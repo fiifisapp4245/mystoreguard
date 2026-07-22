@@ -1,8 +1,17 @@
-import { BarChart3, Package, Receipt, Users } from "lucide-react"
+import { BarChart3, Package, Receipt, TrendingUp, Users } from "lucide-react"
 
 import { PageHeader } from "@/components/dashboard/page-header"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import type { ModulePageData } from "@/components/dashboard-pages/registry"
+import { formatGHS, TOP_PRODUCTS_MONTH } from "@/lib/mock-data"
 
 const REPORTS = [
   {
@@ -33,11 +42,18 @@ const REPORTS = [
     highlight: "342",
     highlightLabel: "customers",
   },
+  {
+    icon: TrendingUp,
+    title: "Sales performance",
+    description: "Trends, best cashiers, and how selling is trending over time.",
+    highlight: "+9%",
+    highlightLabel: "vs last month",
+  },
 ]
 
 export function ReportsPage({ module }: { module: ModulePageData }) {
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6 md:p-10">
+    <div className="flex flex-1 flex-col gap-6">
       <PageHeader title={module.name} subtitle={module.description} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -57,6 +73,35 @@ export function ReportsPage({ module }: { module: ModulePageData }) {
           </Card>
         ))}
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-sans">Top products</CardTitle>
+          <CardDescription>Every product sold this month, ranked by revenue.</CardDescription>
+        </CardHeader>
+        <CardContent className="px-0 sm:px-6">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-10">#</TableHead>
+                <TableHead>Product</TableHead>
+                <TableHead>Units sold</TableHead>
+                <TableHead>Revenue</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {TOP_PRODUCTS_MONTH.map((product, index) => (
+                <TableRow key={product.name}>
+                  <TableCell className="text-muted-foreground">{index + 1}</TableCell>
+                  <TableCell className="font-medium">{product.name}</TableCell>
+                  <TableCell>{product.units.toLocaleString()}</TableCell>
+                  <TableCell>{formatGHS(product.revenue)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   )
 }

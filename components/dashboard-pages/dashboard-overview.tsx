@@ -2,18 +2,34 @@
 
 import { useMemo, useState } from "react"
 import dynamic from "next/dynamic"
+import Link from "next/link"
+import {
+  Building2,
+  CalendarCheck,
+  ChevronRight,
+  Clock,
+  FileText,
+  Package,
+  Settings2,
+  ShoppingCart,
+  UserCog,
+  Warehouse,
+  type LucideIcon,
+} from "lucide-react"
 
 import { PageHeader } from "@/components/dashboard/page-header"
-import { StatCard, type StatTrend } from "@/components/dashboard/stat-card"
+import { StatCard } from "@/components/dashboard/stat-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
+  CardAction,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card"
 import {
   Select,
@@ -31,8 +47,19 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { ModulePageData } from "@/components/dashboard-pages/registry"
-import { CustomizeDashboard } from "@/components/dashboard-pages/customize-dashboard"
-import { useDashboardWidgets, type DashboardWidgets } from "@/hooks/use-dashboard-widgets"
+import { useDemoState } from "@/hooks/use-demo-state"
+import { getModule, isModuleLocked } from "@/lib/modules"
+import {
+  ATTENTION_ITEMS,
+  DASHBOARD_DATA,
+  DASHBOARD_RECENT_SALES,
+  formatGHS,
+  formatGHSCompact,
+  initials,
+  NEW_STORE_ATTENTION_ITEMS,
+  OUTSTANDING_CREDIT,
+  type DashboardPeriod,
+} from "@/lib/mock-data"
 
 // Recharts crashes Next's server-side page-data collection if imported
 // statically, even from a "use client" module — isolate it behind a real
@@ -40,284 +67,310 @@ import { useDashboardWidgets, type DashboardWidgets } from "@/hooks/use-dashboar
 const AnalyticsChart = dynamic(() => import("./analytics-chart"), {
   ssr: false,
 })
+const PaymentTypeChart = dynamic(() => import("./payment-type-chart"), {
+  ssr: false,
+})
 
-type Range = "week" | "month" | "year"
+type PeriodOption = DashboardPeriod | "custom"
 
-interface RangeData {
-  label: string
-  stats: { key: keyof DashboardWidgets; label: string; value: string; trend: StatTrend }[]
-  chart: { period: string; income: number; expenses: number }[]
-}
-
-const RANGE_DATA: Record<Range, RangeData> = {
-  week: {
-    label: "This week",
-    stats: [
-      {
-        key: "revenue",
-        label: "Revenue",
-        value: "GHS 32,450",
-        trend: { value: 14, direction: "up", tone: "positive" },
-      },
-      {
-        key: "itemsSold",
-        label: "Items sold",
-        value: "612",
-        trend: { value: 9, direction: "up", tone: "positive" },
-      },
-      {
-        key: "expenses",
-        label: "Expenses",
-        value: "GHS 8,900",
-        trend: { value: 5, direction: "up", tone: "negative" },
-      },
-      {
-        key: "profit",
-        label: "Gross profit",
-        value: "GHS 23,550",
-        trend: { value: 18, direction: "up", tone: "positive" },
-      },
-    ],
-    chart: [
-      { period: "Mon", income: 4200, expenses: 1100 },
-      { period: "Tue", income: 3900, expenses: 1300 },
-      { period: "Wed", income: 4800, expenses: 1050 },
-      { period: "Thu", income: 4500, expenses: 1400 },
-      { period: "Fri", income: 5200, expenses: 1200 },
-      { period: "Sat", income: 6100, expenses: 1500 },
-      { period: "Sun", income: 3750, expenses: 1350 },
-    ],
-  },
-  month: {
-    label: "This month",
-    stats: [
-      {
-        key: "revenue",
-        label: "Revenue",
-        value: "GHS 138,200",
-        trend: { value: 16, direction: "up", tone: "positive" },
-      },
-      {
-        key: "itemsSold",
-        label: "Items sold",
-        value: "2,840",
-        trend: { value: 11, direction: "up", tone: "positive" },
-      },
-      {
-        key: "expenses",
-        label: "Expenses",
-        value: "GHS 41,300",
-        trend: { value: 7, direction: "up", tone: "negative" },
-      },
-      {
-        key: "profit",
-        label: "Gross profit",
-        value: "GHS 96,900",
-        trend: { value: 20, direction: "up", tone: "positive" },
-      },
-    ],
-    chart: [
-      { period: "Week 1", income: 29500, expenses: 8800 },
-      { period: "Week 2", income: 33200, expenses: 9600 },
-      { period: "Week 3", income: 38400, expenses: 10200 },
-      { period: "Week 4", income: 37100, expenses: 12700 },
-    ],
-  },
-  year: {
-    label: "This year",
-    stats: [
-      {
-        key: "revenue",
-        label: "Revenue",
-        value: "GHS 1,542,000",
-        trend: { value: 22, direction: "up", tone: "positive" },
-      },
-      {
-        key: "itemsSold",
-        label: "Items sold",
-        value: "31,200",
-        trend: { value: 15, direction: "up", tone: "positive" },
-      },
-      {
-        key: "expenses",
-        label: "Expenses",
-        value: "GHS 468,000",
-        trend: { value: 9, direction: "up", tone: "negative" },
-      },
-      {
-        key: "profit",
-        label: "Gross profit",
-        value: "GHS 1,074,000",
-        trend: { value: 26, direction: "up", tone: "positive" },
-      },
-    ],
-    chart: [
-      { period: "Jan", income: 98000, expenses: 32000 },
-      { period: "Feb", income: 102000, expenses: 34000 },
-      { period: "Mar", income: 118000, expenses: 36000 },
-      { period: "Apr", income: 121000, expenses: 38000 },
-      { period: "May", income: 134000, expenses: 39500 },
-      { period: "Jun", income: 128000, expenses: 41000 },
-      { period: "Jul", income: 142000, expenses: 40200 },
-      { period: "Aug", income: 138000, expenses: 42500 },
-      { period: "Sep", income: 130000, expenses: 39800 },
-      { period: "Oct", income: 145000, expenses: 41200 },
-      { period: "Nov", income: 152000, expenses: 43000 },
-      { period: "Dec", income: 168000, expenses: 44500 },
-    ],
-  },
-}
-
-const RECENT_SALES = [
-  {
-    customer: "Kwame Mensah",
-    initials: "KM",
-    amount: "GHS 320.00",
-    type: "Cash",
-    date: "21 Jul, 10:24 am",
-    status: "Completed",
-  },
-  {
-    customer: "Ama Serwaa",
-    initials: "AS",
-    amount: "GHS 1,150.00",
-    type: "Credit",
-    date: "21 Jul, 09:52 am",
-    status: "Pending",
-  },
-  {
-    customer: "Kofi Boateng",
-    initials: "KB",
-    amount: "GHS 480.00",
-    type: "Deposit",
-    date: "20 Jul, 04:15 pm",
-    status: "Completed",
-  },
-  {
-    customer: "Efua Owusu",
-    initials: "EO",
-    amount: "GHS 96.00",
-    type: "Cash",
-    date: "20 Jul, 02:30 pm",
-    status: "Completed",
-  },
-  {
-    customer: "Yaw Asante",
-    initials: "YA",
-    amount: "GHS 640.00",
-    type: "Credit",
-    date: "19 Jul, 11:05 am",
-    status: "On hold",
-  },
+const PERIOD_OPTIONS: { value: PeriodOption; label: string }[] = [
+  { value: "today", label: "Today" },
+  { value: "week", label: "This week" },
+  { value: "month", label: "This month" },
+  { value: "custom", label: "Custom" },
 ]
 
+const ATTENTION_ICON: Record<string, LucideIcon> = {
+  "low-stock": Package,
+  "credit-overdue": Clock,
+  "invoices-unpaid": FileText,
+  "transfers-pending": Warehouse,
+  "appointments-today": CalendarCheck,
+  "staff-invite": UserCog,
+  "add-products": Package,
+  "add-supplier": Building2,
+  "first-sale": ShoppingCart,
+}
+
+const PAYMENT_COLOR: Record<string, string> = {
+  Cash: "bg-chart-1",
+  Momo: "bg-chart-2",
+  Credit: "bg-chart-3",
+  Deposit: "bg-chart-4",
+}
+
 export function DashboardOverviewPage({ module }: { module: ModulePageData }) {
-  const [range, setRange] = useState<Range>("month")
-  const data = useMemo(() => RANGE_DATA[range], [range])
-  const { widgets, toggle } = useDashboardWidgets()
-  const visibleStats = data.stats.filter((stat) => widgets[stat.key])
+  const { state } = useDemoState()
+  const [period, setPeriod] = useState<PeriodOption>("today")
+
+  const effectivePeriod: DashboardPeriod = period === "custom" ? "month" : period
+  const data = useMemo(() => DASHBOARD_DATA[effectivePeriod], [effectivePeriod])
+  const periodLabel = PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? data.label
+
+  const isNewStore = state.storeState === "new"
+
+  const visibleAttentionItems = useMemo(
+    () =>
+      ATTENTION_ITEMS.filter((item) => {
+        const mod = getModule(item.moduleId)
+        return mod ? !isModuleLocked(mod, state.tier) : true
+      }),
+    [state.tier]
+  )
+
+  const totalRevenueForShare = data.revenue.value
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6 md:p-10">
+    <div className="flex flex-1 flex-col gap-6">
       <PageHeader
         title={module.name}
-        subtitle={module.description}
+        subtitle="Revenue, expenses, profit, and what needs your attention."
         action={
           <div className="flex items-center gap-2">
-            <Select
-              value={range}
-              onValueChange={(value) => setRange(value as Range)}
-            >
+            <Select value={period} onValueChange={(value) => setPeriod(value as PeriodOption)}>
               <SelectTrigger size="sm" className="w-36">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="week">This week</SelectItem>
-                <SelectItem value="month">This month</SelectItem>
-                <SelectItem value="year">This year</SelectItem>
+                {PERIOD_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            <CustomizeDashboard widgets={widgets} onToggle={toggle} />
+            <Button variant="outline" size="sm">
+              <Settings2 />
+              Customize
+            </Button>
           </div>
         }
       />
 
-      {visibleStats.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {visibleStats.map((stat) => (
-            <StatCard key={stat.key} label={stat.label} value={stat.value} trend={stat.trend} />
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          label="Revenue"
+          value={isNewStore ? "—" : formatGHSCompact(data.revenue.value)}
+          trend={
+            isNewStore
+              ? undefined
+              : { value: data.revenue.deltaPercent, direction: data.revenue.direction, tone: "positive" }
+          }
+          footnote={isNewStore ? "No sales yet" : undefined}
+          href="/sales/all"
+        />
+        <StatCard
+          label="Gross profit"
+          value={isNewStore ? "—" : formatGHSCompact(data.grossProfit.value)}
+          trend={
+            isNewStore
+              ? undefined
+              : { value: data.grossProfit.deltaPercent, direction: data.grossProfit.direction, tone: "positive" }
+          }
+          footnote={isNewStore ? "No sales yet" : undefined}
+          href="/m/reports"
+        />
+        <StatCard
+          label="Expenses"
+          value={isNewStore ? "—" : formatGHSCompact(data.expenses.value)}
+          trend={
+            isNewStore
+              ? undefined
+              : { value: data.expenses.deltaPercent, direction: data.expenses.direction, tone: "negative" }
+          }
+          footnote={isNewStore ? "No sales yet" : undefined}
+          href="/money/expenses"
+        />
+        <StatCard
+          label="Outstanding credit"
+          value={isNewStore ? "—" : formatGHSCompact(OUTSTANDING_CREDIT.amount)}
+          caption="as of now"
+          footnote={isNewStore ? "No credit issued yet" : `Across ${OUTSTANDING_CREDIT.customerCount} customers`}
+          href="/sales/all"
+        />
+      </div>
 
-      {widgets.chart && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-sans">Income vs expenses</CardTitle>
-            <CardDescription>{data.label}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <AnalyticsChart data={data.chart} />
+      <Card className="gap-4 py-5">
+        <CardHeader className="px-5">
+          <CardTitle className="font-sans">Needs attention</CardTitle>
+          <CardDescription>Things worth a look today.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col divide-y px-0">
+          {isNewStore
+            ? NEW_STORE_ATTENTION_ITEMS.map((item) => {
+                const Icon = ATTENTION_ICON[item.id] ?? Package
+                return (
+                  <Link
+                    key={item.id}
+                    href={item.href}
+                    className="flex items-center gap-3 px-5 py-3 text-sm transition-colors hover:bg-accent/40"
+                  >
+                    <Icon className="size-4 shrink-0 text-muted-foreground" />
+                    <span className="flex-1">{item.line}</span>
+                    <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                  </Link>
+                )
+              })
+            : visibleAttentionItems.map((item) => {
+                const Icon = ATTENTION_ICON[item.id] ?? Package
+                return (
+                  <Link
+                    key={item.id}
+                    href={item.href}
+                    className="flex items-center gap-3 px-5 py-3 text-sm transition-colors hover:bg-accent/40"
+                  >
+                    <Icon className="size-4 shrink-0 text-muted-foreground" />
+                    <span className="flex-1">{item.line}</span>
+                    <span className="font-medium text-muted-foreground">{item.amount}</span>
+                    <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                  </Link>
+                )
+              })}
+        </CardContent>
+      </Card>
+
+      {isNewStore ? (
+        <Card className="items-center gap-3 py-16 text-center">
+          <CardContent className="flex flex-col items-center gap-4 px-5">
+            <p className="max-w-sm text-sm text-muted-foreground">
+              Once you record your first sale, your charts and reports will appear here.
+            </p>
+            <Button asChild>
+              <Link href="/register">Record a sale</Link>
+            </Button>
           </CardContent>
         </Card>
-      )}
+      ) : (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-sans">Income vs expenses</CardTitle>
+              <CardDescription>{periodLabel}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AnalyticsChart data={data.chart} />
+            </CardContent>
+          </Card>
 
-      {widgets.recentSales && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-sans">Recent sales</CardTitle>
-            <CardDescription>
-              The latest transactions across the till.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="px-0 sm:px-6">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Date &amp; time</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {RECENT_SALES.map((sale) => (
-                  <TableRow key={sale.customer + sale.date}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Avatar size="sm">
-                          <AvatarFallback>{sale.initials}</AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium whitespace-nowrap">
-                          {sale.customer}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-sans">Top products</CardTitle>
+                <CardDescription>{periodLabel}</CardDescription>
+                <CardAction>
+                  <Link
+                    href="/m/reports"
+                    className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                  >
+                    View all
+                    <ChevronRight className="size-3.5" />
+                  </Link>
+                </CardAction>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                {data.topProducts.map((product, index) => {
+                  const maxRevenue = data.topProducts[0]?.revenue ?? product.revenue
+                  const widthPercent = Math.round((product.revenue / maxRevenue) * 100)
+                  return (
+                    <div key={product.name} className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between gap-2 text-sm">
+                        <span className="font-medium">
+                          {index + 1}. {product.name}
+                        </span>
+                        <span className="whitespace-nowrap text-muted-foreground">
+                          {product.units} units · {formatGHS(product.revenue)}
                         </span>
                       </div>
-                    </TableCell>
-                    <TableCell>{sale.amount}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="font-normal">
-                        {sale.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {sale.date}
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge label={sale.status} />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full rounded-full bg-primary"
+                          style={{ width: `${widthPercent}%` }}
+                        />
+                      </div>
+                    </div>
+                  )
+                })}
+              </CardContent>
+            </Card>
 
-      {visibleStats.length === 0 && !widgets.chart && !widgets.recentSales && (
-        <p className="text-sm text-muted-foreground">
-          Nothing selected — use Customize above to bring widgets back.
-        </p>
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-sans">Sales by payment type</CardTitle>
+                <CardDescription>{periodLabel}</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center gap-6 sm:flex-row sm:items-center">
+                <PaymentTypeChart data={data.paymentBreakdown} />
+                <div className="flex flex-1 flex-col gap-2.5">
+                  {data.paymentBreakdown.map((payment) => (
+                    <div key={payment.type} className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2">
+                        <span className={`size-2.5 rounded-full ${PAYMENT_COLOR[payment.type]}`} />
+                        {payment.type}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {formatGHS(payment.amount)} ·{" "}
+                        {Math.round((payment.amount / totalRevenueForShare) * 100)}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-sans">Recent sales</CardTitle>
+              <CardDescription>The latest transactions across the till.</CardDescription>
+              <CardAction>
+                <Link
+                  href="/sales/all"
+                  className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                >
+                  View all
+                  <ChevronRight className="size-3.5" />
+                </Link>
+              </CardAction>
+            </CardHeader>
+            <CardContent className="px-0 sm:px-6">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Date &amp; time</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {DASHBOARD_RECENT_SALES.map((sale) => (
+                    <TableRow key={sale.customer + sale.date}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Avatar size="sm">
+                            <AvatarFallback>{initials(sale.customer)}</AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium whitespace-nowrap">{sale.customer}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{sale.amount}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="font-normal">
+                          {sale.type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{sale.date}</TableCell>
+                      <TableCell>
+                        <StatusBadge label={sale.status} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   )

@@ -38,7 +38,7 @@ const ESTIMATES = [
 
 export function EstimatorPage({ module }: { module: ModulePageData }) {
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6 md:p-10">
+    <div className="flex flex-1 flex-col gap-6">
       <PageHeader title={module.name} subtitle={module.description} search="Search estimates..." />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

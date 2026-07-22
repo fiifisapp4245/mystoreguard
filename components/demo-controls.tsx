@@ -150,6 +150,16 @@ export function DemoControls({
             Estimator and Message placement only apply to the proposed grouped structure.
           </p>
         )}
+
+        <Separator />
+
+        <ControlRow
+          label="Store state"
+          leftLabel="Established"
+          rightLabel="New store"
+          checked={state.storeState === "new"}
+          onCheckedChange={(checked) => update({ storeState: checked ? "new" : "established" })}
+        />
       </CardContent>
     </Card>
   )

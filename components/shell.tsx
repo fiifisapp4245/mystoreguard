@@ -1,6 +1,7 @@
 "use client"
 
 import { AppSidebar } from "@/components/app-sidebar"
+import { ContentContainer } from "@/components/dashboard/content-container"
 import { DemoControls } from "@/components/demo-controls"
 import { Separator } from "@/components/ui/separator"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
@@ -20,7 +21,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
             Navigation-structure prototype — for internal review only
           </span>
         </header>
-        <div className="flex flex-1 flex-col">{children}</div>
+        <div className="flex flex-1 flex-col">
+          <ContentContainer className="flex flex-1 flex-col py-6 md:py-10">
+            {children}
+          </ContentContainer>
+        </div>
       </SidebarInset>
       <DemoControls state={state} update={update} />
     </SidebarProvider>

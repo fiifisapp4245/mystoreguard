@@ -24,7 +24,7 @@ export function ModulePage({ module }: { module: ModuleConfig }) {
   const Icon = module.icon
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 p-6 md:p-10">
+    <div className="flex flex-1 flex-col gap-6">
       <div className="flex flex-wrap items-center gap-3">
         <Icon className="size-6 text-muted-foreground" />
         <h1 className="text-2xl font-semibold tracking-tight">{module.name}</h1>

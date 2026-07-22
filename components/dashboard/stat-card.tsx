@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { TrendingDown, TrendingUp } from "lucide-react"
 
 import { Card, CardHeader } from "@/components/ui/card"
@@ -14,11 +15,20 @@ export function StatCard({
   label,
   value,
   trend,
+  caption,
+  footnote,
+  href,
   className,
 }: {
   label: string
   value: string
   trend?: StatTrend
+  /** Small muted qualifier next to the label, e.g. "as of now". */
+  caption?: string
+  /** Small muted line under the value, e.g. "Across 14 customers" or "No sales yet". */
+  footnote?: string
+  /** Wraps the card in a link to the relevant module. */
+  href?: string
   className?: string
 }) {
   const TrendIcon = trend?.direction === "up" ? TrendingUp : TrendingDown
@@ -27,10 +37,13 @@ export function StatCard({
       ? "bg-success/15 text-success"
       : "bg-destructive/15 text-destructive"
 
-  return (
-    <Card className={cn("gap-3 py-5", className)}>
+  const card = (
+    <Card className={cn("h-full gap-3 py-5", href && "transition-colors hover:bg-accent/40", className)}>
       <CardHeader className="gap-1.5 px-5">
-        <p className="text-sm text-muted-foreground">{label}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="text-sm text-muted-foreground">{label}</p>
+          {caption && <span className="text-xs text-muted-foreground">· {caption}</span>}
+        </div>
         <div className="flex items-baseline gap-2">
           <span className="text-2xl font-semibold">{value}</span>
           {trend && (
@@ -45,7 +58,20 @@ export function StatCard({
             </span>
           )}
         </div>
+        {/* Always rendered (falls back to a non-breaking space) so every card
+            in a row reserves the same number of lines and lands at an equal height. */}
+        <p className="text-xs text-muted-foreground">{footnote || " "}</p>
       </CardHeader>
     </Card>
   )
+
+  if (href) {
+    return (
+      <Link href={href} className="block h-full">
+        {card}
+      </Link>
+    )
+  }
+
+  return card
 }

@@ -15,6 +15,7 @@ import {
   Settings,
   ShoppingCart,
   Truck,
+  Undo2,
   UserCog,
   Users,
   Wallet,
@@ -138,38 +139,35 @@ export const MODULES: ModuleConfig[] = [
     tier: "ultra",
   },
   {
-    id: "sales",
-    name: "Sales",
+    id: "all",
+    name: "All sales",
     icon: ShoppingCart,
-    description: "Daily sales, credit sales, deposit sales, and store returns.",
+    description: "Cash, Momo, credit, and deposit sales — one table, filtered by type instead of split across separate screens.",
     features: [
       {
-        name: "Daily sales",
-        description: "The day-to-day selling screen: recording what was sold, to whom, and for how much.",
+        name: "Sales register",
+        description: "Cash, Momo, credit, and deposit sales recorded through the register and listed here as one stream.",
       },
       {
         name: "On-hold sales",
         description: "Parking an unfinished sale so the cashier can serve the next person and return to it later.",
       },
       {
-        name: "Credit sales",
-        description: "Selling to a trusted customer who pays later, with the debt tracked until it's settled.",
+        name: "Credit & deposit tracking",
+        description: "Debts and part-payments tracked until they're settled, filterable alongside every other sale.",
       },
-      {
-        name: "Deposit sales",
-        description: "A customer pays part up front and collects the goods when they finish paying.",
-      },
-      {
-        name: "Statistics",
-        description: "Summaries and analysis of sales performance over time.",
-      },
+    ],
+    tier: "light",
+  },
+  {
+    id: "returns",
+    name: "Returns",
+    icon: Undo2,
+    description: "Goods brought back and refunded or credited according to the return policy.",
+    features: [
       {
         name: "Store returns",
         description: "Refunding or crediting returned goods according to the return policy.",
-      },
-      {
-        name: "Audit logs",
-        description: "A record of every sale, hold, credit, deposit, and return. Included in every tier.",
       },
     ],
     tier: "light",
@@ -545,9 +543,17 @@ export interface GroupConfig {
 export const GROUPS: GroupConfig[] = [
   { id: "home", label: "Home", moduleIds: ["dashboard"], type: "single" },
   {
+    id: "sales",
+    label: "Sales",
+    moduleIds: ["all", "returns"],
+    type: "hub",
+    icon: ShoppingCart,
+    description: "Every sale in one place — cash, momo, credit, and deposit — plus returns.",
+  },
+  {
     id: "sell",
     label: "Sell",
-    moduleIds: ["sales", "invoice", "deliveries", "estimator"],
+    moduleIds: ["invoice", "deliveries", "estimator"],
     type: "group",
   },
   {
@@ -651,6 +657,24 @@ const USERS_FLAT_ENTRY: ModuleConfig = {
   href: hubFirstTabPath("people"),
 }
 
+/**
+ * The flat view still shows a single "Sales" item — it now routes to the
+ * Sales hub instead of its own page. Not a real module, so it isn't in
+ * MODULES; resolveFlat() substitutes it in.
+ */
+const SALES_FLAT_ENTRY: ModuleConfig = {
+  id: "sales",
+  name: "Sales",
+  icon: ShoppingCart,
+  description: "Every sale in one place — cash, momo, credit, and deposit — plus returns.",
+  features: [
+    { name: "All sales", description: "Cash, Momo, credit, and deposit sales in one filterable table." },
+    { name: "Returns", description: "Goods brought back and refunded or credited according to the return policy." },
+  ],
+  tier: "light",
+  href: hubFirstTabPath("sales"),
+}
+
 export const TIER_LABEL: Record<Tier, string> = {
   light: "Light",
   prime: "Prime",
@@ -750,7 +774,9 @@ export function resolveNav(toggles: NavToggles): ResolvedNav {
 }
 
 export function resolveFlat(): ModuleConfig[] {
-  return FLAT_ORDER.map((id) => (id === "users" ? USERS_FLAT_ENTRY : getModule(id))).filter(
-    (m): m is ModuleConfig => Boolean(m)
-  )
+  return FLAT_ORDER.map((id) => {
+    if (id === "users") return USERS_FLAT_ENTRY
+    if (id === "sales") return SALES_FLAT_ENTRY
+    return getModule(id)
+  }).filter((m): m is ModuleConfig => Boolean(m))
 }

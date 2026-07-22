@@ -6,6 +6,8 @@ import { MoneyHubTab } from "@/components/hubs/money-hub-tab"
 import { CustomersTab } from "@/components/hubs/people/customers-tab"
 import { StaffTab } from "@/components/hubs/people/staff-tab"
 import { SuppliersTab } from "@/components/hubs/people/suppliers-tab"
+import { AllSalesTab } from "@/components/hubs/sales/all-sales-tab"
+import { ReturnsTab } from "@/components/hubs/sales/returns-tab"
 import { GROUPS, getHub, getModule } from "@/lib/modules"
 
 export function generateStaticParams() {
@@ -43,13 +45,15 @@ export default async function HubTabPage({
   const tabs = hub.moduleIds.map((id) => ({ id, label: getModule(id)?.name ?? id }))
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6 md:p-10">
+    <div className="flex flex-1 flex-col gap-6">
       <PageHeader title={hub.label} subtitle={hub.description} />
       <HubTabsNav hubId={hubId} tabs={tabs} activeTab={tab} />
 
       {hubId === "people" && tab === "customers" && <CustomersTab />}
       {hubId === "people" && tab === "suppliers" && <SuppliersTab />}
       {hubId === "people" && tab === "staff" && <StaffTab />}
+      {hubId === "sales" && tab === "all" && <AllSalesTab />}
+      {hubId === "sales" && tab === "returns" && <ReturnsTab />}
       {hubId === "money" && <MoneyHubTab moduleId={tab} />}
     </div>
   )

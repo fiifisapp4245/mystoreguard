@@ -3,12 +3,11 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ChevronRight, Lock } from "lucide-react"
+import { ChevronRight, Lock, Plus } from "lucide-react"
 
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -19,6 +18,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { UpgradeDialog } from "@/components/upgrade-dialog"
 import { demoStateToParams, type DemoState } from "@/hooks/use-demo-state"
 import {
@@ -194,13 +194,25 @@ export function AppSidebar({ state }: { state: DemoState }) {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="gap-0.5 px-3 py-3 group-data-[collapsible=icon]:px-2">
-        <span className="text-sm font-semibold tracking-tight group-data-[collapsible=icon]:hidden">
-          MyStoreGuard
-        </span>
-        <span className="text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
-          Adwoa&apos;s Provisions — Makola, Accra
-        </span>
+      <SidebarHeader className="gap-3 px-3 py-3 group-data-[collapsible=icon]:px-2">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-sm font-semibold tracking-tight group-data-[collapsible=icon]:hidden">
+            MyStoreGuard
+          </span>
+          <span className="text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
+            Adwoa&apos;s Provisions — Makola, Accra
+          </span>
+        </div>
+
+        <Button
+          asChild
+          className="w-full group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:p-0"
+        >
+          <Link href="/register">
+            <Plus />
+            <span className="group-data-[collapsible=icon]:hidden">New sale</span>
+          </Link>
+        </Button>
       </SidebarHeader>
 
       <SidebarContent>
@@ -216,7 +228,7 @@ export function AppSidebar({ state }: { state: DemoState }) {
             </SidebarGroupContent>
           </SidebarGroup>
         ) : (
-          <>
+          <div className="flex min-h-full flex-1 flex-col">
             <SidebarGroup>
               <SidebarGroupContent>
                 <ModuleMenu
@@ -264,33 +276,34 @@ export function AppSidebar({ state }: { state: DemoState }) {
                 </CollapsibleGroup>
               )
             })}
-          </>
+
+            {/* Pinned near the bottom when there's room (mt-auto); once the
+                nav above doesn't fit, this scrolls with everything else in
+                SidebarContent instead of being clipped outside it. */}
+            <div className="mt-auto pb-2">
+              {nav.bottomUtility.length > 0 && (
+                <ModuleMenu
+                  modules={nav.bottomUtility}
+                  pathname={pathname}
+                  state={state}
+                  onLockedClick={handleLockedClick}
+                />
+              )}
+              <SidebarGroup className="p-0">
+                <SidebarGroupLabel>{nav.system.label}</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <ModuleMenu
+                    modules={nav.system.modules}
+                    pathname={pathname}
+                    state={state}
+                    onLockedClick={handleLockedClick}
+                  />
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </div>
+          </div>
         )}
       </SidebarContent>
-
-      {state.nav === "grouped" && (
-        <SidebarFooter>
-          {nav.bottomUtility.length > 0 && (
-            <ModuleMenu
-              modules={nav.bottomUtility}
-              pathname={pathname}
-              state={state}
-              onLockedClick={handleLockedClick}
-            />
-          )}
-          <SidebarGroup className="p-0">
-            <SidebarGroupLabel>{nav.system.label}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <ModuleMenu
-                modules={nav.system.modules}
-                pathname={pathname}
-                state={state}
-                onLockedClick={handleLockedClick}
-              />
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarFooter>
-      )}
 
       <UpgradeDialog module={lockedModule} onOpenChange={(open) => !open && setLockedModule(null)} />
     </Sidebar>

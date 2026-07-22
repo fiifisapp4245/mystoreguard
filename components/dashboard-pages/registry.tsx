@@ -12,7 +12,6 @@ import { LoyaltyPage } from "@/components/dashboard-pages/loyalty-page"
 import { MessagePage } from "@/components/dashboard-pages/message-page"
 import { OffersRewardsPage } from "@/components/dashboard-pages/offers-rewards-page"
 import { ReportsPage } from "@/components/dashboard-pages/reports-page"
-import { SalesPage } from "@/components/dashboard-pages/sales-page"
 import { SettingsPage } from "@/components/dashboard-pages/settings-page"
 import { StoreWarehousePage } from "@/components/dashboard-pages/store-warehouse-page"
 import { WorkflowPage } from "@/components/dashboard-pages/workflow-page"
@@ -37,7 +36,6 @@ export const DASHBOARD_PAGES: Record<
   // Light
   dashboard: DashboardOverviewPage,
   inventory: InventoryPage,
-  sales: SalesPage,
   expenses: ExpensesPage,
   settings: SettingsPage,
   guide: GuidePage,

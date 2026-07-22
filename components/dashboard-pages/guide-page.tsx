@@ -22,7 +22,7 @@ const ICONS: Record<string, typeof Award> = {
 
 export function GuidePage({ module }: { module: ModulePageData }) {
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6 md:p-10">
+    <div className="flex flex-1 flex-col gap-6">
       <PageHeader
         title={module.name}
         subtitle={module.description}

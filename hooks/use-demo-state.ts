@@ -7,6 +7,7 @@ import type { EstimatorLocation, MessageLocation, Tier } from "@/lib/modules"
 
 export type NavStructure = "flat" | "grouped"
 export type LockMode = "hidden" | "greyed"
+export type StoreState = "established" | "new"
 
 export interface DemoState {
   nav: NavStructure
@@ -14,6 +15,7 @@ export interface DemoState {
   lockMode: LockMode
   estimatorLocation: EstimatorLocation
   messageLocation: MessageLocation
+  storeState: StoreState
 }
 
 export const DEMO_DEFAULTS: DemoState = {
@@ -22,6 +24,7 @@ export const DEMO_DEFAULTS: DemoState = {
   lockMode: "greyed",
   estimatorLocation: "sell",
   messageLocation: "grow",
+  storeState: "established",
 }
 
 function parse(searchParams: URLSearchParams): DemoState {
@@ -30,6 +33,7 @@ function parse(searchParams: URLSearchParams): DemoState {
   const lockMode = searchParams.get("lock")
   const estimatorLocation = searchParams.get("estimator")
   const messageLocation = searchParams.get("message")
+  const storeState = searchParams.get("store")
 
   return {
     nav: nav === "flat" ? "flat" : DEMO_DEFAULTS.nav,
@@ -37,6 +41,7 @@ function parse(searchParams: URLSearchParams): DemoState {
     lockMode: lockMode === "hidden" ? "hidden" : DEMO_DEFAULTS.lockMode,
     estimatorLocation: estimatorLocation === "system" ? "system" : DEMO_DEFAULTS.estimatorLocation,
     messageLocation: messageLocation === "bottom" ? "bottom" : DEMO_DEFAULTS.messageLocation,
+    storeState: storeState === "new" ? "new" : DEMO_DEFAULTS.storeState,
   }
 }
 
@@ -48,6 +53,7 @@ export function demoStateToParams(state: DemoState): URLSearchParams {
   if (state.lockMode !== DEMO_DEFAULTS.lockMode) params.set("lock", state.lockMode)
   if (state.estimatorLocation !== DEMO_DEFAULTS.estimatorLocation) params.set("estimator", state.estimatorLocation)
   if (state.messageLocation !== DEMO_DEFAULTS.messageLocation) params.set("message", state.messageLocation)
+  if (state.storeState !== DEMO_DEFAULTS.storeState) params.set("store", state.storeState)
 
   return params
 }

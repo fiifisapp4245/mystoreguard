@@ -8,6 +8,27 @@ export function formatGHS(amount: number): string {
   return `GHS ${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
+/**
+ * Headline-number formatter for KPI cards. Small stores see their exact
+ * figure; once a number crosses into millions/billions, exact digits stop
+ * helping and an abbreviation reads faster at a glance.
+ */
+export function formatGHSCompact(amount: number): string {
+  const abs = Math.abs(amount)
+
+  if (abs >= 1_000_000_000) {
+    return `GHS ${trimTrailingZero((amount / 1_000_000_000).toFixed(1))}B`
+  }
+  if (abs >= 1_000_000) {
+    return `GHS ${trimTrailingZero((amount / 1_000_000).toFixed(1))}M`
+  }
+  return formatGHS(amount)
+}
+
+function trimTrailingZero(value: string): string {
+  return value.endsWith(".0") ? value.slice(0, -2) : value
+}
+
 export function initials(name: string): string {
   return name
     .split(" ")
@@ -35,6 +56,8 @@ export interface Customer {
   loyaltyTier: LoyaltyTier
   loyaltyPoints: number
   storeCredit: number
+  /** Money this customer currently owes the store from past credit sales — the reverse of storeCredit. */
+  creditBalance: number
   status: CustomerStatus
 }
 
@@ -51,6 +74,7 @@ export const CUSTOMERS: Customer[] = [
     loyaltyTier: "Gold",
     loyaltyPoints: 2840,
     storeCredit: 0,
+    creditBalance: 0,
     status: "Active",
   },
   {
@@ -63,6 +87,7 @@ export const CUSTOMERS: Customer[] = [
     loyaltyTier: "Silver",
     loyaltyPoints: 1120,
     storeCredit: 0,
+    creditBalance: 450,
     status: "Active",
   },
   {
@@ -75,6 +100,7 @@ export const CUSTOMERS: Customer[] = [
     loyaltyTier: "Gold",
     loyaltyPoints: 3960,
     storeCredit: 45,
+    creditBalance: 320,
     status: "Active",
   },
   {
@@ -87,6 +113,7 @@ export const CUSTOMERS: Customer[] = [
     loyaltyTier: "Bronze",
     loyaltyPoints: 340,
     storeCredit: 0,
+    creditBalance: 0,
     status: "Active",
   },
   {
@@ -99,6 +126,7 @@ export const CUSTOMERS: Customer[] = [
     loyaltyTier: "Silver",
     loyaltyPoints: 980,
     storeCredit: 20,
+    creditBalance: 0,
     status: "Active",
   },
   {
@@ -111,6 +139,7 @@ export const CUSTOMERS: Customer[] = [
     loyaltyTier: "Bronze",
     loyaltyPoints: 120,
     storeCredit: 0,
+    creditBalance: 0,
     status: "Inactive",
   },
   {
@@ -123,6 +152,7 @@ export const CUSTOMERS: Customer[] = [
     loyaltyTier: "Gold",
     loyaltyPoints: 2100,
     storeCredit: 0,
+    creditBalance: 0,
     status: "Active",
   },
   {
@@ -135,6 +165,7 @@ export const CUSTOMERS: Customer[] = [
     loyaltyTier: "Bronze",
     loyaltyPoints: 210,
     storeCredit: 0,
+    creditBalance: 0,
     status: "Active",
   },
   {
@@ -147,6 +178,7 @@ export const CUSTOMERS: Customer[] = [
     loyaltyTier: "Silver",
     loyaltyPoints: 890,
     storeCredit: 15,
+    creditBalance: 0,
     status: "Active",
   },
   {
@@ -159,6 +191,7 @@ export const CUSTOMERS: Customer[] = [
     loyaltyTier: "Bronze",
     loyaltyPoints: 60,
     storeCredit: 0,
+    creditBalance: 0,
     status: "Inactive",
   },
 ]
@@ -311,4 +344,250 @@ export const STAFF: StaffMember[] = [
     status: "Invited",
     lastActive: "—",
   },
+]
+
+/**
+ * Dashboard mock data. Keyed by period so the period selector swaps
+ * real-feeling numbers rather than recomputing anything. Kept internally
+ * consistent: revenue − expenses ≈ gross profit, payment-type amounts sum to
+ * revenue, and chart buckets sum to their period's revenue/expenses totals.
+ */
+export type DashboardPeriod = "today" | "week" | "month"
+
+export interface DashboardKpi {
+  value: number
+  deltaPercent: number
+  direction: "up" | "down"
+}
+
+export interface DashboardChartPoint {
+  period: string
+  income: number
+  expenses: number
+}
+
+export interface TopProduct {
+  name: string
+  units: number
+  revenue: number
+}
+
+export interface PaymentTypeAmount {
+  type: string
+  amount: number
+}
+
+export interface DashboardPeriodData {
+  label: string
+  revenue: DashboardKpi
+  grossProfit: DashboardKpi
+  expenses: DashboardKpi
+  chart: DashboardChartPoint[]
+  topProducts: TopProduct[]
+  paymentBreakdown: PaymentTypeAmount[]
+}
+
+export const DASHBOARD_DATA: Record<DashboardPeriod, DashboardPeriodData> = {
+  today: {
+    label: "Today",
+    revenue: { value: 3240, deltaPercent: 8, direction: "up" },
+    grossProfit: { value: 2600, deltaPercent: 9, direction: "up" },
+    expenses: { value: 640, deltaPercent: 5, direction: "up" },
+    chart: [
+      { period: "8am", income: 180, expenses: 40 },
+      { period: "9am", income: 220, expenses: 0 },
+      { period: "10am", income: 310, expenses: 120 },
+      { period: "11am", income: 380, expenses: 0 },
+      { period: "12pm", income: 420, expenses: 200 },
+      { period: "1pm", income: 390, expenses: 0 },
+      { period: "2pm", income: 340, expenses: 80 },
+      { period: "3pm", income: 310, expenses: 0 },
+      { period: "4pm", income: 280, expenses: 150 },
+      { period: "5pm", income: 250, expenses: 0 },
+      { period: "6pm", income: 160, expenses: 50 },
+    ],
+    topProducts: [
+      { name: "Ideal Milk 380g", units: 43, revenue: 623.5 },
+      { name: "Voltic Water 750ml", units: 96, revenue: 480 },
+      { name: "Milo 400g tin", units: 9, revenue: 378 },
+      { name: "Indomie Chicken Noodles", units: 57, revenue: 342 },
+      { name: "Key Soap", units: 32, revenue: 272 },
+    ],
+    paymentBreakdown: [
+      { type: "Cash", amount: 1450 },
+      { type: "Momo", amount: 980 },
+      { type: "Credit", amount: 560 },
+      { type: "Deposit", amount: 250 },
+    ],
+  },
+  week: {
+    label: "This week",
+    revenue: { value: 21850, deltaPercent: 6, direction: "up" },
+    grossProfit: { value: 16670, deltaPercent: 7, direction: "up" },
+    expenses: { value: 5180, deltaPercent: 4, direction: "up" },
+    chart: [
+      { period: "Mon", income: 2800, expenses: 620 },
+      { period: "Tue", income: 2650, expenses: 580 },
+      { period: "Wed", income: 3100, expenses: 700 },
+      { period: "Thu", income: 3400, expenses: 750 },
+      { period: "Fri", income: 3850, expenses: 850 },
+      { period: "Sat", income: 4200, expenses: 900 },
+      { period: "Sun", income: 1850, expenses: 780 },
+    ],
+    topProducts: [
+      { name: "Ideal Milk 380g", units: 300, revenue: 4350 },
+      { name: "Voltic Water 750ml", units: 640, revenue: 3200 },
+      { name: "Milo 400g tin", units: 68, revenue: 2856 },
+      { name: "Indomie Chicken Noodles", units: 390, revenue: 2340 },
+      { name: "Key Soap", units: 218, revenue: 1853 },
+    ],
+    paymentBreakdown: [
+      { type: "Cash", amount: 9800 },
+      { type: "Momo", amount: 6600 },
+      { type: "Credit", amount: 3850 },
+      { type: "Deposit", amount: 1600 },
+    ],
+  },
+  month: {
+    label: "This month",
+    revenue: { value: 96400, deltaPercent: 9, direction: "up" },
+    grossProfit: { value: 72300, deltaPercent: 10, direction: "up" },
+    expenses: { value: 24100, deltaPercent: 6, direction: "up" },
+    chart: [
+      { period: "Week 1", income: 21500, expenses: 5400 },
+      { period: "Week 2", income: 23800, expenses: 5900 },
+      { period: "Week 3", income: 25200, expenses: 6300 },
+      { period: "Week 4", income: 25900, expenses: 6500 },
+    ],
+    topProducts: [
+      { name: "Ideal Milk 380g", units: 1324, revenue: 19198 },
+      { name: "Voltic Water 750ml", units: 2820, revenue: 14100 },
+      { name: "Milo 400g tin", units: 299, revenue: 12558 },
+      { name: "Indomie Chicken Noodles", units: 1725, revenue: 10350 },
+      { name: "Key Soap", units: 965, revenue: 8202.5 },
+    ],
+    paymentBreakdown: [
+      { type: "Cash", amount: 43200 },
+      { type: "Momo", amount: 29100 },
+      { type: "Credit", amount: 16960 },
+      { type: "Deposit", amount: 7140 },
+    ],
+  },
+}
+
+/** A balance as of now, not scoped to any period — never changes with the period selector. */
+export const OUTSTANDING_CREDIT = {
+  amount: 6840,
+  customerCount: 14,
+}
+
+export interface DashboardSale {
+  customer: string
+  amount: string
+  type: string
+  date: string
+  status: string
+}
+
+export const DASHBOARD_RECENT_SALES: DashboardSale[] = [
+  { customer: "Kwame Mensah", amount: "GHS 320.00", type: "Cash", date: "22 Jul, 11:40 am", status: "Completed" },
+  { customer: "Ama Serwaa", amount: "GHS 450.00", type: "Credit", date: "22 Jul, 11:05 am", status: "Pending" },
+  { customer: "Kofi Boateng", amount: "GHS 180.00", type: "Momo", date: "22 Jul, 10:22 am", status: "Completed" },
+  { customer: "Efua Owusu", amount: "GHS 96.00", type: "Cash", date: "22 Jul, 9:47 am", status: "Completed" },
+  { customer: "Yaw Asante", amount: "GHS 240.00", type: "Deposit", date: "22 Jul, 8:58 am", status: "Completed" },
+]
+
+/**
+ * "Needs attention" rows. Not period-scoped. `moduleId` drives tier-lock
+ * checks — a row is hidden entirely (not greyed) if its module is locked at
+ * the current viewing tier.
+ */
+export interface AttentionItem {
+  id: string
+  moduleId: string
+  href: string
+  line: string
+  amount: string
+}
+
+export const ATTENTION_ITEMS: AttentionItem[] = [
+  {
+    id: "low-stock",
+    moduleId: "inventory",
+    href: "/m/inventory",
+    line: "Products low on stock",
+    amount: "7",
+  },
+  {
+    id: "credit-overdue",
+    moduleId: "all",
+    href: "/sales/all",
+    line: "Credit sales overdue past 30 days",
+    amount: "GHS 4,280 · 5 customers",
+  },
+  {
+    id: "invoices-unpaid",
+    moduleId: "invoice",
+    href: "/m/invoice",
+    line: "Invoices unpaid",
+    amount: "3 · GHS 12,400",
+  },
+  {
+    id: "transfers-pending",
+    moduleId: "store-warehouse",
+    href: "/m/store-warehouse",
+    line: "Stock transfers awaiting approval",
+    amount: "2",
+  },
+  {
+    id: "appointments-today",
+    moduleId: "appointments",
+    href: "/m/appointments",
+    line: "Appointments today",
+    amount: "4",
+  },
+  {
+    id: "staff-invite",
+    moduleId: "staff",
+    href: "/people/staff",
+    line: "Staff invitation pending",
+    amount: "1",
+  },
+]
+
+/** Shown instead of ATTENTION_ITEMS when the demo's store state is "new". */
+export interface GettingStartedItem {
+  id: string
+  href: string
+  line: string
+}
+
+export const NEW_STORE_ATTENTION_ITEMS: GettingStartedItem[] = [
+  { id: "add-products", href: "/m/inventory", line: "Add your first products" },
+  { id: "add-supplier", href: "/people/suppliers", line: "Add a supplier" },
+  { id: "first-sale", href: "/register", line: "Record your first sale" },
+]
+
+/** Full "This month" ranking behind the Dashboard's top-5 — the Reports page's "View all" destination. */
+export const TOP_PRODUCTS_MONTH: TopProduct[] = [
+  { name: "Ideal Milk 380g", units: 1324, revenue: 19198 },
+  { name: "Voltic Water 750ml", units: 2820, revenue: 14100 },
+  { name: "Milo 400g tin", units: 299, revenue: 12558 },
+  { name: "Indomie Chicken Noodles", units: 1725, revenue: 10350 },
+  { name: "Key Soap", units: 965, revenue: 8202.5 },
+  { name: "Perfumed Rice 5kg", units: 98, revenue: 7644 },
+  { name: "Frytol Cooking Oil 3L", units: 74, revenue: 6808 },
+  { name: "Royal Aroma Rice 5kg", units: 68, revenue: 5576 },
+  { name: "Sunlight Dishwashing Liquid", units: 470, revenue: 5170 },
+  { name: "Nido 400g", units: 96, revenue: 4608 },
+  { name: "Lipton Tea 25s", units: 238, revenue: 4284 },
+  { name: "Omo 900g", units: 128, revenue: 4096 },
+  { name: "Titus Sardines", units: 251, revenue: 3765 },
+  { name: "Peak Milk 400g", units: 210, revenue: 3360 },
+  { name: "Geisha Sardines", units: 256, revenue: 3072 },
+  { name: "Malta Guinness", units: 288, revenue: 2736 },
+  { name: "Close Up Toothpaste", units: 190, revenue: 2565 },
+  { name: "Coca-Cola 500ml", units: 340, revenue: 2380 },
+  { name: "Gino Tomato Mix", units: 310, revenue: 2015 },
+  { name: "Tasty Tom Tomato Paste", units: 410, revenue: 1845 },
 ]

@@ -80,6 +80,7 @@ export function AddCustomerDialog({
       loyaltyTier: "Bronze",
       loyaltyPoints: 0,
       storeCredit: 0,
+      creditBalance: 0,
       status: "Active",
     })
     reset()
