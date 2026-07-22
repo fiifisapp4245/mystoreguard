@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { REFUND_METHODS, RETURN_REASONS, SALES_RECORDS, type ReturnRecord } from "@/lib/sales-data"
+import { REFUND_METHODS, RETURN_REASONS, SALES_RECORDS, SALES_TODAY_ISO, type ReturnRecord } from "@/lib/sales-data"
 
 interface FormErrors {
   sale?: string
@@ -72,6 +72,7 @@ export function RecordReturnDialog({
       item: itemName,
       reason,
       amount: line ? line.quantity * line.unitPrice : 0,
+      dateISO: SALES_TODAY_ISO,
       originalReceiptNo: receiptNo,
     })
     reset()
