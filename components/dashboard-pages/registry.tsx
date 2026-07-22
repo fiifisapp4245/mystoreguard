@@ -15,7 +15,6 @@ import { ReportsPage } from "@/components/dashboard-pages/reports-page"
 import { SalesPage } from "@/components/dashboard-pages/sales-page"
 import { SettingsPage } from "@/components/dashboard-pages/settings-page"
 import { StoreWarehousePage } from "@/components/dashboard-pages/store-warehouse-page"
-import { UsersPage } from "@/components/dashboard-pages/users-page"
 import { WorkflowPage } from "@/components/dashboard-pages/workflow-page"
 import type { ModuleConfig } from "@/lib/modules"
 
@@ -39,7 +38,6 @@ export const DASHBOARD_PAGES: Record<
   dashboard: DashboardOverviewPage,
   inventory: InventoryPage,
   sales: SalesPage,
-  users: UsersPage,
   expenses: ExpensesPage,
   settings: SettingsPage,
   guide: GuidePage,

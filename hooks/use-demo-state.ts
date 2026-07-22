@@ -18,7 +18,7 @@ export interface DemoState {
 
 export const DEMO_DEFAULTS: DemoState = {
   nav: "grouped",
-  tier: "light",
+  tier: "ultra",
   lockMode: "greyed",
   estimatorLocation: "sell",
   messageLocation: "grow",

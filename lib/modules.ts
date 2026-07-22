@@ -2,6 +2,7 @@ import {
   Award,
   BarChart3,
   BookOpen,
+  Building2,
   Calculator,
   CalendarCheck,
   FileText,
@@ -14,7 +15,9 @@ import {
   Settings,
   ShoppingCart,
   Truck,
+  UserCog,
   Users,
+  Wallet,
   Warehouse,
   Workflow,
   type LucideIcon,
@@ -44,6 +47,9 @@ export interface ModuleConfig {
   tier: Tier
   /** Always shown with an "Add-on" badge, independent of tier locking. */
   addon?: boolean
+  /** Overrides the default `/m/${id}` link target. Used for the flat-view
+   * "Users" entry, which now routes to the People hub instead of its own page. */
+  href?: string
 }
 
 export const MODULES: ModuleConfig[] = [
@@ -203,22 +209,52 @@ export const MODULES: ModuleConfig[] = [
     tier: "light",
   },
   {
-    id: "users",
-    name: "Users",
+    id: "customers",
+    name: "Customers",
     icon: Users,
-    description: "Customers, suppliers, and staff accounts in one place.",
+    description: "Everyone who buys from the store — contact details, purchase history, and loyalty status.",
     features: [
       {
-        name: "Customers",
-        description: "A directory of everyone who buys from the store — contact details and purchase history.",
-      },
-      {
-        name: "Suppliers",
-        description: "A directory of the businesses the store buys stock from.",
+        name: "Customer directory",
+        description: "Contact details, purchase history, and loyalty status for every customer.",
       },
       {
         name: "Audit logs",
-        description: "A record of who added, changed, or removed customer and supplier records. Included in every tier.",
+        description: "A record of who added, changed, or removed customer records. Included in every tier.",
+      },
+    ],
+    tier: "light",
+  },
+  {
+    id: "suppliers",
+    name: "Suppliers",
+    icon: Building2,
+    description: "The businesses the store buys stock from.",
+    features: [
+      {
+        name: "Supplier directory",
+        description: "Contact details, categories supplied, and payment terms for every supplier.",
+      },
+      {
+        name: "Audit logs",
+        description: "A record of changes to supplier records. Included in every tier.",
+      },
+    ],
+    tier: "light",
+  },
+  {
+    id: "staff",
+    name: "Staff",
+    icon: UserCog,
+    description: "Staff accounts and what each person can see and do in the system.",
+    features: [
+      {
+        name: "Staff accounts",
+        description: "A seat for every staff member, with a role controlling what they can access.",
+      },
+      {
+        name: "Audit logs",
+        description: "A record of staff account changes. Included in every tier.",
       },
     ],
     tier: "light",
@@ -482,10 +518,24 @@ export const MODULES: ModuleConfig[] = [
   },
 ]
 
+export type GroupType = "single" | "group" | "hub"
+
 export interface GroupConfig {
   id: string
   label: string
   moduleIds: string[]
+  /**
+   * "single" — one module, pinned (Dashboard).
+   * "group" — a collapsible sidebar group; members have their own interior
+   *   depth, so each gets its own sidebar link.
+   * "hub" — one sidebar item; members are flat sibling lists, so they render
+   *   as tabs inside a single page instead of separate sidebar links.
+   */
+  type: GroupType
+  /** Icon for the hub's own single sidebar entry. Only meaningful when type is "hub". */
+  icon?: LucideIcon
+  /** Page-header subtitle for the hub's tab page. Only meaningful when type is "hub". */
+  description?: string
 }
 
 /**
@@ -493,14 +543,66 @@ export interface GroupConfig {
  * rather than rendered as collapsible groups — see resolveNav().
  */
 export const GROUPS: GroupConfig[] = [
-  { id: "home", label: "Home", moduleIds: ["dashboard"] },
-  { id: "sell", label: "Sell", moduleIds: ["sales", "invoice", "deliveries", "estimator"] },
-  { id: "stock", label: "Stock", moduleIds: ["inventory", "store-warehouse"] },
-  { id: "people", label: "People", moduleIds: ["users"] },
-  { id: "grow", label: "Grow", moduleIds: ["loyalty", "offers-rewards", "affiliates", "appointments", "message"] },
-  { id: "money", label: "Money", moduleIds: ["expenses", "reports"] },
-  { id: "system", label: "System", moduleIds: ["settings", "workflow", "guide"] },
+  { id: "home", label: "Home", moduleIds: ["dashboard"], type: "single" },
+  {
+    id: "sell",
+    label: "Sell",
+    moduleIds: ["sales", "invoice", "deliveries", "estimator"],
+    type: "group",
+  },
+  {
+    id: "stock",
+    label: "Stock",
+    moduleIds: ["inventory", "store-warehouse"],
+    type: "group",
+  },
+  {
+    id: "people",
+    label: "People",
+    moduleIds: ["customers", "suppliers", "staff"],
+    type: "hub",
+    icon: Users,
+    description: "Customers, suppliers, and staff accounts in one place.",
+  },
+  {
+    id: "grow",
+    label: "Grow",
+    moduleIds: ["loyalty", "offers-rewards", "affiliates", "appointments", "message"],
+    type: "group",
+  },
+  {
+    id: "money",
+    label: "Money",
+    moduleIds: ["expenses", "reports"],
+    type: "hub",
+    icon: Wallet,
+    description: "Expenses and cross-module reports for the business.",
+  },
+  {
+    id: "system",
+    label: "System",
+    moduleIds: ["settings", "workflow", "guide"],
+    type: "group",
+  },
 ]
+
+/** Hub tab labels, keyed by the module id used as that tab's content. */
+export const HUB_TABS: Record<string, { hubId: string; tabId: string }> = Object.fromEntries(
+  GROUPS.filter((g) => g.type === "hub").flatMap((g) =>
+    g.moduleIds.map((moduleId) => [moduleId, { hubId: g.id, tabId: moduleId }])
+  )
+)
+
+export function getHub(hubId: string): GroupConfig | undefined {
+  return GROUPS.find((g) => g.id === hubId && g.type === "hub")
+}
+
+/** The path a hub's sidebar entry (and any legacy link to it) should go to — always its first tab. */
+export function hubFirstTabPath(hubId: string): string {
+  const hub = getHub(hubId)
+  const firstTab = hub?.moduleIds[0]
+  return firstTab ? `/${hubId}/${firstTab}` : `/${hubId}`
+}
 
 /** Current sidebar: a flat, ungrouped list in this exact order. */
 export const FLAT_ORDER: string[] = [
@@ -530,6 +632,25 @@ export function getModule(id: string): ModuleConfig | undefined {
   return MODULES_BY_ID.get(id)
 }
 
+/**
+ * The flat view still shows a single "Users" item (matching the current live
+ * platform) — it now routes to the People hub instead of its own page. Not a
+ * real module, so it isn't in MODULES; resolveFlat() substitutes it in.
+ */
+const USERS_FLAT_ENTRY: ModuleConfig = {
+  id: "users",
+  name: "Users",
+  icon: Users,
+  description: "Customers, suppliers, and staff accounts in one place.",
+  features: [
+    { name: "Customers", description: "A directory of everyone who buys from the store." },
+    { name: "Suppliers", description: "A directory of the businesses the store buys stock from." },
+    { name: "Staff", description: "A seat for every staff member, tied to what they do in the system." },
+  ],
+  tier: "light",
+  href: hubFirstTabPath("people"),
+}
+
 export const TIER_LABEL: Record<Tier, string> = {
   light: "Light",
   prime: "Prime",
@@ -544,6 +665,14 @@ export function isModuleLocked(module: ModuleConfig, viewingAsTier: Tier): boole
   return TIER_RANK[module.tier] > TIER_RANK[viewingAsTier]
 }
 
+/**
+ * A hub renders as one sidebar entry that always opens its first tab, so its
+ * lock state (and badge) tracks that first tab's tier, not its other tabs.
+ */
+export function hubModule(group: GroupConfig): ModuleConfig | undefined {
+  return getModule(group.moduleIds[0])
+}
+
 export type EstimatorLocation = "sell" | "system"
 export type MessageLocation = "grow" | "bottom"
 
@@ -552,15 +681,24 @@ export interface NavToggles {
   messageLocation: MessageLocation
 }
 
+export interface ResolvedGroup {
+  id: string
+  label: string
+  type: GroupType
+  /** Only meaningful when type is "hub" — the icon for its single sidebar entry. */
+  icon?: LucideIcon
+  modules: ModuleConfig[]
+}
+
 export interface ResolvedNav {
   /** Pinned at the very top of the sidebar, outside any group. */
   pinned: ModuleConfig[]
-  /** Scrollable collapsible groups, in config order (excludes "home" and "system"). */
-  groups: { id: string; label: string; modules: ModuleConfig[] }[]
+  /** Scrollable collapsible groups and hubs, in config order (excludes "home" and "system"). */
+  groups: ResolvedGroup[]
   /** Pinned near the bottom, above the System group (e.g. Message as a utility item). */
   bottomUtility: ModuleConfig[]
   /** Always pinned at the very bottom. */
-  system: { id: string; label: string; modules: ModuleConfig[] }
+  system: ResolvedGroup
 }
 
 /**
@@ -597,17 +735,22 @@ export function resolveNav(toggles: NavToggles): ResolvedNav {
     groups: middleGroups.map((g) => ({
       id: g.id,
       label: g.label,
+      type: g.type,
+      icon: g.icon,
       modules: toModules(idsByGroup.get(g.id) ?? g.moduleIds),
     })),
     bottomUtility: toModules(bottomUtilityIds),
     system: {
       id: system?.id ?? "system",
       label: system?.label ?? "System",
+      type: system?.type ?? "group",
       modules: toModules(systemIds),
     },
   }
 }
 
 export function resolveFlat(): ModuleConfig[] {
-  return FLAT_ORDER.map(getModule).filter((m): m is ModuleConfig => Boolean(m))
+  return FLAT_ORDER.map((id) => (id === "users" ? USERS_FLAT_ENTRY : getModule(id))).filter(
+    (m): m is ModuleConfig => Boolean(m)
+  )
 }

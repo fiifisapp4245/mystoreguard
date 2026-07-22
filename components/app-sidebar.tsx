@@ -27,10 +27,16 @@ import {
   resolveFlat,
   resolveNav,
   type ModuleConfig,
+  type ResolvedGroup,
 } from "@/lib/modules"
 
-function isActivePath(pathname: string, id: string) {
-  return pathname === `/m/${id}` || (id === "dashboard" && pathname === "/")
+/** Hub entries link via `module.href` (their first tab) rather than `/m/${id}` — matches on the hub's path prefix so any of its tabs count as active. */
+function isModuleActive(pathname: string, module: ModuleConfig) {
+  if (module.href) {
+    const hubId = module.href.split("/")[1]
+    return pathname.startsWith(`/${hubId}`)
+  }
+  return pathname === `/m/${module.id}` || (module.id === "dashboard" && pathname === "/")
 }
 
 function ModuleLink({
@@ -79,13 +85,15 @@ function ModuleLink({
     )
   }
 
+  const href = module.href ?? `/m/${module.id}`
+
   return (
     <SidebarMenuButton
       asChild
       isActive={active}
       className="data-active:bg-primary/10 data-active:text-primary data-active:hover:bg-primary/15 data-active:hover:text-primary"
     >
-      <Link href={`/m/${module.id}${query}`}>{content}</Link>
+      <Link href={`${href}${query}`}>{content}</Link>
     </SidebarMenuButton>
   )
 }
@@ -115,7 +123,7 @@ function ModuleMenu({
         <SidebarMenuItem key={module.id}>
           <ModuleLink
             module={module}
-            active={isActivePath(pathname, module.id)}
+            active={isModuleActive(pathname, module)}
             locked={isModuleLocked(module, state.tier)}
             lockMode={state.lockMode}
             query={query}
@@ -125,6 +133,20 @@ function ModuleMenu({
       ))}
     </SidebarMenu>
   )
+}
+
+/** A hub renders as one sidebar entry — build a module-shaped object for it so ModuleLink can render it identically to a regular item. */
+function hubAsModule(group: ResolvedGroup): ModuleConfig {
+  const firstTab = group.modules[0]
+  return {
+    id: group.id,
+    name: group.label,
+    icon: group.icon ?? firstTab?.icon,
+    description: "",
+    features: [],
+    tier: firstTab?.tier ?? "light",
+    href: `/${group.id}/${firstTab?.id ?? ""}`,
+  }
 }
 
 function CollapsibleGroup({
@@ -206,16 +228,42 @@ export function AppSidebar({ state }: { state: DemoState }) {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            {nav.groups.map((group) => (
-              <CollapsibleGroup key={group.id} label={group.label}>
-                <ModuleMenu
-                  modules={group.modules}
-                  pathname={pathname}
-                  state={state}
-                  onLockedClick={handleLockedClick}
-                />
-              </CollapsibleGroup>
-            ))}
+            {nav.groups.map((group) => {
+              if (group.type === "hub") {
+                const hubModule = hubAsModule(group)
+                const params = demoStateToParams(state).toString()
+
+                return (
+                  <SidebarGroup key={group.id}>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        <SidebarMenuItem>
+                          <ModuleLink
+                            module={hubModule}
+                            active={isModuleActive(pathname, hubModule)}
+                            locked={isModuleLocked(hubModule, state.tier)}
+                            lockMode={state.lockMode}
+                            query={params ? `?${params}` : ""}
+                            onLockedClick={handleLockedClick}
+                          />
+                        </SidebarMenuItem>
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </SidebarGroup>
+                )
+              }
+
+              return (
+                <CollapsibleGroup key={group.id} label={group.label}>
+                  <ModuleMenu
+                    modules={group.modules}
+                    pathname={pathname}
+                    state={state}
+                    onLockedClick={handleLockedClick}
+                  />
+                </CollapsibleGroup>
+              )
+            })}
           </>
         )}
       </SidebarContent>
