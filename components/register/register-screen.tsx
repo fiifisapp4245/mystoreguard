@@ -8,10 +8,11 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { CartPanel } from "@/components/register/cart-panel"
 import { TotalsRail } from "@/components/register/totals-rail"
-import { PaymentSheet } from "@/components/register/payment-sheet"
+import { PaymentSheet, type CheckoutSummary, type ReceiptInfo } from "@/components/register/payment-sheet"
 import { HeldSalesSheet } from "@/components/register/held-sales-sheet"
-import { AddCustomerDialog } from "@/components/hubs/people/add-customer-dialog"
-import { DEFAULT_SHOP_LOCATION_ID, type Customer } from "@/lib/mock-data"
+import { ManagerOverrideDialog } from "@/components/register/manager-override-dialog"
+import { useDemoState } from "@/hooks/use-demo-state"
+import { DEFAULT_SHOP_LOCATION_ID } from "@/lib/mock-data"
 import {
   ALL_PRODUCTS,
   availableAt,
@@ -29,9 +30,33 @@ import {
   type TenderType,
 } from "@/lib/pos-data"
 import { splitStock } from "@/lib/stock-movements-data"
+import {
+  addCreditBalanceForSale,
+  getMember,
+  getProgrammeSettings,
+  recordSaleForMember,
+  redeemPointsOnBehalf,
+  tierForSpend,
+  type LoyaltyMember,
+} from "@/lib/loyalty-data"
+import { findAffiliateByCode, recordReferredSale } from "@/lib/affiliates-data"
+import { redeemGiftCard } from "@/lib/gift-cards-data"
+import { recordPromoCodeUse, validatePromoCode } from "@/lib/promo-codes-data"
+import {
+  computeDiscountBreakdown,
+  getPricingSettings,
+  logOverride,
+  priceFloorFor,
+  type DiscountLine,
+  type DiscountPriorityItem,
+} from "@/lib/pricing-engine-data"
+import { addSaleRecord, nextReceiptNo } from "@/lib/sales-data"
+import { TODAY_ISO } from "@/lib/period-utils"
 
 export function RegisterScreen() {
   const router = useRouter()
+  const { state } = useDemoState()
+  const isUltra = state.tier === "ultra"
 
   const [cart, setCart] = useState<CartLine[]>([])
   const [scanValue, setScanValue] = useState("")
@@ -40,9 +65,16 @@ export function RegisterScreen() {
   const [dropdownIndex, setDropdownIndex] = useState(0)
   const [quickKeysOpen, setQuickKeysOpen] = useState(false)
 
-  const [customer, setCustomer] = useState<Customer | null>(null)
-  const [discount, setDiscount] = useState(0)
-  const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false)
+  const [member, setMember] = useState<LoyaltyMember | null>(null)
+  const [promoCodeInput, setPromoCodeInput] = useState("")
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; discountAmount: number } | null>(null)
+  const [promoError, setPromoError] = useState<string | null>(null)
+  const [affiliateCodeInput, setAffiliateCodeInput] = useState("")
+  const [appliedAffiliate, setAppliedAffiliate] = useState<{ code: string; partnerId: string } | null>(null)
+  const [affiliateError, setAffiliateError] = useState<string | null>(null)
+  const [tierDiscountDismissed, setTierDiscountDismissed] = useState(false)
+  const [overrideOpen, setOverrideOpen] = useState(false)
+  const [overrideApproved, setOverrideApproved] = useState(false)
 
   const [heldSales, setHeldSales] = useState<HeldSale[]>(INITIAL_HELD_SALES)
   const [heldSalesOpen, setHeldSalesOpen] = useState(false)
@@ -50,7 +82,6 @@ export function RegisterScreen() {
   const [paymentOpen, setPaymentOpen] = useState(false)
   const [tender, setTender] = useState<TenderType>("Cash")
 
-  const [addCustomerOpen, setAddCustomerOpen] = useState(false)
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [splitPromptProduct, setSplitPromptProduct] = useState<Product | null>(null)
@@ -66,7 +97,52 @@ export function RegisterScreen() {
   }, [refocusScan])
 
   const subtotal = cartSubtotal(cart)
-  const total = Math.max(0, subtotal - discount)
+
+  const pricingSettings = getPricingSettings()
+  const programmeSettings = getProgrammeSettings()
+  const tierDef = member ? tierForSpend(member.lifetimeSpend, programmeSettings.tiers) : null
+  const tierDiscountAmount =
+    member && tierDef && tierDef.discountPercent > 0 && !tierDiscountDismissed
+      ? Math.round(((subtotal * tierDef.discountPercent) / 100) * 100) / 100
+      : 0
+
+  const discountLines: DiscountLine[] = useMemo(
+    () =>
+      computeDiscountBreakdown(
+        {
+          subtotal,
+          promoCodeDiscount: appliedPromo ? { label: `Promo ${appliedPromo.code}`, amount: appliedPromo.discountAmount } : undefined,
+          tierDiscount:
+            tierDiscountAmount > 0 && member && tierDef
+              ? { label: `${member.tier} member ${tierDef.discountPercent}%`, amount: tierDiscountAmount }
+              : undefined,
+        },
+        pricingSettings
+      ),
+    [subtotal, appliedPromo, tierDiscountAmount, member, tierDef, pricingSettings]
+  )
+
+  const totalDiscount = discountLines.reduce((sum, line) => sum + line.amount, 0)
+  const rawTotal = Math.max(0, subtotal - totalDiscount)
+
+  const cartCostTotal = cart.reduce((sum, line) => sum + line.product.costPrice * line.quantity, 0)
+  const floor = cart.length > 0 ? priceFloorFor(cartCostTotal, undefined, pricingSettings) : 0
+  const breachesFloor = cart.length > 0 && rawTotal < floor
+
+  const total =
+    breachesFloor && pricingSettings.priceFloor.behavior === "cap-at-floor" ? floor : rawTotal
+
+  const priceFloorNote = !breachesFloor
+    ? undefined
+    : pricingSettings.priceFloor.behavior === "block"
+      ? `Below the GHS ${floor.toFixed(2)} margin floor — discount blocked.`
+      : pricingSettings.priceFloor.behavior === "cap-at-floor"
+        ? `Discount capped to protect margin (floor GHS ${floor.toFixed(2)}).`
+        : overrideApproved
+          ? "Approved by manager override."
+          : `Below the GHS ${floor.toFixed(2)} margin floor — manager override required.`
+
+  const chargeDisabled = breachesFloor && pricingSettings.priceFloor.behavior === "block"
 
   const searchMatches = useMemo(
     () => (scanValue.trim() && !looksLikeBarcode(scanValue) ? searchProducts(scanValue) : []),
@@ -199,8 +275,15 @@ export function RegisterScreen() {
 
   function resetSaleState() {
     setCart([])
-    setCustomer(null)
-    setDiscount(0)
+    setMember(null)
+    setPromoCodeInput("")
+    setAppliedPromo(null)
+    setPromoError(null)
+    setAffiliateCodeInput("")
+    setAppliedAffiliate(null)
+    setAffiliateError(null)
+    setTierDiscountDismissed(false)
+    setOverrideApproved(false)
   }
 
   function handleClearCartRequest() {
@@ -222,7 +305,7 @@ export function RegisterScreen() {
     if (cart.length === 0) return
     const sale: HeldSale = {
       id: `hold-${cart[0].product.id}-${cart.length}-${Math.random().toString(36).slice(2, 8)}`,
-      customerName: customer?.name ?? "Walk-in customer",
+      customerName: member?.name ?? "Walk-in customer",
       heldAt: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
       lines: cart,
     }
@@ -242,20 +325,113 @@ export function RegisterScreen() {
     refocusScan()
   }
 
-  function handleCheckoutComplete() {
+  function handleApplyPromoCode() {
+    const trimmed = promoCodeInput.trim()
+    if (!trimmed) return
+    if (pricingSettings.stacking.onePromoCodePerTransaction && appliedPromo) {
+      setPromoError("Only one promo code per transaction — remove the current one first.")
+      return
+    }
+    const categories = Array.from(new Set(cart.map((line) => line.product.category)))
+    const result = validatePromoCode(trimmed, { subtotal, categories, customerTier: member?.tier })
+    if (!result.ok) {
+      setPromoError(result.reason)
+      return
+    }
+    setAppliedPromo({ code: result.promo.id, discountAmount: result.discountAmount })
+    setPromoError(null)
+    setPromoCodeInput("")
+  }
+
+  function handleApplyAffiliateCode() {
+    const trimmed = affiliateCodeInput.trim()
+    if (!trimmed) return
+    const partner = findAffiliateByCode(trimmed)
+    if (!partner) {
+      setAffiliateError("Code not recognised")
+      return
+    }
+    setAppliedAffiliate({ code: partner.code, partnerId: partner.id })
+    setAffiliateError(null)
+    setAffiliateCodeInput("")
+  }
+
+  function handleRemoveDiscountLine(source: DiscountPriorityItem) {
+    if (source === "promo-code") setAppliedPromo(null)
+    if (source === "tier-discount") setTierDiscountDismissed(true)
+  }
+
+  function handleChargeClick() {
+    if (chargeDisabled) return
+    if (breachesFloor && pricingSettings.priceFloor.behavior === "require-override" && !overrideApproved) {
+      setOverrideOpen(true)
+      return
+    }
+    setPaymentOpen(true)
+  }
+
+  function handleOverrideApprove(approvingUser: string, reason: string, note: string | undefined) {
+    logOverride(approvingUser, reason, note, `Sale below price floor (GHS ${floor.toFixed(2)}) — total GHS ${total.toFixed(2)}`)
+    setOverrideApproved(true)
+    setOverrideOpen(false)
+    setPaymentOpen(true)
+  }
+
+  function handleCheckoutComplete(summary: CheckoutSummary): ReceiptInfo {
     for (const line of cart) {
       deductOnHandForSale(line.product.id, line.quantity)
     }
-    setPaymentOpen(false)
-    resetSaleState()
-    toast.success("Sale complete")
-    refocusScan()
+
+    const receiptNo = nextReceiptNo()
+    let pointsEarned: number | undefined
+    let newPointsBalance: number | undefined
+
+    if (member) {
+      pointsEarned = recordSaleForMember(member.id, total, tender === "Credit", programmeSettings)
+      if (tender === "Credit") addCreditBalanceForSale(member.id, total)
+      if (summary.pointsRedeemed) redeemPointsOnBehalf(member.id, summary.pointsRedeemed, "Register")
+      newPointsBalance = getMember(member.id)?.points
+    }
+
+    if (appliedPromo) recordPromoCodeUse(appliedPromo.code)
+    if (appliedAffiliate) recordReferredSale(appliedAffiliate.partnerId, receiptNo, total)
+
+    let giftCardRemainingBalance: number | undefined
+    if (summary.giftCardId && summary.giftCardAppliedAmount) {
+      const result = redeemGiftCard(summary.giftCardId, summary.giftCardAppliedAmount, receiptNo)
+      giftCardRemainingBalance = result.cardRemainingBalance
+    }
+
+    addSaleRecord({
+      id: `sale-${receiptNo}`,
+      receiptNo,
+      customer: member?.name ?? "Walk-in customer",
+      amount: total,
+      type: tender,
+      date: new Date().toLocaleString("en-US", { day: "2-digit", month: "short", hour: "numeric", minute: "2-digit" }),
+      dateISO: TODAY_ISO,
+      cashier: "Adjoa Boateng",
+      status: "Completed",
+      lineItems: cart.map((line) => ({ name: line.product.name, quantity: line.quantity, unitPrice: line.product.sellingPrice })),
+      pointsEarned,
+      newPointsBalance,
+      giftCardRemainingBalance,
+      discountsApplied: discountLines,
+    })
+
+    toast.success("Sale complete", { description: receiptNo })
+
+    return {
+      pointsEarned,
+      newPointsBalance,
+      giftCardRemainingBalance,
+      discountsApplied: discountLines,
+    }
   }
 
-  function handleAddCustomer(newCustomer: Customer) {
-    setCustomer(newCustomer)
-    setAddCustomerOpen(false)
-    toast.success("Customer added", { description: `${newCustomer.name} has been added.` })
+  function handlePaymentDone() {
+    setPaymentOpen(false)
+    resetSaleState()
     refocusScan()
   }
 
@@ -267,8 +443,7 @@ export function RegisterScreen() {
     function onKeyDown(event: KeyboardEvent) {
       const target = event.target as HTMLElement | null
       const isTypingTarget = target?.tagName === "INPUT" || target?.tagName === "TEXTAREA"
-      const anyOverlayOpen =
-        addCustomerOpen || clearConfirmOpen || heldSalesOpen || shortcutsOpen || customerPopoverOpen || splitPromptProduct !== null
+      const anyOverlayOpen = clearConfirmOpen || heldSalesOpen || shortcutsOpen || splitPromptProduct !== null || overrideOpen
 
       if (event.key === "Escape") {
         if (paymentOpen) {
@@ -283,14 +458,14 @@ export function RegisterScreen() {
         } else if (splitPromptProduct !== null) {
           setSplitPromptProduct(null)
           refocusScan()
-        } else if (!addCustomerOpen && !clearConfirmOpen && !customerPopoverOpen) {
+        } else if (!clearConfirmOpen && !overrideOpen) {
           exitRegister()
         }
         return
       }
 
       if (paymentOpen) {
-        if (!isTypingTarget && ["1", "2", "3", "4", "5"].includes(event.key)) {
+        if (!isTypingTarget && ["1", "2", "3", "4", "5", "6", "7"].includes(event.key)) {
           event.preventDefault()
           const map: Record<string, TenderType> = {
             "1": "Cash",
@@ -298,6 +473,8 @@ export function RegisterScreen() {
             "3": "Credit",
             "4": "Deposit",
             "5": "Split",
+            "6": "Gift card",
+            "7": "Points",
           }
           setTender(map[event.key])
         }
@@ -326,7 +503,7 @@ export function RegisterScreen() {
         if (scanValue.trim()) {
           handleScanSubmit()
         } else if (cart.length > 0) {
-          setPaymentOpen(true)
+          handleChargeClick()
         }
         return
       }
@@ -358,11 +535,9 @@ export function RegisterScreen() {
     paymentOpen,
     heldSalesOpen,
     shortcutsOpen,
-    addCustomerOpen,
     clearConfirmOpen,
-    customerPopoverOpen,
-    customer,
     splitPromptProduct,
+    overrideOpen,
   ])
 
   return (
@@ -403,16 +578,27 @@ export function RegisterScreen() {
         />
 
         <TotalsRail
-          customer={customer}
-          onSelectCustomer={setCustomer}
-          onAddCustomer={() => setAddCustomerOpen(true)}
-          onCustomerPopoverOpenChange={setCustomerPopoverOpen}
+          member={member}
+          onAttachMember={setMember}
+          onDetachMember={() => setMember(null)}
           subtotal={subtotal}
-          discount={discount}
-          onDiscountChange={setDiscount}
+          discountLines={discountLines}
+          onRemoveDiscountLine={handleRemoveDiscountLine}
           total={total}
+          priceFloorNote={priceFloorNote}
+          promoCodeInput={promoCodeInput}
+          onPromoCodeInputChange={setPromoCodeInput}
+          onApplyPromoCode={handleApplyPromoCode}
+          promoError={promoError}
+          isUltra={isUltra}
+          affiliateCodeInput={affiliateCodeInput}
+          onAffiliateCodeInputChange={setAffiliateCodeInput}
+          onApplyAffiliateCode={handleApplyAffiliateCode}
+          affiliateError={affiliateError}
+          appliedAffiliateCode={appliedAffiliate?.code}
           cartEmpty={cart.length === 0}
-          onCharge={() => setPaymentOpen(true)}
+          chargeDisabled={chargeDisabled}
+          onChargeClick={handleChargeClick}
           onHold={handleHold}
           onClearCart={handleClearCartRequest}
           heldSalesCount={heldSales.length}
@@ -426,12 +612,22 @@ export function RegisterScreen() {
         open={paymentOpen}
         onOpenChange={setPaymentOpen}
         total={total}
-        customer={customer}
-        onAttachCustomer={setCustomer}
+        member={member}
+        onAttachMember={setMember}
         tender={tender}
         onTenderChange={setTender}
         onComplete={handleCheckoutComplete}
+        onDone={handlePaymentDone}
         onRestoreFocus={refocusScan}
+        isUltra={isUltra}
+        discountsApplied={discountLines}
+      />
+
+      <ManagerOverrideDialog
+        open={overrideOpen}
+        onOpenChange={setOverrideOpen}
+        description={`Total GHS ${total.toFixed(2)} falls below the GHS ${floor.toFixed(2)} margin floor.`}
+        onApprove={handleOverrideApprove}
       />
 
       <HeldSalesSheet
@@ -440,15 +636,6 @@ export function RegisterScreen() {
         heldSales={heldSales}
         onResume={handleResumeHeld}
         onRestoreFocus={refocusScan}
-      />
-
-      <AddCustomerDialog
-        open={addCustomerOpen}
-        onOpenChange={(open) => {
-          setAddCustomerOpen(open)
-          if (!open) refocusScan()
-        }}
-        onAdd={handleAddCustomer}
       />
 
       {clearConfirmOpen && (

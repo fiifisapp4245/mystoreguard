@@ -751,6 +751,8 @@ export interface Quotation {
   convertedToInvoiceId?: string
   /** Deposit taken while Accepted, ahead of conversion to invoice. */
   depositAmount?: number
+  /** Set when this quotation was created from an Attended appointment's "Create quotation" action. */
+  fromAppointmentId?: string
 }
 
 export const QUOTATIONS: Quotation[] = [

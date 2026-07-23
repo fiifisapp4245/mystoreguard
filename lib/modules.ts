@@ -8,6 +8,7 @@ import {
   FileText,
   Gift,
   Handshake,
+  Layers,
   LayoutDashboard,
   MessageSquare,
   Package,
@@ -15,6 +16,8 @@ import {
   Ruler,
   Settings,
   ShoppingCart,
+  SlidersHorizontal,
+  Tag,
   Truck,
   Undo2,
   UserCog,
@@ -329,59 +332,107 @@ export const MODULES: ModuleConfig[] = [
     href: "/deliveries",
   },
   {
-    id: "loyalty",
-    name: "Loyalty",
+    id: "loyalty-members",
+    name: "Members",
     icon: Award,
-    description: "Points, tiers, and customer segments that reward repeat buyers.",
+    description: "Enrolled customers, their points balance, tier, and history.",
+    features: [
+      {
+        name: "Member directory",
+        description: "Every enrolled customer, their tier, points balance, lifetime spend, and last visit.",
+      },
+      {
+        name: "Points ledger",
+        description: "A full history of points earned, redeemed, adjusted, and expired for each member.",
+      },
+      {
+        name: "Manual adjustments",
+        description: "Adjusting points or tier by hand, always with a required reason.",
+      },
+      {
+        name: "Audit logs",
+        description: "A record of changes to member points and tiers. Included in every tier.",
+      },
+    ],
+    tier: "ultra",
+  },
+  {
+    id: "loyalty-segments",
+    name: "Segments",
+    icon: Layers,
+    description: "Automatic customer groups you can act on directly.",
     features: [
       {
         name: "Segments",
-        description: "Automatic grouping of customers by criteria you set, kept current without manual work.",
+        description: "Automatic grouping of customers by criteria you set, kept current on a schedule.",
       },
       {
-        name: "Points",
-        description: "Customers earn points on purchases and redeem them for value later.",
+        name: "Rule builder",
+        description: "Plain-language conditions — no syntax — with a live count of matching customers.",
       },
+      {
+        name: "Send message",
+        description: "Messaging a segment directly, so a group you can see is a group you can act on.",
+      },
+    ],
+    tier: "ultra",
+  },
+  {
+    id: "loyalty-rules",
+    name: "Rules & tiers",
+    icon: SlidersHorizontal,
+    description: "How points are earned and redeemed, and the tiers customers move through.",
+    features: [
       {
         name: "Point rules",
         description: "Your own settings for how points are earned and redeemed.",
       },
       {
         name: "Tiers",
-        description: "Ranked levels such as Bronze / Silver / Gold, based on lifetime spend.",
-      },
-      {
-        name: "Analytics",
-        description: "Reports on your best customers, who's slipping away, and overall customer health.",
-      },
-      {
-        name: "Audit logs",
-        description: "A record of changes to loyalty settings, points, and tiers. Included in every tier.",
+        description: "Ranked levels such as Bronze / Silver / Gold, based on lifetime spend, with their own benefits.",
       },
     ],
     tier: "ultra",
   },
   {
-    id: "offers-rewards",
-    name: "Offers & Rewards",
+    id: "loyalty-analytics",
+    name: "Analytics",
+    icon: BarChart3,
+    description: "How the programme is performing, in plain panels.",
+    features: [
+      {
+        name: "Analytics",
+        description: "Reports on your best customers, who's slipping away, and overall programme ROI.",
+      },
+    ],
+    tier: "ultra",
+  },
+  {
+    id: "gift-cards",
+    name: "Gift cards",
     icon: Gift,
-    description: "Promo codes and gift cards to drive repeat purchases.",
+    description: "Stored-value cards a customer can spend in store later.",
     features: [
       {
         name: "Gift cards",
         description: "Selling stored-value cards a customer can spend in store later — cash up front for the store.",
       },
       {
+        name: "Audit logs",
+        description: "A record of gift card issuance, top-ups, and redemptions. Included in every tier.",
+      },
+    ],
+    tier: "light",
+  },
+  {
+    id: "promo-codes",
+    name: "Promo codes",
+    icon: Tag,
+    description: "Discount codes for campaigns, with control over what they apply to and for how long.",
+    features: [
+      {
         name: "Promo codes",
         description: "Discount codes for campaigns, with control over what they apply to and for how long.",
-      },
-      {
-        name: "Affiliates",
-        description: "Letting referral partners bring in customers, with referrals tracked for reward.",
-      },
-      {
-        name: "Audit logs",
-        description: "A record of changes to gift cards, promo codes, and affiliate arrangements. Included in every tier.",
       },
     ],
     tier: "prime",
@@ -390,7 +441,7 @@ export const MODULES: ModuleConfig[] = [
     id: "affiliates",
     name: "Affiliates",
     icon: Handshake,
-    description: "Referral partners who bring in new customers.",
+    description: "Referral partners who bring in new customers, tracked by a code quoted at the till.",
     features: [
       {
         name: "Referral partners",
@@ -407,11 +458,15 @@ export const MODULES: ModuleConfig[] = [
     id: "appointments",
     name: "Appointments",
     icon: CalendarCheck,
-    description: "Customer bookings for services and consultations.",
+    description: "Customer bookings for services and consultations, calendar-first.",
     features: [
       {
-        name: "Appointments",
-        description: "Booking and managing customer appointments, with a schedule of who is coming in and when.",
+        name: "Calendar",
+        description: "Day, week, and list views of bookings, with staff assigned to each one.",
+      },
+      {
+        name: "Convert to quotation",
+        description: "Turning an attended appointment straight into a quotation, with the customer and link carried over.",
       },
       {
         name: "Audit logs",
@@ -420,6 +475,7 @@ export const MODULES: ModuleConfig[] = [
     ],
     tier: "light",
     addon: true,
+    href: "/appointments",
   },
   {
     id: "workflow",
@@ -519,7 +575,7 @@ export const MODULES: ModuleConfig[] = [
       },
       {
         name: "Pricing rules",
-        description: "Automatic pricing logic for different customer groups, quantities, or conditions.",
+        description: "How discounts stack and apply in priority order, and the price floor that protects margin.",
       },
       {
         name: "Tax",
@@ -665,6 +721,24 @@ export const GROUPS: GroupConfig[] = [
     nestedOnly: true,
   },
   {
+    id: "loyalty",
+    label: "Loyalty",
+    moduleIds: ["loyalty-members", "loyalty-segments", "loyalty-rules", "loyalty-analytics"],
+    type: "hub",
+    icon: Award,
+    description: "Members, segments, and the rules that drive points and tiers.",
+    nestedOnly: true,
+  },
+  {
+    id: "offers-rewards",
+    label: "Offers & Rewards",
+    moduleIds: ["gift-cards", "promo-codes", "affiliates"],
+    type: "hub",
+    icon: Gift,
+    description: "Gift cards, promo codes, and affiliate partners — configuration that only matters at the register.",
+    nestedOnly: true,
+  },
+  {
     id: "sell",
     label: "Sell",
     moduleIds: ["sales", "invoice", "deliveries", "estimator"],
@@ -687,7 +761,7 @@ export const GROUPS: GroupConfig[] = [
   {
     id: "grow",
     label: "Grow",
-    moduleIds: ["loyalty", "offers-rewards", "affiliates", "appointments", "message"],
+    moduleIds: ["loyalty", "offers-rewards", "appointments", "message"],
     type: "group",
   },
   {
@@ -760,7 +834,6 @@ export const FLAT_ORDER: string[] = [
   "deliveries",
   "loyalty",
   "offers-rewards",
-  "affiliates",
   "appointments",
   "workflow",
   "estimator",
@@ -874,6 +947,40 @@ const STOCK_FLAT_ENTRY: ModuleConfig = {
   ],
   tier: "light",
   href: hubFirstTabPath("stock"),
+}
+
+/**
+ * The flat view still shows single "Loyalty" and "Offers & Rewards" items —
+ * they now route to their hubs instead of their own pages. Not real modules,
+ * so they aren't in MODULES; resolveFlat() substitutes them in.
+ */
+const LOYALTY_FLAT_ENTRY: ModuleConfig = {
+  id: "loyalty",
+  name: "Loyalty",
+  icon: Award,
+  description: "Members, segments, and the rules that drive points and tiers.",
+  features: [
+    { name: "Members", description: "Enrolled customers, their points balance, tier, and history." },
+    { name: "Segments", description: "Automatic customer groups you can act on directly." },
+    { name: "Rules & tiers", description: "How points are earned and redeemed, and the tiers customers move through." },
+    { name: "Analytics", description: "How the programme is performing, in plain panels." },
+  ],
+  tier: "ultra",
+  href: hubFirstTabPath("loyalty"),
+}
+
+const OFFERS_REWARDS_FLAT_ENTRY: ModuleConfig = {
+  id: "offers-rewards",
+  name: "Offers & Rewards",
+  icon: Gift,
+  description: "Gift cards, promo codes, and affiliate partners — configuration that only matters at the register.",
+  features: [
+    { name: "Gift cards", description: "Stored-value cards a customer can spend in store later." },
+    { name: "Promo codes", description: "Discount codes for campaigns, with control over what they apply to and for how long." },
+    { name: "Affiliates", description: "Referral partners who bring in new customers, tracked by a code quoted at the till." },
+  ],
+  tier: "light",
+  href: hubFirstTabPath("offers-rewards"),
 }
 
 export const TIER_LABEL: Record<Tier, string> = {
@@ -991,6 +1098,8 @@ export function resolveFlat(): ModuleConfig[] {
     if (id === "estimator") return ESTIMATOR_FLAT_ENTRY
     if (id === "inventory") return INVENTORY_FLAT_ENTRY
     if (id === "stock") return STOCK_FLAT_ENTRY
+    if (id === "loyalty") return LOYALTY_FLAT_ENTRY
+    if (id === "offers-rewards") return OFFERS_REWARDS_FLAT_ENTRY
     return getModule(id)
   }).filter((m): m is ModuleConfig => Boolean(m))
 }

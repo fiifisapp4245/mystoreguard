@@ -8,13 +8,18 @@ export const metadata = {
 export default async function NewQuotationPage({
   searchParams,
 }: {
-  searchParams: Promise<{ edit?: string }>
+  searchParams: Promise<{ edit?: string; fromAppointmentId?: string; customerName?: string; customerPhone?: string }>
 }) {
-  const { edit } = await searchParams
+  const { edit, fromAppointmentId, customerName, customerPhone } = await searchParams
 
   return (
     <>
-      <CreateQuotationScreen editId={edit} />
+      <CreateQuotationScreen
+        editId={edit}
+        fromAppointmentId={fromAppointmentId}
+        prefillCustomerName={customerName}
+        prefillCustomerPhone={customerPhone}
+      />
       <Toaster />
     </>
   )

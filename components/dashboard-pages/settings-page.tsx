@@ -10,6 +10,7 @@ import {
 import { PageHeader } from "@/components/dashboard/page-header"
 import { CostingMethodCard } from "@/components/dashboard-pages/costing-method-card"
 import { LocationsSettingsCard } from "@/components/dashboard-pages/locations-settings-card"
+import { PricingDiscountsCard } from "@/components/dashboard-pages/pricing-discounts-card"
 import { TaxSettingsCard } from "@/components/dashboard-pages/tax-settings-card"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -24,9 +25,9 @@ const ICONS: Record<string, typeof Tag> = {
   "Audit logs": ShieldCheck,
 }
 
-// "Tax"/"Tax rules", "Locations", and "Inventory costing" are folded into bespoke, interactive
-// cards below instead of the generic read-only card.
-const BESPOKE_FEATURES = new Set(["Tax", "Tax rules", "Locations", "Inventory costing"])
+// "Tax"/"Tax rules", "Locations", "Inventory costing", and "Pricing rules" are folded into
+// bespoke, interactive cards below instead of the generic read-only card.
+const BESPOKE_FEATURES = new Set(["Tax", "Tax rules", "Locations", "Inventory costing", "Pricing rules"])
 
 export function SettingsPage({ module }: { module: ModulePageData }) {
   return (
@@ -64,6 +65,7 @@ export function SettingsPage({ module }: { module: ModulePageData }) {
         <TaxSettingsCard />
         <LocationsSettingsCard />
         <CostingMethodCard />
+        <PricingDiscountsCard />
       </div>
     </div>
   )

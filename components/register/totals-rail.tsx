@@ -1,27 +1,38 @@
 "use client"
 
-import { useState } from "react"
-import { History, Tag } from "lucide-react"
+import { History, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CustomerPicker } from "@/components/register/customer-picker"
+import { CustomerIdentificationControl } from "@/components/register/customer-identification-control"
 import { ShortcutsHelp } from "@/components/register/shortcuts-help"
-import { formatGHS, type Customer } from "@/lib/mock-data"
+import { formatGHS } from "@/lib/mock-data"
+import type { LoyaltyMember } from "@/lib/loyalty-data"
+import type { DiscountLine } from "@/lib/pricing-engine-data"
 
 export function TotalsRail({
-  customer,
-  onSelectCustomer,
-  onAddCustomer,
-  onCustomerPopoverOpenChange,
+  member,
+  onAttachMember,
+  onDetachMember,
   subtotal,
-  discount,
-  onDiscountChange,
+  discountLines,
+  onRemoveDiscountLine,
   total,
+  priceFloorNote,
+  promoCodeInput,
+  onPromoCodeInputChange,
+  onApplyPromoCode,
+  promoError,
+  isUltra,
+  affiliateCodeInput,
+  onAffiliateCodeInputChange,
+  onApplyAffiliateCode,
+  affiliateError,
+  appliedAffiliateCode,
   cartEmpty,
-  onCharge,
+  chargeDisabled,
+  onChargeClick,
   onHold,
   onClearCart,
   heldSalesCount,
@@ -29,16 +40,27 @@ export function TotalsRail({
   shortcutsOpen,
   onShortcutsOpenChange,
 }: {
-  customer: Customer | null
-  onSelectCustomer: (customer: Customer | null) => void
-  onAddCustomer: () => void
-  onCustomerPopoverOpenChange: (open: boolean) => void
+  member: LoyaltyMember | null
+  onAttachMember: (member: LoyaltyMember) => void
+  onDetachMember: () => void
   subtotal: number
-  discount: number
-  onDiscountChange: (discount: number) => void
+  discountLines: DiscountLine[]
+  onRemoveDiscountLine: (source: DiscountLine["source"]) => void
   total: number
+  priceFloorNote?: string
+  promoCodeInput: string
+  onPromoCodeInputChange: (value: string) => void
+  onApplyPromoCode: () => void
+  promoError: string | null
+  isUltra: boolean
+  affiliateCodeInput: string
+  onAffiliateCodeInputChange: (value: string) => void
+  onApplyAffiliateCode: () => void
+  affiliateError: string | null
+  appliedAffiliateCode?: string
   cartEmpty: boolean
-  onCharge: () => void
+  chargeDisabled: boolean
+  onChargeClick: () => void
   onHold: () => void
   onClearCart: () => void
   heldSalesCount: number
@@ -46,15 +68,6 @@ export function TotalsRail({
   shortcutsOpen: boolean
   onShortcutsOpenChange: (open: boolean) => void
 }) {
-  const [discountOpen, setDiscountOpen] = useState(false)
-  const [discountInput, setDiscountInput] = useState(discount ? String(discount) : "")
-
-  function applyDiscount() {
-    const value = Number.parseFloat(discountInput)
-    onDiscountChange(Number.isFinite(value) && value > 0 ? value : 0)
-    setDiscountOpen(false)
-  }
-
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-12 shrink-0 items-center justify-between border-b px-4">
@@ -65,12 +78,58 @@ export function TotalsRail({
       <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-4">
         <div>
           <Label className="mb-1.5 text-xs text-muted-foreground">Customer</Label>
-          <CustomerPicker
-            customer={customer}
-            onSelect={onSelectCustomer}
-            onAddNew={onAddCustomer}
-            onOpenChange={onCustomerPopoverOpenChange}
-          />
+          <CustomerIdentificationControl member={member} onAttach={onAttachMember} onDetach={onDetachMember} />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="promo-code-input" className="text-xs text-muted-foreground">
+              Promo code
+            </Label>
+            <div className="flex gap-1.5">
+              <Input
+                id="promo-code-input"
+                value={promoCodeInput}
+                onChange={(e) => onPromoCodeInputChange(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && onApplyPromoCode()}
+                placeholder="e.g. SAVE15"
+                className="uppercase"
+              />
+              <Button variant="outline" onClick={onApplyPromoCode} disabled={!promoCodeInput.trim()}>
+                Apply
+              </Button>
+            </div>
+            {promoError && <p className="text-xs text-destructive">{promoError}</p>}
+          </div>
+
+          {isUltra && (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="affiliate-code-input" className="text-xs text-muted-foreground">
+                Affiliate code (optional)
+              </Label>
+              {appliedAffiliateCode ? (
+                <div className="flex items-center justify-between rounded-md border px-3 py-1.5 text-sm">
+                  <span>{appliedAffiliateCode}</span>
+                  <span className="text-xs text-muted-foreground">Referral noted</span>
+                </div>
+              ) : (
+                <div className="flex gap-1.5">
+                  <Input
+                    id="affiliate-code-input"
+                    value={affiliateCodeInput}
+                    onChange={(e) => onAffiliateCodeInputChange(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && onApplyAffiliateCode()}
+                    placeholder="Quoted by customer"
+                    className="uppercase"
+                  />
+                  <Button variant="outline" onClick={onApplyAffiliateCode} disabled={!affiliateCodeInput.trim()}>
+                    Apply
+                  </Button>
+                </div>
+              )}
+              {affiliateError && <p className="text-xs text-destructive">{affiliateError}</p>}
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-2 rounded-lg border p-4">
@@ -79,57 +138,32 @@ export function TotalsRail({
             <span className="tabular-nums">{formatGHS(subtotal)}</span>
           </div>
 
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Discount</span>
-            {discount > 0 ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setDiscountInput(String(discount))
-                  setDiscountOpen(true)
-                }}
-                className="tabular-nums text-primary hover:underline"
-              >
-                − {formatGHS(discount)}
-              </button>
-            ) : (
-              <Popover open={discountOpen} onOpenChange={setDiscountOpen}>
-                <PopoverTrigger asChild>
-                  <button type="button" className="flex items-center gap-1 text-primary hover:underline">
-                    <Tag className="size-3" />
-                    Add discount
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-56">
-                  <Label htmlFor="discount-amount" className="text-xs text-muted-foreground">
-                    Discount amount (GHS)
-                  </Label>
-                  <Input
-                    id="discount-amount"
-                    type="number"
-                    min="0"
-                    value={discountInput}
-                    onChange={(event) => setDiscountInput(event.target.value)}
-                    onKeyDown={(event) => event.key === "Enter" && applyDiscount()}
-                    className="mt-1.5"
-                    autoFocus
-                  />
-                  <Button size="sm" className="mt-2 w-full" onClick={applyDiscount}>
-                    Apply
-                  </Button>
-                </PopoverContent>
-              </Popover>
-            )}
-          </div>
+          {discountLines.map((line) => (
+            <div key={line.source} className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">{line.label}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="tabular-nums text-primary">− {formatGHS(line.amount)}</span>
+                <button
+                  type="button"
+                  onClick={() => onRemoveDiscountLine(line.source)}
+                  aria-label={`Remove ${line.label}`}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="size-3" />
+                </button>
+              </div>
+            </div>
+          ))}
 
           <div className="mt-2 flex items-center justify-between border-t pt-2">
             <span className="text-lg font-semibold">Total</span>
             <span className="text-3xl font-semibold tabular-nums">{formatGHS(total)}</span>
           </div>
+          {priceFloorNote && <p className="text-xs text-amber-700 dark:text-amber-400">{priceFloorNote}</p>}
         </div>
 
         <div className="mt-auto flex flex-col gap-2">
-          <Button size="lg" className="h-12 text-base" disabled={cartEmpty} onClick={onCharge}>
+          <Button size="lg" className="h-12 text-base" disabled={cartEmpty || chargeDisabled} onClick={onChargeClick}>
             Charge {formatGHS(total)}
           </Button>
           <div className="grid grid-cols-2 gap-2">

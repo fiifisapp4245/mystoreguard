@@ -20,42 +20,69 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { CustomerPicker } from "@/components/register/customer-picker"
-import { formatGHS, type Customer } from "@/lib/mock-data"
+import { CustomerIdentificationControl } from "@/components/register/customer-identification-control"
+import { formatGHS } from "@/lib/mock-data"
 import { MOMO_NETWORKS, type TenderType } from "@/lib/pos-data"
+import { findGiftCardByNumber, type GiftCard } from "@/lib/gift-cards-data"
+import { getProgrammeSettings, pointsToGHS, type LoyaltyMember } from "@/lib/loyalty-data"
 
-const TENDERS: { key: TenderType; label: string; shortcut: string }[] = [
+const BASE_TENDERS: { key: TenderType; label: string; shortcut: string }[] = [
   { key: "Cash", label: "Cash", shortcut: "1" },
   { key: "Momo", label: "Momo", shortcut: "2" },
   { key: "Credit", label: "Credit", shortcut: "3" },
   { key: "Deposit", label: "Deposit", shortcut: "4" },
   { key: "Split", label: "Split", shortcut: "5" },
+  { key: "Gift card", label: "Gift card", shortcut: "6" },
+  { key: "Points", label: "Points", shortcut: "7" },
 ]
 
+const REMAINDER_TENDERS: TenderType[] = ["Cash", "Momo", "Credit", "Deposit"]
 const QUICK_TENDER_AMOUNTS = [50, 100, 200]
+
+export interface CheckoutSummary {
+  giftCardId?: string
+  giftCardAppliedAmount?: number
+  remainderTender?: TenderType
+  pointsRedeemed?: number
+}
+
+export interface ReceiptInfo {
+  pointsEarned?: number
+  newPointsBalance?: number
+  giftCardRemainingBalance?: number
+  discountsApplied: { label: string; amount: number }[]
+}
 
 export function PaymentSheet({
   open,
   onOpenChange,
   total,
-  customer,
-  onAttachCustomer,
+  member,
+  onAttachMember,
   tender,
   onTenderChange,
   onComplete,
+  onDone,
   onRestoreFocus,
+  isUltra,
+  discountsApplied,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   total: number
-  customer: Customer | null
-  onAttachCustomer: (customer: Customer) => void
+  member: LoyaltyMember | null
+  onAttachMember: (member: LoyaltyMember) => void
   tender: TenderType
   onTenderChange: (tender: TenderType) => void
-  onComplete: () => void
+  onComplete: (summary: CheckoutSummary) => ReceiptInfo
+  /** Called once the cashier dismisses the receipt — this is when the sale actually resets, not just when the sheet closes. */
+  onDone: () => void
   onRestoreFocus: () => void
+  isUltra: boolean
+  discountsApplied: { label: string; amount: number }[]
 }) {
   const [stage, setStage] = useState<"select" | "success">("select")
+  const [receipt, setReceipt] = useState<ReceiptInfo | null>(null)
 
   const [cashReceived, setCashReceived] = useState("")
   const [momoNetwork, setMomoNetwork] = useState(MOMO_NETWORKS[0])
@@ -69,6 +96,16 @@ export function PaymentSheet({
   const [splitBAmount, setSplitBAmount] = useState("0")
   const [splitBTender, setSplitBTender] = useState<TenderType>("Momo")
 
+  const [giftCardNumber, setGiftCardNumber] = useState("")
+  const [foundGiftCard, setFoundGiftCard] = useState<GiftCard | null | undefined>(undefined)
+  const [giftCardRemainderTender, setGiftCardRemainderTender] = useState<TenderType>("Cash")
+
+  const programmeSettings = getProgrammeSettings()
+  const maxPointsValue = member ? Math.min(pointsToGHS(member.points), (total * programmeSettings.maxRedemptionPercent) / 100) : 0
+  const maxPointsRedeemable = member ? Math.floor(maxPointsValue / programmeSettings.pointValueGHS) : 0
+  const [pointsToRedeem, setPointsToRedeem] = useState(0)
+  const [pointsRemainderTender, setPointsRemainderTender] = useState<TenderType>("Cash")
+
   // Reset the form the moment the sheet transitions closed → open, so a
   // fresh sale never sees the previous transaction's numbers. Adjusting
   // state during render (rather than in an effect) is the React-sanctioned
@@ -78,6 +115,7 @@ export function PaymentSheet({
     setWasOpen(open)
     if (open) {
       setStage("select")
+      setReceipt(null)
       setCashReceived("")
       setMomoAmount(String(total))
       setMomoReference("")
@@ -86,6 +124,9 @@ export function PaymentSheet({
       setDepositDueDate("")
       setSplitAAmount(String(total))
       setSplitBAmount("0")
+      setGiftCardNumber("")
+      setFoundGiftCard(undefined)
+      setPointsToRedeem(0)
     }
   }
 
@@ -103,26 +144,62 @@ export function PaymentSheet({
     setCashReceived((prev) => prev.slice(0, -1))
   }
 
+  function handleCheckGiftCard() {
+    const trimmed = giftCardNumber.trim()
+    if (!trimmed) return
+    setFoundGiftCard(findGiftCardByNumber(trimmed) ?? null)
+  }
+
+  const giftCardCoversAll = foundGiftCard ? foundGiftCard.balance >= total : false
+  const giftCardApplied = foundGiftCard ? Math.min(foundGiftCard.balance, total) : 0
+  const giftCardRemainder = Math.max(0, total - giftCardApplied)
+
+  const pointsValueApplied = pointsToRedeem * programmeSettings.pointValueGHS
+  const pointsRemainder = Math.max(0, total - pointsValueApplied)
+
+  const tenders = BASE_TENDERS.filter((t) => {
+    if (t.key === "Points") return isUltra && member && member.points >= programmeSettings.minPointsToRedeem
+    return true
+  })
+
   const canConfirm =
     tender === "Cash"
       ? receivedValue >= total
       : tender === "Momo"
         ? momoReference.trim().length > 0 && Number.parseFloat(momoAmount) > 0
         : tender === "Credit"
-          ? Boolean(customer) && creditDueDate.trim().length > 0
+          ? Boolean(member) && creditDueDate.trim().length > 0
           : tender === "Deposit"
             ? Number.parseFloat(depositAmount) > 0 &&
               Number.parseFloat(depositAmount) <= total &&
               depositDueDate.trim().length > 0
-            : // Split
-              Math.abs((Number.parseFloat(splitAAmount) || 0) + (Number.parseFloat(splitBAmount) || 0) - total) < 0.01
+            : tender === "Split"
+              ? Math.abs((Number.parseFloat(splitAAmount) || 0) + (Number.parseFloat(splitBAmount) || 0) - total) < 0.01
+              : tender === "Gift card"
+                ? Boolean(foundGiftCard) && foundGiftCard!.status === "Active" && (giftCardCoversAll || Boolean(giftCardRemainderTender))
+                : // Points
+                  pointsToRedeem > 0 && (pointsValueApplied >= total || Boolean(pointsRemainderTender))
 
   function handleConfirm() {
     if (!canConfirm) return
+    const summary =
+      tender === "Gift card"
+        ? {
+            giftCardId: foundGiftCard!.id,
+            giftCardAppliedAmount: giftCardApplied,
+            remainderTender: giftCardCoversAll ? undefined : giftCardRemainderTender,
+          }
+        : tender === "Points"
+          ? { pointsRedeemed: pointsToRedeem, remainderTender: pointsValueApplied >= total ? undefined : pointsRemainderTender }
+          : {}
+    const result = onComplete(summary)
+    setReceipt(result)
     setStage("success")
-    window.setTimeout(() => {
-      onComplete()
-    }, 2200)
+  }
+
+  function handleDone() {
+    onOpenChange(false)
+    onDone()
   }
 
   return (
@@ -151,22 +228,64 @@ export function PaymentSheet({
           <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 py-8 text-center">
             <CheckCircle2 className="size-12 text-success" />
             <p className="text-2xl font-semibold">{formatGHS(total)} received</p>
+
+            <div className="flex w-full flex-col gap-1.5 rounded-lg border p-3 text-left text-sm">
+              {receipt?.discountsApplied.map((line) => (
+                <div key={line.label} className="flex items-center justify-between text-muted-foreground">
+                  <span>{line.label}</span>
+                  <span>− {formatGHS(line.amount)}</span>
+                </div>
+              ))}
+              {receipt?.pointsEarned !== undefined && (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Points earned</span>
+                  <span className="font-medium">+{receipt.pointsEarned}</span>
+                </div>
+              )}
+              {receipt?.newPointsBalance !== undefined && (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">New points balance</span>
+                  <span className="font-medium">{receipt.newPointsBalance}</span>
+                </div>
+              )}
+              {receipt?.giftCardRemainingBalance !== undefined && (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Gift card balance remaining</span>
+                  <span className="font-medium">{formatGHS(receipt.giftCardRemainingBalance)}</span>
+                </div>
+              )}
+              {!receipt?.discountsApplied.length &&
+                receipt?.pointsEarned === undefined &&
+                receipt?.giftCardRemainingBalance === undefined && <p className="text-muted-foreground">No discounts or loyalty activity on this sale.</p>}
+            </div>
+
             <div className="flex gap-2">
-              <Button variant="outline" onClick={onComplete}>
+              <Button variant="outline" onClick={handleDone}>
                 Print
               </Button>
-              <Button variant="outline" onClick={onComplete}>
+              <Button variant="outline" onClick={handleDone}>
                 Send SMS
               </Button>
-              <Button variant="outline" onClick={onComplete}>
+              <Button variant="outline" onClick={handleDone}>
                 No receipt
               </Button>
             </div>
           </div>
         ) : (
           <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4">
-            <div className="grid grid-cols-5 gap-1.5">
-              {TENDERS.map((t) => (
+            {discountsApplied.length > 0 && (
+              <div className="flex flex-col gap-1 rounded-lg bg-muted/60 p-2.5 text-xs">
+                {discountsApplied.map((line) => (
+                  <div key={line.label} className="flex items-center justify-between text-muted-foreground">
+                    <span>{line.label}</span>
+                    <span>− {formatGHS(line.amount)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="grid grid-cols-4 gap-1.5">
+              {tenders.map((t) => (
                 <button
                   key={t.key}
                   type="button"
@@ -257,22 +376,18 @@ export function PaymentSheet({
 
             {tender === "Credit" && (
               <div className="flex flex-col gap-3">
-                {!customer ? (
+                {!member ? (
                   <div className="flex flex-col gap-2 rounded-lg border border-dashed p-3">
                     <p className="text-sm text-muted-foreground">Attach a customer to sell on credit.</p>
-                    <CustomerPicker
-                      customer={customer}
-                      onSelect={(selected) => selected && onAttachCustomer(selected)}
-                      onAddNew={() => {}}
-                    />
+                    <CustomerIdentificationControl member={null} onAttach={onAttachMember} onDetach={() => {}} />
                   </div>
                 ) : (
                   <>
                     <div className="rounded-lg border p-3">
-                      <p className="text-sm font-medium">{customer.name}</p>
-                      {customer.creditBalance > 0 && (
+                      <p className="text-sm font-medium">{member.name}</p>
+                      {member.creditBalance > 0 && (
                         <p className="text-sm text-amber-700 dark:text-amber-400">
-                          Already owes {formatGHS(customer.creditBalance)} from past credit sales
+                          Already owes {formatGHS(member.creditBalance)} from past credit sales
                         </p>
                       )}
                     </div>
@@ -342,6 +457,113 @@ export function PaymentSheet({
                     {formatGHS(total)}
                   </span>
                 </div>
+              </div>
+            )}
+
+            {tender === "Gift card" && (
+              <div className="flex flex-col gap-3">
+                <div className="flex gap-1.5">
+                  <Input
+                    value={giftCardNumber}
+                    onChange={(e) => {
+                      setGiftCardNumber(e.target.value)
+                      setFoundGiftCard(undefined)
+                    }}
+                    onKeyDown={(e) => e.key === "Enter" && handleCheckGiftCard()}
+                    placeholder="Card number — scan or type"
+                  />
+                  <Button variant="outline" onClick={handleCheckGiftCard}>
+                    Check
+                  </Button>
+                </div>
+                {foundGiftCard === null && <p className="text-sm text-destructive">Card not recognised.</p>}
+                {foundGiftCard && foundGiftCard.status !== "Active" && (
+                  <p className="text-sm text-destructive">This card is {foundGiftCard.status.toLowerCase()} and can&apos;t be used.</p>
+                )}
+                {foundGiftCard && foundGiftCard.status === "Active" && (
+                  <>
+                    <div className="rounded-lg border p-3 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Card balance</span>
+                        <span className="font-medium">{formatGHS(foundGiftCard.balance)}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Applied to this sale</span>
+                        <span className="font-medium">{formatGHS(giftCardApplied)}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Balance after sale</span>
+                        <span className="font-medium">{formatGHS(foundGiftCard.balance - giftCardApplied)}</span>
+                      </div>
+                    </div>
+                    {!giftCardCoversAll && (
+                      <div className="flex flex-col gap-1.5 rounded-lg border border-dashed p-3">
+                        <p className="text-sm text-muted-foreground">
+                          Card doesn&apos;t cover the total — {formatGHS(giftCardRemainder)} remaining goes to:
+                        </p>
+                        <Select value={giftCardRemainderTender} onValueChange={(v) => setGiftCardRemainderTender(v as TenderType)}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {REMAINDER_TENDERS.map((t) => (
+                              <SelectItem key={t} value={t}>
+                                {t}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
+            {tender === "Points" && member && (
+              <div className="flex flex-col gap-3">
+                <div className="rounded-lg border p-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Points available</span>
+                    <span className="font-medium">{member.points}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Max redeemable this sale</span>
+                    <span className="font-medium">
+                      {maxPointsRedeemable} pts ({formatGHS(maxPointsValue)}, capped at {programmeSettings.maxRedemptionPercent}% of total)
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label>Points to redeem</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={maxPointsRedeemable}
+                    value={pointsToRedeem}
+                    onChange={(e) => setPointsToRedeem(Math.max(0, Math.min(maxPointsRedeemable, Number.parseInt(e.target.value, 10) || 0)))}
+                  />
+                  <p className="text-xs text-muted-foreground">Worth {formatGHS(pointsValueApplied)}</p>
+                </div>
+                {pointsValueApplied < total && pointsToRedeem > 0 && (
+                  <div className="flex flex-col gap-1.5 rounded-lg border border-dashed p-3">
+                    <p className="text-sm text-muted-foreground">
+                      Points don&apos;t cover the total — {formatGHS(pointsRemainder)} remaining goes to:
+                    </p>
+                    <Select value={pointsRemainderTender} onValueChange={(v) => setPointsRemainderTender(v as TenderType)}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {REMAINDER_TENDERS.map((t) => (
+                          <SelectItem key={t} value={t}>
+                            {t}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
             )}
 

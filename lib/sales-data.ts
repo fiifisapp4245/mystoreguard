@@ -3,7 +3,7 @@
  * People hub's convention.
  */
 
-export type SaleTenderType = "Cash" | "Momo" | "Credit" | "Deposit" | "On-hold"
+export type SaleTenderType = "Cash" | "Momo" | "Credit" | "Deposit" | "On-hold" | "Split" | "Gift card" | "Points"
 export type SaleStatus = "Completed" | "Pending" | "On hold"
 
 export interface SaleLineItem {
@@ -26,6 +26,11 @@ export interface SaleRecord {
   status: SaleStatus
   lineItems: SaleLineItem[]
   momoReference?: string
+  /** Set when a loyalty member was attached at checkout. */
+  pointsEarned?: number
+  newPointsBalance?: number
+  giftCardRemainingBalance?: number
+  discountsApplied?: { label: string; amount: number }[]
 }
 
 export const SALES_RECORDS: SaleRecord[] = [
@@ -446,3 +451,25 @@ export const REFUND_METHODS = ["Cash refund", "Store credit", "Exchange"]
  * here so existing imports keep working.
  */
 export { TODAY_ISO as SALES_TODAY_ISO } from "@/lib/period-utils"
+
+let salesRecordsStore: SaleRecord[] = [...SALES_RECORDS]
+
+export function getSalesRecordsStore(): SaleRecord[] {
+  return salesRecordsStore
+}
+
+export function setSalesRecordsStore(next: SaleRecord[]): void {
+  salesRecordsStore = next
+}
+
+export function nextReceiptNo(): string {
+  const numbers = salesRecordsStore
+    .map((s) => Number.parseInt(s.receiptNo.replace(/^RCT-/, ""), 10))
+    .filter((n) => !Number.isNaN(n))
+  return `RCT-${Math.max(0, ...numbers) + 1}`
+}
+
+/** Register checkout completes here — the one place a real SaleRecord gets created. */
+export function addSaleRecord(sale: SaleRecord): void {
+  salesRecordsStore = [sale, ...salesRecordsStore]
+}

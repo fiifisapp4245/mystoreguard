@@ -36,6 +36,7 @@ import {
   type QuotationLineItem,
   type QuotationStatus,
 } from "@/lib/estimator-data"
+import { linkQuotationToAppointment } from "@/lib/appointments-data"
 import { TODAY_ISO } from "@/lib/period-utils"
 
 type CreationPath = "template" | "catalogue"
@@ -46,7 +47,18 @@ interface MeasurementUnit {
   fieldValues: Record<string, string>
 }
 
-export function CreateQuotationScreen({ editId }: { editId?: string }) {
+export function CreateQuotationScreen({
+  editId,
+  fromAppointmentId,
+  prefillCustomerName,
+  prefillCustomerPhone,
+}: {
+  editId?: string
+  /** Set when arriving from an Attended appointment's "Create quotation" action. */
+  fromAppointmentId?: string
+  prefillCustomerName?: string
+  prefillCustomerPhone?: string
+}) {
   const router = useRouter()
   const { state } = useDemoState()
   const storeLabel = STORE_PERSONA_LABEL.larry
@@ -75,10 +87,12 @@ export function CreateQuotationScreen({ editId }: { editId?: string }) {
     existingQuotation && !existingQuotation.templateId ? existingQuotation.lineItems : []
   )
 
-  const [customer, setCustomer] = useState<Customer | null>(
-    () => LARRY_CUSTOMERS.find((c) => c.name === existingQuotation?.customer) ?? null
-  )
-  const [customerName, setCustomerName] = useState(existingQuotation?.customer ?? "")
+  const [customer, setCustomer] = useState<Customer | null>(() => {
+    if (existingQuotation) return LARRY_CUSTOMERS.find((c) => c.name === existingQuotation.customer) ?? null
+    if (prefillCustomerPhone) return LARRY_CUSTOMERS.find((c) => c.phone === prefillCustomerPhone) ?? null
+    return null
+  })
+  const [customerName, setCustomerName] = useState(existingQuotation?.customer ?? prefillCustomerName ?? "")
   const [addCustomerOpen, setAddCustomerOpen] = useState(false)
 
   const [validUntil, setValidUntil] = useState(existingQuotation?.validUntil ?? "")
@@ -191,6 +205,7 @@ export function CreateQuotationScreen({ editId }: { editId?: string }) {
       note: note.trim() || undefined,
       convertedToInvoiceId: existingQuotation?.convertedToInvoiceId,
       depositAmount: existingQuotation?.depositAmount,
+      fromAppointmentId: existingQuotation?.fromAppointmentId ?? fromAppointmentId,
     }
 
     const current = getQuotationsStore()
@@ -198,6 +213,10 @@ export function CreateQuotationScreen({ editId }: { editId?: string }) {
       setQuotationsStore(current.map((q) => (q.id === id ? newQuotation : q)))
     } else {
       setQuotationsStore([newQuotation, ...current])
+    }
+
+    if (!existingQuotation && fromAppointmentId) {
+      linkQuotationToAppointment(true, fromAppointmentId, id)
     }
 
     toast.success(existingQuotation ? "Quotation updated" : "Quotation created", {
@@ -219,6 +238,9 @@ export function CreateQuotationScreen({ editId }: { editId?: string }) {
           <X className="size-4" />
         </Button>
         <span className="ml-2 text-sm font-medium">{existingQuotation ? "Edit quotation" : "New quotation"}</span>
+        {fromAppointmentId && !existingQuotation && (
+          <span className="ml-2 text-xs text-muted-foreground">From appointment {fromAppointmentId}</span>
+        )}
       </div>
 
       <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[40%_60%]">

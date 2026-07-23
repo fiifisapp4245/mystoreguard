@@ -604,9 +604,9 @@ export const ATTENTION_ITEMS: AttentionItem[] = [
   {
     id: "appointments-today",
     moduleId: "appointments",
-    href: "/m/appointments",
+    href: "/appointments",
     line: "Appointments today",
-    amount: "4",
+    amount: "0",
   },
   {
     id: "staff-invite",

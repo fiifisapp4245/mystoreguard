@@ -1,12 +1,9 @@
 import type { ComponentType } from "react"
 
-import { AffiliatesPage } from "@/components/dashboard-pages/affiliates-page"
 import { DashboardOverviewPage } from "@/components/dashboard-pages/dashboard-overview"
 import { ExpensesPage } from "@/components/dashboard-pages/expenses-page"
 import { GuidePage } from "@/components/dashboard-pages/guide-page"
-import { LoyaltyPage } from "@/components/dashboard-pages/loyalty-page"
 import { MessagePage } from "@/components/dashboard-pages/message-page"
-import { OffersRewardsPage } from "@/components/dashboard-pages/offers-rewards-page"
 import { ReportsPage } from "@/components/dashboard-pages/reports-page"
 import { SettingsPage } from "@/components/dashboard-pages/settings-page"
 import { WorkflowPage } from "@/components/dashboard-pages/workflow-page"
@@ -20,25 +17,20 @@ import type { ModuleConfig } from "@/lib/modules"
 export type ModulePageData = Omit<ModuleConfig, "icon">
 
 /**
- * Custom-designed pages, keyed by module id. All 18 modules are covered now
- * (Light, Prime, and Ultra) — the generic placeholder in ModulePage is kept
- * as a fallback for any future module added without a custom page yet.
+ * Custom-designed pages, keyed by module id. Loyalty and Offers & Rewards are
+ * now hubs (see lib/modules.ts) with their own tab pages, not flat modules —
+ * they're no longer registered here. The generic placeholder in ModulePage is
+ * kept as a fallback for any future module added without a custom page yet.
  */
 export const DASHBOARD_PAGES: Record<
   string,
   ComponentType<{ module: ModulePageData }>
 > = {
-  // Light
   dashboard: DashboardOverviewPage,
   expenses: ExpensesPage,
   settings: SettingsPage,
   guide: GuidePage,
-  // Prime
   reports: ReportsPage,
   message: MessagePage,
-  "offers-rewards": OffersRewardsPage,
-  // Ultra
-  loyalty: LoyaltyPage,
-  affiliates: AffiliatesPage,
   workflow: WorkflowPage,
 }

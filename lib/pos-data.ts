@@ -253,7 +253,7 @@ export function cartSubtotal(lines: CartLine[]): number {
   return lines.reduce((sum, line) => sum + cartLineTotal(line), 0)
 }
 
-export type TenderType = "Cash" | "Momo" | "Credit" | "Deposit" | "Split"
+export type TenderType = "Cash" | "Momo" | "Credit" | "Deposit" | "Split" | "Gift card" | "Points"
 
 export const MOMO_NETWORKS = ["MTN", "Telecel", "AirtelTigo"]
 

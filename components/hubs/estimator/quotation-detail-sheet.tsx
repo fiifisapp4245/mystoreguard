@@ -55,6 +55,12 @@ export function QuotationDetailSheet({
                   <span className="text-muted-foreground">Valid until</span>
                   <span>{formatDateDisplay(quotation.validUntil)}</span>
                 </div>
+                {quotation.fromAppointmentId && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Source</span>
+                    <span className="font-medium">From appointment {quotation.fromAppointmentId}</span>
+                  </div>
+                )}
                 {quotation.convertedToInvoiceId && (
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Converted to</span>

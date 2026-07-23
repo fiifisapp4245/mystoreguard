@@ -1,3 +1,8 @@
+"use client"
+
+import { useSearchParams } from "next/navigation"
+import { Megaphone } from "lucide-react"
+
 import { PageHeader } from "@/components/dashboard/page-header"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
@@ -5,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { ModulePageData } from "@/components/dashboard-pages/registry"
+import { getSegmentsStore } from "@/lib/loyalty-data"
 
 const STATS = [
   {
@@ -28,9 +34,28 @@ const MESSAGES = [
 ]
 
 export function MessagePage({ module }: { module: ModulePageData }) {
+  const searchParams = useSearchParams()
+  const segmentId = searchParams.get("segment")
+  const count = searchParams.get("count")
+  const segment = segmentId ? getSegmentsStore().find((s) => s.id === segmentId) : undefined
+
   return (
     <div className="flex flex-1 flex-col gap-6">
       <PageHeader title={module.name} subtitle={module.description} search="Search messages..." />
+
+      {segment && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="flex items-center gap-3 py-4">
+            <Megaphone className="size-5 shrink-0 text-primary" aria-hidden="true" />
+            <div className="text-sm">
+              <p className="font-medium">
+                Composing to segment: {segment.name} {count ? `(${count} customers)` : ""}
+              </p>
+              <p className="text-muted-foreground">{segment.description} — visual only, no compose flow is wired up in this prototype.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {STATS.map((stat) => (
