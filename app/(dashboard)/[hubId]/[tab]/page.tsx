@@ -12,7 +12,6 @@ import { AnalyticsTab } from "@/components/hubs/loyalty/analytics-tab"
 import { MembersTab } from "@/components/hubs/loyalty/members-tab"
 import { RulesTiersTab } from "@/components/hubs/loyalty/rules-tiers-tab"
 import { SegmentsTab } from "@/components/hubs/loyalty/segments-tab"
-import { MoneyHubTab } from "@/components/hubs/money-hub-tab"
 import { AffiliatesTab } from "@/components/hubs/offers/affiliates-tab"
 import { GiftCardsTab } from "@/components/hubs/offers/gift-cards-tab"
 import { PromoCodesTab } from "@/components/hubs/offers/promo-codes-tab"
@@ -25,6 +24,14 @@ import { MovementsTab } from "@/components/hubs/stock/movements-tab"
 import { StockLevelsTab } from "@/components/hubs/stock/stock-levels-tab"
 import { StocktakesTab } from "@/components/hubs/stock/stocktakes-tab"
 import { TabGate } from "@/components/hubs/tab-gate"
+import { DayCloseTab } from "@/components/hubs/money/day-close-tab"
+import { ExpensesTab } from "@/components/hubs/money/expenses-tab"
+import { MoneyOwedTab } from "@/components/hubs/money/money-owed-tab"
+import { ReportsTab } from "@/components/hubs/money/reports-tab"
+import { AutomatedTab } from "@/components/hubs/message/automated-tab"
+import { ComposeTab } from "@/components/hubs/message/compose-tab"
+import { HistoryTab } from "@/components/hubs/message/history-tab"
+import { TemplatesTab as MessageTemplatesTab } from "@/components/hubs/message/templates-tab"
 import { GROUPS, getHub, getModule } from "@/lib/modules"
 
 export function generateStaticParams() {
@@ -87,7 +94,14 @@ export default async function HubTabPage({
       {hubId === "offers-rewards" && tab === "gift-cards" && <TabGate moduleId="gift-cards"><GiftCardsTab /></TabGate>}
       {hubId === "offers-rewards" && tab === "promo-codes" && <TabGate moduleId="promo-codes"><PromoCodesTab /></TabGate>}
       {hubId === "offers-rewards" && tab === "affiliates" && <TabGate moduleId="affiliates"><AffiliatesTab /></TabGate>}
-      {hubId === "money" && <MoneyHubTab moduleId={tab} />}
+      {hubId === "money" && tab === "expenses" && <TabGate moduleId="expenses"><ExpensesTab /></TabGate>}
+      {hubId === "money" && tab === "money-owed" && <TabGate moduleId="money-owed"><MoneyOwedTab /></TabGate>}
+      {hubId === "money" && tab === "reports" && <TabGate moduleId="reports"><ReportsTab /></TabGate>}
+      {hubId === "money" && tab === "day-close" && <TabGate moduleId="day-close"><DayCloseTab /></TabGate>}
+      {hubId === "message" && tab === "message-compose" && <TabGate moduleId="message-compose"><ComposeTab /></TabGate>}
+      {hubId === "message" && tab === "message-automated" && <TabGate moduleId="message-automated"><AutomatedTab /></TabGate>}
+      {hubId === "message" && tab === "message-history" && <TabGate moduleId="message-history"><HistoryTab /></TabGate>}
+      {hubId === "message" && tab === "message-templates" && <TabGate moduleId="message-templates"><MessageTemplatesTab /></TabGate>}
     </div>
   )
 }

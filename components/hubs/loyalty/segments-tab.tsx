@@ -96,7 +96,7 @@ export function SegmentsTab() {
   }
 
   function handleSendMessage(segment: Segment, count: number) {
-    router.push(withDemoQuery(`/m/message?segment=${segment.id}&count=${count}`))
+    router.push(withDemoQuery(`/message/message-compose?segment=${segment.id}&count=${count}`))
   }
 
   return (

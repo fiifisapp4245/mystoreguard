@@ -350,7 +350,7 @@ export function DeliveriesScreen() {
         <DeliveryBoard deliveries={filtered} onSelect={setSelected} />
       )}
 
-      <RiderReconciliationPanel deliveries={deliveries} />
+      <RiderReconciliationPanel />
 
       <DeliveryDetailSheet
         delivery={selected}

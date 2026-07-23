@@ -43,6 +43,8 @@ export interface LoyaltyMember {
   creditBalance: number
   /** Value held on this member's account they can spend on future purchases. */
   storeCredit: number
+  /** "Send me offers and updates" — unchecked by default. Only gates promotional sends; transactional messages are unaffected. Replying STOP sets this to false automatically. */
+  marketingConsent?: boolean
 }
 
 function daysBetween(fromISO: string, toISO: string): number {
@@ -470,6 +472,7 @@ export interface EnrolMemberInput {
   phone: string
   name: string
   area?: string
+  marketingConsent?: boolean
 }
 
 export function enrolMember(input: EnrolMemberInput): LoyaltyMember {
@@ -489,9 +492,16 @@ export function enrolMember(input: EnrolMemberInput): LoyaltyMember {
     ledger: [{ id: nextLedgerId(), dateISO: TODAY_ISO, type: "Earned", points: 0, source: "Enrolled at register" }],
     creditBalance: 0,
     storeCredit: 0,
+    marketingConsent: input.marketingConsent ?? false,
   }
   loyaltyMembersStore = [member, ...loyaltyMembersStore]
   return member
+}
+
+/** A reply of STOP turns off promotional consent automatically — transactional messages are unaffected. */
+export function processStopReply(phone: string): void {
+  const trimmed = phone.replace(/\s/g, "")
+  loyaltyMembersStore = loyaltyMembersStore.map((m) => (m.phone.replace(/\s/g, "") === trimmed ? { ...m, marketingConsent: false } : m))
 }
 
 /** A Credit-tender sale adds to what the member owes the store. */

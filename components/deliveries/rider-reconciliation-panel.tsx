@@ -6,34 +6,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { formatGHS } from "@/lib/mock-data"
-import { getRider, type Delivery } from "@/lib/deliveries-data"
+import { getRiderCodSummary } from "@/lib/deliveries-data"
 import { TODAY_ISO } from "@/lib/period-utils"
 
-interface RiderRow {
-  riderId: string
-  riderName: string
-  completed: number
-  expected: number
-  collected: number
-}
-
-export function RiderReconciliationPanel({ deliveries }: { deliveries: Delivery[] }) {
+export function RiderReconciliationPanel() {
   const [reconciled, setReconciled] = useState<Record<string, string>>({})
 
-  const todays = deliveries.filter((d) => d.scheduledDateISO === TODAY_ISO && d.riderId && d.status !== "Cancelled")
-  const byRider = new Map<string, RiderRow>()
-
-  for (const delivery of todays) {
-    const riderId = delivery.riderId!
-    const rider = getRider(riderId)
-    const row = byRider.get(riderId) ?? { riderId, riderName: rider?.name ?? riderId, completed: 0, expected: 0, collected: 0 }
-    if (delivery.status === "Delivered") row.completed += 1
-    if (delivery.isCod && delivery.status !== "Failed") row.expected += delivery.codAmount
-    if (delivery.proof?.cashCollected) row.collected += delivery.proof.cashCollected
-    byRider.set(riderId, row)
-  }
-
-  const rows = Array.from(byRider.values())
+  const rows = getRiderCodSummary(TODAY_ISO)
 
   function handleReconcile(riderId: string) {
     setReconciled((prev) => ({ ...prev, [riderId]: "6:15 pm by Adwoa" }))

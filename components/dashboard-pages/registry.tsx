@@ -1,10 +1,7 @@
 import type { ComponentType } from "react"
 
 import { DashboardOverviewPage } from "@/components/dashboard-pages/dashboard-overview"
-import { ExpensesPage } from "@/components/dashboard-pages/expenses-page"
 import { GuidePage } from "@/components/dashboard-pages/guide-page"
-import { MessagePage } from "@/components/dashboard-pages/message-page"
-import { ReportsPage } from "@/components/dashboard-pages/reports-page"
 import { SettingsPage } from "@/components/dashboard-pages/settings-page"
 import { WorkflowPage } from "@/components/dashboard-pages/workflow-page"
 import type { ModuleConfig } from "@/lib/modules"
@@ -17,20 +14,18 @@ import type { ModuleConfig } from "@/lib/modules"
 export type ModulePageData = Omit<ModuleConfig, "icon">
 
 /**
- * Custom-designed pages, keyed by module id. Loyalty and Offers & Rewards are
- * now hubs (see lib/modules.ts) with their own tab pages, not flat modules —
- * they're no longer registered here. The generic placeholder in ModulePage is
- * kept as a fallback for any future module added without a custom page yet.
+ * Custom-designed pages, keyed by module id. Loyalty, Offers & Rewards,
+ * Money, and Message are all hubs (see lib/modules.ts) with their own tab
+ * pages, not flat modules — they're no longer registered here. The generic
+ * placeholder in ModulePage is kept as a fallback for any future module
+ * added without a custom page yet.
  */
 export const DASHBOARD_PAGES: Record<
   string,
   ComponentType<{ module: ModulePageData }>
 > = {
   dashboard: DashboardOverviewPage,
-  expenses: ExpensesPage,
   settings: SettingsPage,
   guide: GuidePage,
-  reports: ReportsPage,
-  message: MessagePage,
   workflow: WorkflowPage,
 }

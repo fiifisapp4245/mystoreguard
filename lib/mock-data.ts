@@ -59,6 +59,8 @@ export interface Customer {
   /** Money this customer currently owes the store from past credit sales — the reverse of storeCredit. */
   creditBalance: number
   status: CustomerStatus
+  /** "Send me offers and updates" — unchecked by default (undefined/false). Only gates promotional sends; transactional messages (receipt, delivery status) are unaffected. */
+  marketingConsent?: boolean
 }
 
 export const AREAS = ["Makola", "Osu", "Tema", "Madina", "Kaneshie", "Achimota", "Other"]

@@ -69,3 +69,14 @@ export function formatDateDisplay(iso: string): string {
   return toDate(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
 }
 
+/** Whole days from `fromISO` to `toISO` — negative when `fromISO` is in the future. */
+export function daysBetween(fromISO: string, toISO: string = TODAY_ISO): number {
+  return Math.round((toDate(toISO).getTime() - toDate(fromISO).getTime()) / (1000 * 60 * 60 * 24))
+}
+
+export function addDaysISO(iso: string, delta: number): string {
+  const d = toDate(iso)
+  d.setDate(d.getDate() + delta)
+  return d.toISOString().slice(0, 10)
+}
+

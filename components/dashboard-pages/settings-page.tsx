@@ -9,8 +9,10 @@ import {
 
 import { PageHeader } from "@/components/dashboard/page-header"
 import { CostingMethodCard } from "@/components/dashboard-pages/costing-method-card"
+import { ExpenseApprovalCard } from "@/components/dashboard-pages/expense-approval-card"
 import { LocationsSettingsCard } from "@/components/dashboard-pages/locations-settings-card"
 import { PricingDiscountsCard } from "@/components/dashboard-pages/pricing-discounts-card"
+import { SmsGatewayCard } from "@/components/dashboard-pages/sms-gateway-card"
 import { TaxSettingsCard } from "@/components/dashboard-pages/tax-settings-card"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,9 +27,18 @@ const ICONS: Record<string, typeof Tag> = {
   "Audit logs": ShieldCheck,
 }
 
-// "Tax"/"Tax rules", "Locations", "Inventory costing", and "Pricing rules" are folded into
-// bespoke, interactive cards below instead of the generic read-only card.
-const BESPOKE_FEATURES = new Set(["Tax", "Tax rules", "Locations", "Inventory costing", "Pricing rules"])
+// "Tax"/"Tax rules", "Locations", "Inventory costing", "Pricing rules", "Expense
+// approvals", and "SMS gateway" are folded into bespoke, interactive cards below
+// instead of the generic read-only card.
+const BESPOKE_FEATURES = new Set([
+  "Tax",
+  "Tax rules",
+  "Locations",
+  "Inventory costing",
+  "Pricing rules",
+  "Expense approvals",
+  "SMS gateway",
+])
 
 export function SettingsPage({ module }: { module: ModulePageData }) {
   return (
@@ -66,6 +77,8 @@ export function SettingsPage({ module }: { module: ModulePageData }) {
         <LocationsSettingsCard />
         <CostingMethodCard />
         <PricingDiscountsCard />
+        <ExpenseApprovalCard />
+        <SmsGatewayCard />
       </div>
     </div>
   )

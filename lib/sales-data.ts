@@ -383,6 +383,8 @@ export const SALES_RECORDS: SaleRecord[] = [
   },
 ]
 
+export type RefundMethod = "Cash refund" | "Store credit" | "Exchange"
+
 export interface ReturnRecord {
   id: string
   customer: string
@@ -391,6 +393,7 @@ export interface ReturnRecord {
   amount: number
   originalReceiptNo: string
   dateISO: string
+  refundMethod?: RefundMethod
 }
 
 export const RETURNS_RECORDS: ReturnRecord[] = [
@@ -399,9 +402,10 @@ export const RETURNS_RECORDS: ReturnRecord[] = [
     customer: "Yaw Asante",
     item: "Milo 400g tin × 2",
     reason: "Wrong item",
-    amount: 84,
+    amount: 68,
     originalReceiptNo: "RCT-10241",
     dateISO: "2026-07-22",
+    refundMethod: "Cash refund",
   },
   {
     id: "ret-2",

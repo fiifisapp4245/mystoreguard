@@ -71,6 +71,13 @@ export function CustomerDetailSheet({
                   <span className="text-muted-foreground">Store credit</span>
                   <span className="font-medium">{formatGHS(customer.storeCredit)}</span>
                 </div>
+                <Separator />
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Marketing messages</span>
+                  <Badge variant={customer.marketingConsent ? "default" : "outline"} className="font-normal">
+                    {customer.marketingConsent ? "Consented" : "Not consented"}
+                  </Badge>
+                </div>
               </div>
 
               <div className="flex flex-col gap-2">

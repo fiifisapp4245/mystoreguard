@@ -1,6 +1,8 @@
 import {
+  ArrowLeftRight,
   Award,
   BarChart3,
+  Banknote,
   BookOpen,
   Building2,
   Calculator,
@@ -8,6 +10,7 @@ import {
   FileText,
   Gift,
   Handshake,
+  History,
   Layers,
   LayoutDashboard,
   MessageSquare,
@@ -25,6 +28,7 @@ import {
   Wallet,
   Warehouse,
   Workflow,
+  Zap,
   type LucideIcon,
 } from "lucide-react"
 
@@ -249,15 +253,65 @@ export const MODULES: ModuleConfig[] = [
     id: "expenses",
     name: "Expenses",
     icon: Receipt,
-    description: "Recording day-to-day business expenses.",
+    description: "Money that left the business for something other than stock — categorised, evidenced, and never double-counted against inventory.",
     features: [
       {
         name: "Expenses",
-        description: "Recording business costs so they can be set against revenue to show true profitability.",
+        description: "Recording business costs so they can be set against revenue to show true profitability. Stock purchases are recorded at goods receiving, not here.",
+      },
+      {
+        name: "Recurring expenses",
+        description: "Rent, salaries, and other regulars generate a pending entry each period instead of being retyped.",
+      },
+      {
+        name: "Approvals",
+        description: "Expenses above a threshold sit pending until the owner approves them.",
       },
       {
         name: "Audit logs",
         description: "A record of expense entries and changes. Included in every tier.",
+      },
+    ],
+    tier: "light",
+  },
+  {
+    id: "money-owed",
+    name: "Money owed",
+    icon: ArrowLeftRight,
+    description: "Who owes you, and who you owe — receivables and payables in one workspace.",
+    features: [
+      {
+        name: "Owed to me",
+        description: "Unpaid invoices and credit sales, aged and sorted by how overdue they are.",
+      },
+      {
+        name: "I owe",
+        description: "Supplier bills captured at goods receiving and for operating costs, tracked through to payment.",
+      },
+      {
+        name: "Audit logs",
+        description: "A record of payments recorded and reminders sent. Included in every tier.",
+      },
+    ],
+    tier: "prime",
+  },
+  {
+    id: "day-close",
+    name: "Day close",
+    icon: Banknote,
+    description: "Counting the drawer at the end of the day, with a transparent expected-cash breakdown and an explained variance.",
+    features: [
+      {
+        name: "Expected cash breakdown",
+        description: "Every line that should have changed the drawer's cash today, shown transparently, never as one opaque number.",
+      },
+      {
+        name: "Denomination count",
+        description: "Counting the drawer note by note and coin by coin, auto-totalling.",
+      },
+      {
+        name: "Variance & history",
+        description: "A required reason for any variance, and a history of past sessions to spot a recurring pattern.",
       },
     ],
     tier: "light",
@@ -540,20 +594,59 @@ export const MODULES: ModuleConfig[] = [
     features: [
       {
         name: "Reports",
-        description: "Business reports drawn from across all modules, giving deeper views than the dashboard summaries.",
+        description: "Business reports drawn from across all modules, giving deeper views than the dashboard summaries. Profit & loss keeps cost of goods sold and operating expenses as separate, explained blocks.",
       },
     ],
     tier: "prime",
   },
   {
-    id: "message",
-    name: "Message",
+    id: "message-compose",
+    name: "Compose",
     icon: MessageSquare,
-    description: "Messages and notifications sent to customers and staff.",
+    description: "Sending a message to a segment, selected customers, or everyone — with cost shown before you send.",
     features: [
       {
-        name: "Message",
-        description: "Sending notifications or promotional communication to customers and staff from within the system.",
+        name: "Compose",
+        description: "Recipients, channel, template or free text, and a live cost-before-send preview.",
+      },
+    ],
+    tier: "prime",
+  },
+  {
+    id: "message-automated",
+    name: "Automated",
+    icon: Zap,
+    description: "Messages that send themselves — receipts, reminders, and alerts triggered by what happens in the store.",
+    features: [
+      {
+        name: "Automated triggers",
+        description: "On/off triggers with their own template, channel, and quiet hours so nothing sends at 2am.",
+      },
+    ],
+    tier: "prime",
+  },
+  {
+    id: "message-history",
+    name: "History",
+    icon: History,
+    description: "Every message sent, automated or manual, with delivery status and cost.",
+    features: [
+      {
+        name: "History",
+        description: "A record of every send, with failures explained and retryable.",
+      },
+    ],
+    tier: "prime",
+  },
+  {
+    id: "message-templates",
+    name: "Templates",
+    icon: FileText,
+    description: "Reusable message bodies for every automated trigger and common campaigns.",
+    features: [
+      {
+        name: "Templates",
+        description: "Named, reusable message bodies with merge fields, a channel, and a transactional/promotional category.",
       },
     ],
     tier: "prime",
@@ -600,6 +693,14 @@ export const MODULES: ModuleConfig[] = [
       {
         name: "Inventory costing",
         description: "How the cost of stock on hand is calculated as purchases come in at different prices.",
+      },
+      {
+        name: "Expense approvals",
+        description: "The amount above which a staff-recorded expense sits pending until the owner approves it.",
+      },
+      {
+        name: "SMS gateway",
+        description: "Bringing your own SMS provider instead of platform-managed credits.",
       },
       {
         name: "Audit logs",
@@ -739,6 +840,15 @@ export const GROUPS: GroupConfig[] = [
     nestedOnly: true,
   },
   {
+    id: "message",
+    label: "Message",
+    moduleIds: ["message-compose", "message-automated", "message-history", "message-templates"],
+    type: "hub",
+    icon: MessageSquare,
+    description: "Compose, automate, and review every message sent to customers and staff.",
+    nestedOnly: true,
+  },
+  {
     id: "sell",
     label: "Sell",
     moduleIds: ["sales", "invoice", "deliveries", "estimator"],
@@ -767,10 +877,10 @@ export const GROUPS: GroupConfig[] = [
   {
     id: "money",
     label: "Money",
-    moduleIds: ["expenses", "reports"],
+    moduleIds: ["expenses", "money-owed", "reports", "day-close"],
     type: "hub",
     icon: Wallet,
-    description: "Expenses and cross-module reports for the business.",
+    description: "Expenses, who owes who, cross-module reports, and the daily cash count.",
   },
   {
     id: "system",
@@ -983,6 +1093,26 @@ const OFFERS_REWARDS_FLAT_ENTRY: ModuleConfig = {
   href: hubFirstTabPath("offers-rewards"),
 }
 
+/**
+ * The flat view still shows a single "Message" item — it now routes to the
+ * Message hub instead of its own page. Not a real module, so it isn't in
+ * MODULES; resolveFlat() substitutes it in.
+ */
+const MESSAGE_FLAT_ENTRY: ModuleConfig = {
+  id: "message",
+  name: "Message",
+  icon: MessageSquare,
+  description: "Compose, automate, and review every message sent to customers and staff.",
+  features: [
+    { name: "Compose", description: "Recipients, channel, template or free text, and a live cost-before-send preview." },
+    { name: "Automated", description: "Messages that send themselves, triggered by what happens in the store." },
+    { name: "History", description: "A record of every send, with failures explained and retryable." },
+    { name: "Templates", description: "Named, reusable message bodies for every automated trigger and common campaigns." },
+  ],
+  tier: "prime",
+  href: hubFirstTabPath("message"),
+}
+
 export const TIER_LABEL: Record<Tier, string> = {
   light: "Light",
   prime: "Prime",
@@ -1100,6 +1230,7 @@ export function resolveFlat(): ModuleConfig[] {
     if (id === "stock") return STOCK_FLAT_ENTRY
     if (id === "loyalty") return LOYALTY_FLAT_ENTRY
     if (id === "offers-rewards") return OFFERS_REWARDS_FLAT_ENTRY
+    if (id === "message") return MESSAGE_FLAT_ENTRY
     return getModule(id)
   }).filter((m): m is ModuleConfig => Boolean(m))
 }

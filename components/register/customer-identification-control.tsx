@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 import { AREAS, formatGHS, isValidGhanaPhone } from "@/lib/mock-data"
 import { enrolMember, findMemberByPhone, getLoyaltyMembersStore, type LoyaltyMember } from "@/lib/loyalty-data"
 
@@ -34,6 +35,7 @@ export function CustomerIdentificationControl({
   const [enrolName, setEnrolName] = useState("")
   const [enrolPhone, setEnrolPhone] = useState("")
   const [enrolArea, setEnrolArea] = useState("")
+  const [enrolConsent, setEnrolConsent] = useState(false)
 
   const trimmedQuery = query.trim()
   const matches =
@@ -65,12 +67,18 @@ export function CustomerIdentificationControl({
     setEnrolPhone(isValidGhanaPhone(trimmedQuery) ? trimmedQuery : "")
     setEnrolName("")
     setEnrolArea("")
+    setEnrolConsent(false)
     setShowEnrol(true)
   }
 
   function handleEnrol() {
     if (!isValidGhanaPhone(enrolPhone) || !enrolName.trim()) return
-    const newMember = enrolMember({ phone: enrolPhone.replace(/\s/g, ""), name: enrolName.trim(), area: enrolArea || undefined })
+    const newMember = enrolMember({
+      phone: enrolPhone.replace(/\s/g, ""),
+      name: enrolName.trim(),
+      area: enrolArea || undefined,
+      marketingConsent: enrolConsent,
+    })
     onAttach(newMember)
     setShowEnrol(false)
     setQuery("")
@@ -114,6 +122,12 @@ export function CustomerIdentificationControl({
             ))}
           </SelectContent>
         </Select>
+        <div className="flex items-center justify-between gap-2 rounded-md border px-2.5 py-2">
+          <label htmlFor="enrol-consent" className="text-xs text-muted-foreground">
+            Send me offers and updates
+          </label>
+          <Switch id="enrol-consent" checked={enrolConsent} onCheckedChange={setEnrolConsent} />
+        </div>
         <div className="flex gap-2">
           <Button
             variant="outline"

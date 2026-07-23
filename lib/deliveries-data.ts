@@ -405,6 +405,36 @@ export function setDeliveriesStore(next: Delivery[]): void {
   deliveriesStore = next
 }
 
+export interface RiderCodSummary {
+  riderId: string
+  riderName: string
+  completed: number
+  expected: number
+  collected: number
+}
+
+/** Cash a rider should have collected on COD deliveries today vs. what proof-of-delivery says they actually collected — the "Rider COD collected" line Day close reads. */
+export function getRiderCodSummary(dateISO: string): RiderCodSummary[] {
+  const todays = deliveriesStore.filter((d) => d.scheduledDateISO === dateISO && d.riderId && d.status !== "Cancelled")
+  const byRider = new Map<string, RiderCodSummary>()
+
+  for (const delivery of todays) {
+    const riderId = delivery.riderId!
+    const rider = getRider(riderId)
+    const row = byRider.get(riderId) ?? { riderId, riderName: rider?.name ?? riderId, completed: 0, expected: 0, collected: 0 }
+    if (delivery.status === "Delivered") row.completed += 1
+    if (delivery.isCod && delivery.status !== "Failed") row.expected += delivery.codAmount
+    if (delivery.proof?.cashCollected) row.collected += delivery.proof.cashCollected
+    byRider.set(riderId, row)
+  }
+
+  return Array.from(byRider.values())
+}
+
+export function totalRiderCodCollected(dateISO: string): number {
+  return getRiderCodSummary(dateISO).reduce((sum, row) => sum + row.collected, 0)
+}
+
 function updateDelivery(id: string, patch: (d: Delivery) => Delivery): void {
   deliveriesStore = deliveriesStore.map((d) => (d.id === id ? patch(d) : d))
 }

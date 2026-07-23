@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { AREAS, isValidGhanaPhone, type Customer } from "@/lib/mock-data"
 
@@ -42,6 +43,7 @@ export function AddCustomerDialog({
   const [area, setArea] = useState(AREAS[0])
   const [email, setEmail] = useState("")
   const [notes, setNotes] = useState("")
+  const [marketingConsent, setMarketingConsent] = useState(false)
   const [errors, setErrors] = useState<FormErrors>({})
 
   function reset() {
@@ -50,6 +52,7 @@ export function AddCustomerDialog({
     setArea(AREAS[0])
     setEmail("")
     setNotes("")
+    setMarketingConsent(false)
     setErrors({})
   }
 
@@ -82,6 +85,7 @@ export function AddCustomerDialog({
       storeCredit: 0,
       creditBalance: 0,
       status: "Active",
+      marketingConsent,
     })
     reset()
   }
@@ -146,6 +150,13 @@ export function AddCustomerDialog({
               onChange={(event) => setNotes(event.target.value)}
               rows={3}
             />
+          </div>
+
+          <div className="flex items-center justify-between gap-2 rounded-md border px-3 py-2.5">
+            <Label htmlFor="customer-consent" className="text-sm font-normal">
+              Send me offers and updates
+            </Label>
+            <Switch id="customer-consent" checked={marketingConsent} onCheckedChange={setMarketingConsent} />
           </div>
 
           <p className="text-xs text-muted-foreground">

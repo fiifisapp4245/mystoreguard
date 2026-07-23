@@ -194,8 +194,8 @@ export const INVOICES: Invoice[] = [
       { label: "COVID levy (1%)", amount: 6.4 },
     ],
     total: 774.4,
-    amountPaid: 387.2,
-    balance: 387.2,
+    amountPaid: 537.2,
+    balance: 237.2,
     status: "Partially paid",
   },
   {
@@ -244,6 +244,7 @@ export const PAYMENTS: PaymentRecord[] = [
   { id: "pay-8", invoiceId: "INV-2040", dateISO: "2026-07-19", customer: "Kofi Boateng", amount: 418.4, method: "Cash", recordedBy: "Adjoa Boateng" },
   { id: "pay-9", invoiceId: "INV-2042", dateISO: "2026-07-17", customer: "Abena Osei", amount: 200, method: "Momo", reference: "8893307", recordedBy: "Abena Darko" },
   { id: "pay-10", invoiceId: "INV-2042", dateISO: "2026-07-21", customer: "Abena Osei", amount: 187.2, method: "Cash", recordedBy: "Adjoa Boateng" },
+  { id: "pay-11", invoiceId: "INV-2042", dateISO: "2026-07-22", customer: "Abena Osei", amount: 150, method: "Cash", recordedBy: "Adjoa Boateng" },
 ]
 
 /**
