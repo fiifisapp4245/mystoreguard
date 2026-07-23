@@ -1,10 +1,16 @@
 "use client"
 
 import { useState } from "react"
+import { Check, Pencil } from "lucide-react"
 import { toast } from "sonner"
 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -15,6 +21,15 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { EditTierDialog } from "@/components/hubs/loyalty/edit-tier-dialog"
 import { cn } from "@/lib/utils"
 import { formatGHS } from "@/lib/mock-data"
 import {
@@ -45,6 +60,7 @@ function applyRounding(value: number, rule: RoundingRule): number {
 
 export function RulesTiersTab() {
   const [form, setForm] = useState<LoyaltyProgrammeSettings>(() => getProgrammeSettings())
+  const [editingTierIndex, setEditingTierIndex] = useState<number | null>(null)
 
   function updateField<K extends keyof LoyaltyProgrammeSettings>(key: K, value: LoyaltyProgrammeSettings[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -63,181 +79,217 @@ export function RulesTiersTab() {
   }
 
   const exampleEarnedPoints = applyRounding(100 / (form.ghsPerPoint || 1), form.roundingRule)
+  const editingTier = editingTierIndex !== null ? form.tiers[editingTierIndex] : null
 
   return (
-    <div className="flex flex-col gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-sans text-base">Earning</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="ghs-per-point">GHS spent per point</Label>
-              <Input
-                id="ghs-per-point"
-                type="number"
-                min={0.01}
-                step={0.5}
-                value={form.ghsPerPoint}
-                onChange={(e) => updateField("ghsPerPoint", Number.parseFloat(e.target.value) || 0)}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="rounding-rule">Rounding rule</Label>
-              <Select value={form.roundingRule} onValueChange={(v) => updateField("roundingRule", v as RoundingRule)}>
-                <SelectTrigger className="w-full" id="rounding-rule">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {(Object.keys(ROUNDING_LABELS) as RoundingRule[]).map((rule) => (
-                    <SelectItem key={rule} value={rule}>
-                      {ROUNDING_LABELS[rule]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+    <div className="flex flex-col gap-4">
+      <p className="text-xs text-muted-foreground">
+        Open a section to change it — nothing is saved until you click <span className="font-medium">Save changes</span> below.
+      </p>
 
-          <div className="flex items-center justify-between rounded-lg border p-3">
-            <div>
-              <p className="text-sm font-medium">Credit sales earn points</p>
-              <p className="text-xs text-muted-foreground">Points accrue even when the sale is on credit.</p>
+      <Accordion type="single" collapsible defaultValue="earning" className="flex flex-col gap-3">
+        <AccordionItem value="earning" className="rounded-xl border px-4">
+          <AccordionTrigger>
+            <div className="flex flex-col items-start gap-0.5 text-left">
+              <span className="font-medium">Earning</span>
+              <span className="text-xs font-normal text-muted-foreground">
+                GHS {form.ghsPerPoint} per point · {ROUNDING_LABELS[form.roundingRule].toLowerCase()}
+              </span>
             </div>
-            <Switch checked={form.creditSalesEarn} onCheckedChange={(v) => updateField("creditSalesEarn", v)} />
-          </div>
-
-          <div className="flex items-center justify-between rounded-lg border p-3">
-            <div>
-              <p className="text-sm font-medium">Discounted items earn points</p>
-              <p className="text-xs text-muted-foreground">Points accrue on the discounted price, not the original.</p>
-            </div>
-            <Switch checked={form.discountedItemsEarn} onCheckedChange={(v) => updateField("discountedItemsEarn", v)} />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="points-expiry">Points expiry (months)</Label>
-            <Input
-              id="points-expiry"
-              type="number"
-              min={0}
-              value={form.pointsExpiryMonths}
-              onChange={(e) => updateField("pointsExpiryMonths", Number.parseInt(e.target.value, 10) || 0)}
-              className="max-w-40"
-            />
-            <p className="text-xs text-muted-foreground">{form.pointsExpiryMonths === 0 ? "Never expires." : `Points expire ${form.pointsExpiryMonths} months after they're earned.`}</p>
-          </div>
-
-          <p className="text-xs text-muted-foreground">
-            A GHS 100 purchase earns {exampleEarnedPoints} points.
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-sans text-base">Redemption</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="point-value">Value of one point (GHS)</Label>
-              <Input
-                id="point-value"
-                type="number"
-                min={0}
-                step={0.01}
-                value={form.pointValueGHS}
-                onChange={(e) => updateField("pointValueGHS", Number.parseFloat(e.target.value) || 0)}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="min-points">Minimum points to redeem</Label>
-              <Input
-                id="min-points"
-                type="number"
-                min={0}
-                value={form.minPointsToRedeem}
-                onChange={(e) => updateField("minPointsToRedeem", Number.parseInt(e.target.value, 10) || 0)}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="max-redemption-percent">Max % of transaction payable by points</Label>
-              <Input
-                id="max-redemption-percent"
-                type="number"
-                min={0}
-                max={100}
-                value={form.maxRedemptionPercent}
-                onChange={(e) => updateField("maxRedemptionPercent", Math.min(100, Math.max(0, Number.parseInt(e.target.value, 10) || 0)))}
-              />
-            </div>
-          </div>
-
-          <p className="text-xs text-muted-foreground">
-            100 points is worth {formatGHS(100 * form.pointValueGHS)}.
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-sans text-base">Tiers</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          {form.tiers.map((tier, index) => (
-            <div key={tier.id} className="flex flex-col gap-3 rounded-lg border p-3">
-              <div className="flex items-center gap-2">
-                <span className={cn("size-3 rounded-full", BADGE_COLOR_CLASS[tier.badgeColor])} />
-                <span className="font-medium">{tier.name}</span>
-              </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="flex flex-col gap-4 pt-1 pb-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor={`${tier.id}-threshold`}>Lifetime spend threshold (GHS)</Label>
+                  <Label htmlFor="ghs-per-point">GHS spent per point</Label>
                   <Input
-                    id={`${tier.id}-threshold`}
+                    id="ghs-per-point"
                     type="number"
-                    min={0}
-                    value={tier.lifetimeSpendThreshold}
-                    onChange={(e) => updateTier(index, { lifetimeSpendThreshold: Number.parseFloat(e.target.value) || 0 })}
+                    min={0.01}
+                    step={0.5}
+                    value={form.ghsPerPoint}
+                    onChange={(e) => updateField("ghsPerPoint", Number.parseFloat(e.target.value) || 0)}
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor={`${tier.id}-discount`}>Discount %</Label>
+                  <Label htmlFor="rounding-rule">Rounding rule</Label>
+                  <Select value={form.roundingRule} onValueChange={(v) => updateField("roundingRule", v as RoundingRule)}>
+                    <SelectTrigger className="w-full" id="rounding-rule">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(ROUNDING_LABELS) as RoundingRule[]).map((rule) => (
+                        <SelectItem key={rule} value={rule}>
+                          {ROUNDING_LABELS[rule]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <div>
+                  <p className="text-sm font-medium">Credit sales earn points</p>
+                  <p className="text-xs text-muted-foreground">Points accrue even when the sale is on credit.</p>
+                </div>
+                <Switch checked={form.creditSalesEarn} onCheckedChange={(v) => updateField("creditSalesEarn", v)} />
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <div>
+                  <p className="text-sm font-medium">Discounted items earn points</p>
+                  <p className="text-xs text-muted-foreground">Points accrue on the discounted price, not the original.</p>
+                </div>
+                <Switch checked={form.discountedItemsEarn} onCheckedChange={(v) => updateField("discountedItemsEarn", v)} />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="points-expiry">Points expiry (months)</Label>
+                <Input
+                  id="points-expiry"
+                  type="number"
+                  min={0}
+                  value={form.pointsExpiryMonths}
+                  onChange={(e) => updateField("pointsExpiryMonths", Number.parseInt(e.target.value, 10) || 0)}
+                  className="max-w-40"
+                />
+                <p className="text-xs text-muted-foreground">
+                  {form.pointsExpiryMonths === 0 ? "Never expires." : `Points expire ${form.pointsExpiryMonths} months after they're earned.`}
+                </p>
+              </div>
+
+              <p className="rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
+                A GHS 100 purchase earns {exampleEarnedPoints} points.
+              </p>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="redemption" className="rounded-xl border px-4">
+          <AccordionTrigger>
+            <div className="flex flex-col items-start gap-0.5 text-left">
+              <span className="font-medium">Redemption</span>
+              <span className="text-xs font-normal text-muted-foreground">
+                1 point = {formatGHS(form.pointValueGHS)} · min {form.minPointsToRedeem} pts · up to {form.maxRedemptionPercent}% of a sale
+              </span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="flex flex-col gap-4 pt-1 pb-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="point-value">Value of one point (GHS)</Label>
                   <Input
-                    id={`${tier.id}-discount`}
+                    id="point-value"
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    value={form.pointValueGHS}
+                    onChange={(e) => updateField("pointValueGHS", Number.parseFloat(e.target.value) || 0)}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="min-points">Minimum points to redeem</Label>
+                  <Input
+                    id="min-points"
+                    type="number"
+                    min={0}
+                    value={form.minPointsToRedeem}
+                    onChange={(e) => updateField("minPointsToRedeem", Number.parseInt(e.target.value, 10) || 0)}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="max-redemption-percent">Max % of transaction payable by points</Label>
+                  <Input
+                    id="max-redemption-percent"
                     type="number"
                     min={0}
                     max={100}
-                    value={tier.discountPercent}
-                    onChange={(e) => updateTier(index, { discountPercent: Number.parseFloat(e.target.value) || 0 })}
+                    value={form.maxRedemptionPercent}
+                    onChange={(e) => updateField("maxRedemptionPercent", Math.min(100, Math.max(0, Number.parseInt(e.target.value, 10) || 0)))}
                   />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor={`${tier.id}-multiplier`}>Points multiplier</Label>
-                  <Input
-                    id={`${tier.id}-multiplier`}
-                    type="number"
-                    min={0}
-                    step={0.25}
-                    value={tier.pointsMultiplier}
-                    onChange={(e) => updateTier(index, { pointsMultiplier: Number.parseFloat(e.target.value) || 0 })}
-                  />
-                </div>
-                <div className="flex items-center justify-between gap-2 rounded-lg border p-2.5">
-                  <span className="text-sm">Free delivery</span>
-                  <Switch checked={tier.freeDelivery} onCheckedChange={(v) => updateTier(index, { freeDelivery: v })} />
                 </div>
               </div>
+
+              <p className="rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
+                100 points is worth {formatGHS(100 * form.pointValueGHS)}.
+              </p>
             </div>
-          ))}
-        </CardContent>
-      </Card>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="tiers" className="rounded-xl border px-4">
+          <AccordionTrigger>
+            <div className="flex flex-col items-start gap-0.5 text-left">
+              <span className="font-medium">Tiers</span>
+              <span className="text-xs font-normal text-muted-foreground">
+                {form.tiers.map((t) => t.name).join(" · ")}
+              </span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="flex flex-col gap-3 pt-1 pb-2">
+              <p className="text-xs text-muted-foreground">Click a row&apos;s Edit button to change just that tier — the others are untouched.</p>
+              <div className="overflow-hidden rounded-lg border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Tier</TableHead>
+                      <TableHead>Spend threshold</TableHead>
+                      <TableHead>Discount</TableHead>
+                      <TableHead>Points multiplier</TableHead>
+                      <TableHead>Free delivery</TableHead>
+                      <TableHead className="w-10" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {form.tiers.map((tier, index) => (
+                      <TableRow key={tier.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2 font-medium">
+                            <span className={cn("size-2.5 shrink-0 rounded-full", BADGE_COLOR_CLASS[tier.badgeColor])} />
+                            {tier.name}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{formatGHS(tier.lifetimeSpendThreshold)}+</TableCell>
+                        <TableCell className="text-muted-foreground">{tier.discountPercent > 0 ? `${tier.discountPercent}%` : "—"}</TableCell>
+                        <TableCell className="text-muted-foreground">{tier.pointsMultiplier}×</TableCell>
+                        <TableCell>
+                          {tier.freeDelivery ? (
+                            <span className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
+                              <Check className="size-3.5" /> Included
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="icon-sm" onClick={() => setEditingTierIndex(index)} aria-label={`Edit ${tier.name}`}>
+                            <Pencil className="size-3.5" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       <div className="flex justify-end">
         <Button onClick={handleSave}>Save changes</Button>
       </div>
+
+      <EditTierDialog
+        tier={editingTier}
+        onOpenChange={(open) => !open && setEditingTierIndex(null)}
+        onSave={(patch) => {
+          if (editingTierIndex !== null) updateTier(editingTierIndex, patch)
+        }}
+      />
     </div>
   )
 }
