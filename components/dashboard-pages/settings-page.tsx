@@ -8,6 +8,8 @@ import {
 } from "lucide-react"
 
 import { PageHeader } from "@/components/dashboard/page-header"
+import { CostingMethodCard } from "@/components/dashboard-pages/costing-method-card"
+import { LocationsSettingsCard } from "@/components/dashboard-pages/locations-settings-card"
 import { TaxSettingsCard } from "@/components/dashboard-pages/tax-settings-card"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -22,8 +24,9 @@ const ICONS: Record<string, typeof Tag> = {
   "Audit logs": ShieldCheck,
 }
 
-// "Tax" and "Tax rules" are folded into the bespoke, interactive TaxSettingsCard below instead of the generic read-only card.
-const BESPOKE_FEATURES = new Set(["Tax", "Tax rules"])
+// "Tax"/"Tax rules", "Locations", and "Inventory costing" are folded into bespoke, interactive
+// cards below instead of the generic read-only card.
+const BESPOKE_FEATURES = new Set(["Tax", "Tax rules", "Locations", "Inventory costing"])
 
 export function SettingsPage({ module }: { module: ModulePageData }) {
   return (
@@ -59,6 +62,8 @@ export function SettingsPage({ module }: { module: ModulePageData }) {
             )
           })}
         <TaxSettingsCard />
+        <LocationsSettingsCard />
+        <CostingMethodCard />
       </div>
     </div>
   )

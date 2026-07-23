@@ -27,21 +27,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { LARRY_CUSTOMERS } from "@/lib/larry-data"
 import { CUSTOMERS, formatGHS, initials, type Customer } from "@/lib/mock-data"
-
-const STATS = [
-  {
-    label: "Total customers",
-    value: "342",
-    trend: { value: 7, direction: "up" as const, tone: "positive" as const },
-  },
-  { label: "New this month", value: "12" },
-  {
-    label: "Loyalty members",
-    value: "87",
-    trend: { value: 5, direction: "up" as const, tone: "positive" as const },
-  },
-]
+import { useDemoState } from "@/hooks/use-demo-state"
 
 const TIER_BADGE_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
   Gold: "default",
@@ -53,12 +41,30 @@ type StatusFilter = "all" | "Active" | "Inactive"
 type TierFilter = "all" | "Bronze" | "Silver" | "Gold"
 
 export function CustomersTab() {
-  const [customers, setCustomers] = useState<Customer[]>(CUSTOMERS)
+  const { state } = useDemoState()
+  const isLarry = state.storePersona === "larry"
+
+  const [customers, setCustomers] = useState<Customer[]>(() => (isLarry ? LARRY_CUSTOMERS : CUSTOMERS))
+  const [prevIsLarry, setPrevIsLarry] = useState(isLarry)
+  if (isLarry !== prevIsLarry) {
+    setPrevIsLarry(isLarry)
+    setCustomers(isLarry ? LARRY_CUSTOMERS : CUSTOMERS)
+  }
+
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all")
   const [tierFilter, setTierFilter] = useState<TierFilter>("all")
   const [addOpen, setAddOpen] = useState(false)
   const [selected, setSelected] = useState<Customer | null>(null)
+
+  const stats = useMemo(
+    () => [
+      { label: "Total customers", value: String(customers.length) },
+      { label: "Active", value: String(customers.filter((c) => c.status === "Active").length) },
+      { label: "Gold / Silver tier", value: String(customers.filter((c) => c.loyaltyTier !== "Bronze").length) },
+    ],
+    [customers]
+  )
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -84,7 +90,7 @@ export function CustomersTab() {
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {STATS.map((stat) => (
+        {stats.map((stat) => (
           <StatCard key={stat.label} {...stat} />
         ))}
       </div>

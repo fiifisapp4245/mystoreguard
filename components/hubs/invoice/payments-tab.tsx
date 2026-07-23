@@ -7,6 +7,13 @@ import { CustomDateRangeRow, PeriodSelect } from "@/components/dashboard/period-
 import { StatCard } from "@/components/dashboard/stat-card"
 import { Badge } from "@/components/ui/badge"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   Table,
   TableBody,
   TableCell,
@@ -14,7 +21,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { cn } from "@/lib/utils"
 import { formatGHS } from "@/lib/mock-data"
 import { getInvoicesStore, getPaymentsStore, PAYMENT_METHODS, type PaymentMethod } from "@/lib/invoice-data"
 import {
@@ -25,9 +31,7 @@ import {
   type StandardPeriod,
 } from "@/lib/period-utils"
 
-type FilterChip = "All" | PaymentMethod
-
-const FILTER_CHIPS: FilterChip[] = ["All", ...PAYMENT_METHODS]
+type FilterOption = "All" | PaymentMethod
 
 function daysBetween(fromISO: string, toISO: string): number {
   const from = new Date(`${fromISO}T00:00:00`)
@@ -43,7 +47,7 @@ export function PaymentsTab() {
   const [period, setPeriod] = useState<StandardPeriod>("today")
   const [customFrom, setCustomFrom] = useState("")
   const [customTo, setCustomTo] = useState("")
-  const [filter, setFilter] = useState<FilterChip>("All")
+  const [filter, setFilter] = useState<FilterOption>("All")
 
   const periodRange = useMemo(
     () => getStandardPeriodRange(period, customFrom, customTo),
@@ -93,23 +97,19 @@ export function PaymentsTab() {
 
       <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-1.5">
-            {FILTER_CHIPS.map((chip) => (
-              <button
-                key={chip}
-                type="button"
-                onClick={() => setFilter(chip)}
-                className={cn(
-                  "rounded-full border px-3 py-1 text-sm font-medium transition-colors",
-                  filter === chip
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-accent"
-                )}
-              >
-                {chip}
-              </button>
-            ))}
-          </div>
+          <Select value={filter} onValueChange={(v) => setFilter(v as FilterOption)}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All methods</SelectItem>
+              {PAYMENT_METHODS.map((method) => (
+                <SelectItem key={method} value={method}>
+                  {method}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <PeriodSelect value={period} onValueChange={setPeriod} />
         </div>
 

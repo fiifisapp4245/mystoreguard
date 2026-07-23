@@ -86,58 +86,97 @@ export const MODULES: ModuleConfig[] = [
     tier: "light",
   },
   {
-    id: "inventory",
-    name: "Inventory",
+    id: "products",
+    name: "Products",
     icon: Package,
-    description: "Products, purchase orders, and splitting cartons into sellable units.",
+    description: "The catalogue of everything the store sells, its pack structure, and stock across locations.",
     features: [
       {
-        name: "Product",
-        description: "The catalogue of everything the store sells: names, descriptions, and identifying details.",
+        name: "Product catalogue",
+        description: "Names, categories, barcodes, and pack structure — one definition that drives selling, purchasing, and counting.",
       },
       {
-        name: "Product split",
-        description: "Breaking one purchased unit into smaller sellable units, so stock counts stay accurate.",
-      },
-      {
-        name: "Purchase orders",
-        description: "Orders raised to suppliers, tracked from ordering through to receiving the goods.",
-      },
-      {
-        name: "Audit logs",
-        description: "A record of changes to products and purchase orders. Included in every tier.",
+        name: "Import products",
+        description: "Bring in a whole catalogue from a spreadsheet instead of typing each product in by hand.",
       },
     ],
     tier: "light",
   },
   {
-    id: "store-warehouse",
-    name: "Store & Warehouse",
-    icon: Warehouse,
-    description: "Transfers to the shop floor and stocktaking across locations.",
+    id: "purchase-orders",
+    name: "Purchase orders",
+    icon: FileText,
+    description: "Orders raised to suppliers, tracked from ordering through to receiving the goods.",
     features: [
       {
-        name: "Split items",
-        description: "Splitting bulk stock into smaller sellable units at store or warehouse level.",
+        name: "Purchase orders",
+        description: "Orders raised to suppliers, tracked from draft through to received.",
       },
       {
-        name: "Transfers",
-        description: "Moving stock between the warehouse and stores, with a record of what moved, when, and by whom.",
+        name: "Order low stock",
+        description: "Turn every product at or below its reorder point into draft orders, grouped by supplier, in one click.",
       },
       {
-        name: "Stocktaking",
-        description: "Physically counting shelf and warehouse stock against system records, exposing theft and errors.",
-      },
-      {
-        name: "Settings",
-        description: "Configuration specific to each store or warehouse location.",
-      },
-      {
-        name: "Audit logs",
-        description: "A record of all stock movements and adjustments. Included in every tier.",
+        name: "Receive goods",
+        description: "Recording what actually arrived, at what cost, and the supplier bill it created.",
       },
     ],
-    tier: "ultra",
+    tier: "light",
+  },
+  {
+    id: "stock-levels",
+    name: "Stock levels",
+    icon: Warehouse,
+    description: "On hand, set aside, and available stock, by location.",
+    features: [
+      {
+        name: "Stock levels",
+        description: "On hand, set aside, and available quantities for every product, broken down by location.",
+      },
+      {
+        name: "Adjust stock",
+        description: "Correcting a quantity with a required reason — damage, expiry, theft, or a miscount.",
+      },
+    ],
+    tier: "light",
+  },
+  {
+    id: "movements",
+    name: "Movements",
+    icon: Warehouse,
+    description: "Transfers, splits, adjustments, and returns — every stock movement in one ledger.",
+    features: [
+      {
+        name: "Transfers",
+        description: "Moving stock between locations, with a two-sided confirmation so nothing goes missing in transit. Ultra only.",
+      },
+      {
+        name: "Split stock",
+        description: "Breaking a purchased pack into its sellable units on the shelf.",
+      },
+      {
+        name: "Adjustments & returns",
+        description: "Every correction and return recorded with a reason, in the same ledger as transfers and splits.",
+      },
+    ],
+    tier: "light",
+  },
+  {
+    id: "stocktakes",
+    name: "Stocktakes",
+    icon: Warehouse,
+    description: "Cycle counts against a snapshot, with blind counting and reconciliation for what moved during the count.",
+    features: [
+      {
+        name: "Stocktaking",
+        description: "Counting shelf and warehouse stock against system records, exposing theft and errors. Available at every tier.",
+      },
+      {
+        name: "Snapshot reconciliation",
+        description: "Sales and receipts during a count are tracked separately, so trading doesn't have to stop to count.",
+      },
+    ],
+    tier: "light",
   },
   {
     id: "all",
@@ -499,8 +538,16 @@ export const MODULES: ModuleConfig[] = [
         description: "Value held on a customer's account that they can spend on future purchases.",
       },
       {
+        name: "Locations",
+        description: "Every shop and warehouse the business operates, and what each one is set up to do.",
+      },
+      {
+        name: "Inventory costing",
+        description: "How the cost of stock on hand is calculated as purchases come in at different prices.",
+      },
+      {
         name: "Audit logs",
-        description: "A record of changes to business rules and settings. Included in every tier.",
+        description: "A record of changes to business rules and settings, and every stock movement across locations. Included in every tier.",
       },
     ],
     tier: "light",
@@ -600,15 +647,33 @@ export const GROUPS: GroupConfig[] = [
     nestedOnly: true,
   },
   {
+    id: "inventory",
+    label: "Inventory",
+    moduleIds: ["products", "purchase-orders"],
+    type: "hub",
+    icon: Package,
+    description: "Products, their pack structure, and the purchase orders that restock them.",
+    nestedOnly: true,
+  },
+  {
+    id: "stock",
+    label: "Store & Warehouse",
+    moduleIds: ["stock-levels", "movements", "stocktakes"],
+    type: "hub",
+    icon: Warehouse,
+    description: "Stock levels, movements, and stocktakes across every location.",
+    nestedOnly: true,
+  },
+  {
     id: "sell",
     label: "Sell",
     moduleIds: ["sales", "invoice", "deliveries", "estimator"],
     type: "group",
   },
   {
-    id: "stock",
+    id: "stock-group",
     label: "Stock",
-    moduleIds: ["inventory", "store-warehouse"],
+    moduleIds: ["inventory", "stock"],
     type: "group",
   },
   {
@@ -687,7 +752,7 @@ function resolveGroupMember(id: string): ModuleConfig | undefined {
 export const FLAT_ORDER: string[] = [
   "dashboard",
   "inventory",
-  "store-warehouse",
+  "stock",
   "sales",
   "invoice",
   "expenses",
@@ -779,6 +844,38 @@ const ESTIMATOR_FLAT_ENTRY: ModuleConfig = {
   href: hubFirstTabPath("estimator"),
 }
 
+/**
+ * The flat view still shows single "Inventory" and "Store & Warehouse" items
+ * — they now route to their hubs instead of their own pages. Not real
+ * modules, so they aren't in MODULES; resolveFlat() substitutes them in.
+ */
+const INVENTORY_FLAT_ENTRY: ModuleConfig = {
+  id: "inventory",
+  name: "Inventory",
+  icon: Package,
+  description: "Products, their pack structure, and the purchase orders that restock them.",
+  features: [
+    { name: "Products", description: "The catalogue of everything the store sells, its pack structure, and stock across locations." },
+    { name: "Purchase orders", description: "Orders raised to suppliers, tracked from ordering through to receiving the goods." },
+  ],
+  tier: "light",
+  href: hubFirstTabPath("inventory"),
+}
+
+const STOCK_FLAT_ENTRY: ModuleConfig = {
+  id: "stock",
+  name: "Store & Warehouse",
+  icon: Warehouse,
+  description: "Stock levels, movements, and stocktakes across every location.",
+  features: [
+    { name: "Stock levels", description: "On hand, set aside, and available quantities for every product, broken down by location." },
+    { name: "Movements", description: "Transfers, splits, adjustments, and returns — every stock movement in one ledger." },
+    { name: "Stocktakes", description: "Cycle counts against a snapshot, with blind counting and reconciliation for what moved during the count." },
+  ],
+  tier: "light",
+  href: hubFirstTabPath("stock"),
+}
+
 export const TIER_LABEL: Record<Tier, string> = {
   light: "Light",
   prime: "Prime",
@@ -791,6 +888,15 @@ const TIER_RANK: Record<Tier, number> = { light: 0, prime: 1, ultra: 2 }
 export function isModuleLocked(module: ModuleConfig, viewingAsTier: Tier): boolean {
   if (module.addon) return false
   return TIER_RANK[module.tier] > TIER_RANK[viewingAsTier]
+}
+
+/**
+ * Stocktaking and adjustments work at every tier for a single location —
+ * only Ultra unlocks multiple locations and transfers between them. This is
+ * content-level gating inside Store & Warehouse, not a module lock.
+ */
+export function isMultiLocationTier(tier: Tier): boolean {
+  return tier === "ultra"
 }
 
 /**
@@ -883,6 +989,8 @@ export function resolveFlat(): ModuleConfig[] {
     if (id === "sales") return SALES_FLAT_ENTRY
     if (id === "invoice") return INVOICE_FLAT_ENTRY
     if (id === "estimator") return ESTIMATOR_FLAT_ENTRY
+    if (id === "inventory") return INVENTORY_FLAT_ENTRY
+    if (id === "stock") return STOCK_FLAT_ENTRY
     return getModule(id)
   }).filter((m): m is ModuleConfig => Boolean(m))
 }

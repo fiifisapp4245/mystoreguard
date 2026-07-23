@@ -19,6 +19,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   Table,
   TableBody,
   TableCell,
@@ -46,9 +53,9 @@ import {
 import { formatDateDisplay, TODAY_ISO } from "@/lib/period-utils"
 import { demoStateToParams, useDemoState } from "@/hooks/use-demo-state"
 
-type FilterChip = "All" | QuotationStatus
+type FilterOption = "All" | QuotationStatus
 
-const FILTER_CHIPS: FilterChip[] = ["All", "Draft", "Sent", "Accepted", "Rejected", "Expired", "Converted"]
+const QUOTATION_STATUSES: QuotationStatus[] = ["Draft", "Sent", "Accepted", "Rejected", "Expired", "Converted"]
 
 function daysUntil(dateISO: string): number {
   const target = new Date(`${dateISO}T00:00:00`)
@@ -69,7 +76,7 @@ export function QuotationsTab() {
     setPrevIsLarry(isLarry)
     setQuotations(isLarry ? getQuotationsStore() : [])
   }
-  const [filter, setFilter] = useState<FilterChip>("All")
+  const [filter, setFilter] = useState<FilterOption>("All")
   const [selected, setSelected] = useState<Quotation | null>(null)
   const [depositTarget, setDepositTarget] = useState<Quotation | null>(null)
 
@@ -218,23 +225,19 @@ export function QuotationsTab() {
       </Card>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-1.5">
-          {FILTER_CHIPS.map((chip) => (
-            <button
-              key={chip}
-              type="button"
-              onClick={() => setFilter(chip)}
-              className={cn(
-                "rounded-full border px-3 py-1 text-sm font-medium transition-colors",
-                filter === chip
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-accent"
-              )}
-            >
-              {chip}
-            </button>
-          ))}
-        </div>
+        <Select value={filter} onValueChange={(v) => setFilter(v as FilterOption)}>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="All">All statuses</SelectItem>
+            {QUOTATION_STATUSES.map((status) => (
+              <SelectItem key={status} value={status}>
+                {status}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Button asChild>
           <Link href={withDemoQuery("/estimator/quotations/new")}>
             <Plus />

@@ -325,11 +325,11 @@ export function CreateDeliveryDialog({
                         <button
                           key={product.id}
                           type="button"
-                          onClick={() => addManualProduct(product.name, product.price, product.id)}
+                          onClick={() => addManualProduct(product.name, product.sellingPrice, product.id)}
                           className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-accent"
                         >
                           <span>{product.name}</span>
-                          <span className="text-muted-foreground">{formatGHS(product.price)}</span>
+                          <span className="text-muted-foreground">{formatGHS(product.sellingPrice)}</span>
                         </button>
                       ))}
                     </div>

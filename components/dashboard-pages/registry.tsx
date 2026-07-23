@@ -4,13 +4,11 @@ import { AffiliatesPage } from "@/components/dashboard-pages/affiliates-page"
 import { DashboardOverviewPage } from "@/components/dashboard-pages/dashboard-overview"
 import { ExpensesPage } from "@/components/dashboard-pages/expenses-page"
 import { GuidePage } from "@/components/dashboard-pages/guide-page"
-import { InventoryPage } from "@/components/dashboard-pages/inventory-page"
 import { LoyaltyPage } from "@/components/dashboard-pages/loyalty-page"
 import { MessagePage } from "@/components/dashboard-pages/message-page"
 import { OffersRewardsPage } from "@/components/dashboard-pages/offers-rewards-page"
 import { ReportsPage } from "@/components/dashboard-pages/reports-page"
 import { SettingsPage } from "@/components/dashboard-pages/settings-page"
-import { StoreWarehousePage } from "@/components/dashboard-pages/store-warehouse-page"
 import { WorkflowPage } from "@/components/dashboard-pages/workflow-page"
 import type { ModuleConfig } from "@/lib/modules"
 
@@ -32,7 +30,6 @@ export const DASHBOARD_PAGES: Record<
 > = {
   // Light
   dashboard: DashboardOverviewPage,
-  inventory: InventoryPage,
   expenses: ExpensesPage,
   settings: SettingsPage,
   guide: GuidePage,
@@ -41,7 +38,6 @@ export const DASHBOARD_PAGES: Record<
   message: MessagePage,
   "offers-rewards": OffersRewardsPage,
   // Ultra
-  "store-warehouse": StoreWarehousePage,
   loyalty: LoyaltyPage,
   affiliates: AffiliatesPage,
   workflow: WorkflowPage,

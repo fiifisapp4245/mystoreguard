@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { formatGHS } from "@/lib/mock-data"
-import { availableStock, cartLineTotal, QUICK_KEY_ITEMS, type CartLine, type Product } from "@/lib/pos-data"
+import { cartLineTotal, QUICK_KEY_ITEMS, totalAvailable, totalOnHand, totalSetAside, type CartLine, type Product } from "@/lib/pos-data"
 
 function LiveClock() {
   const [now, setNow] = useState<Date | null>(null)
@@ -123,11 +123,11 @@ export function CartPanel({
                 <span className="flex flex-col">
                   <span>{product.name}</span>
                   <span className="text-xs text-muted-foreground">
-                    {availableStock(product)} available
-                    {product.setAside > 0 && ` · ${product.onHand} on hand, ${product.setAside} set aside for delivery`}
+                    {totalAvailable(product)} available
+                    {totalSetAside(product) > 0 && ` · ${totalOnHand(product)} on hand, ${totalSetAside(product)} set aside for delivery`}
                   </span>
                 </span>
-                <span className="text-muted-foreground">{formatGHS(product.price)}</span>
+                <span className="text-muted-foreground">{formatGHS(product.sellingPrice)}</span>
               </button>
             ))}
           </div>
@@ -152,7 +152,7 @@ export function CartPanel({
               >
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">{line.product.name}</p>
-                  <p className="text-sm text-muted-foreground">{formatGHS(line.product.price)} each</p>
+                  <p className="text-sm text-muted-foreground">{formatGHS(line.product.sellingPrice)} each</p>
                 </div>
                 <div className="flex items-center gap-1">
                   <Button
@@ -211,7 +211,7 @@ export function CartPanel({
                 className="flex flex-col items-center gap-0.5 rounded-lg border p-2 text-center text-xs hover:bg-accent"
               >
                 <span className="font-medium">{item.name}</span>
-                <span className="text-muted-foreground">{formatGHS(item.price)}</span>
+                <span className="text-muted-foreground">{formatGHS(item.sellingPrice)}</span>
               </button>
             ))}
           </div>

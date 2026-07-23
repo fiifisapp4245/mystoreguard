@@ -207,7 +207,19 @@ export interface Supplier {
   openPurchaseOrders: number
 }
 
-export const SUPPLIER_CATEGORIES = ["Beverages", "Dairy", "Toiletries", "Packaging", "Fresh produce"]
+export const SUPPLIER_CATEGORIES = [
+  "Beverages",
+  "Dairy",
+  "Toiletries",
+  "Packaging",
+  "Fresh produce",
+  "Cooking oil",
+  "Grains",
+  "Cooking essentials",
+  "Noodles",
+  "Canned fish",
+  "Batteries",
+]
 
 export const PAYMENT_TERMS = ["Cash on delivery", "14 days", "30 days"]
 
@@ -272,7 +284,57 @@ export const SUPPLIERS: Supplier[] = [
     lastOrder: "10 Jul 2026",
     openPurchaseOrders: 1,
   },
+  {
+    id: "sup-7",
+    businessName: "Golden Star Wholesale",
+    contactPerson: "Mr. Asare",
+    phone: "030 888 7777",
+    categories: ["Cooking oil", "Grains", "Cooking essentials", "Noodles", "Canned fish", "Batteries"],
+    paymentTerms: "30 days",
+    lastOrder: "17 Jul 2026",
+    openPurchaseOrders: 2,
+  },
 ]
+
+export type LocationType = "shop" | "warehouse"
+
+export interface Location {
+  id: string
+  name: string
+  type: LocationType
+  address: string
+  /** Whether the register/register-like flows can sell from this location. */
+  canSell: boolean
+  /** Where goods land by default when a purchase order is received. */
+  isDefaultReceiving: boolean
+}
+
+export const LOCATIONS: Location[] = [
+  {
+    id: "loc-makola",
+    name: "Makola Shop",
+    type: "shop",
+    address: "Makola, Accra",
+    canSell: true,
+    isDefaultReceiving: true,
+  },
+  {
+    id: "loc-warehouse-abossey",
+    name: "Warehouse — Abossey Okai",
+    type: "warehouse",
+    address: "Abossey Okai, Accra",
+    canSell: false,
+    isDefaultReceiving: false,
+  },
+]
+
+export const DEFAULT_SHOP_LOCATION_ID = "loc-makola"
+
+/** Light/Prime tiers see a single (shop) location; Ultra unlocks every location and transfers between them. */
+export function getVisibleLocations(locations: Location[], isMultiLocation: boolean): Location[] {
+  if (isMultiLocation) return locations
+  return locations.filter((location) => location.type === "shop")
+}
 
 export type StaffRole = "Owner" | "Manager" | "Cashier" | "Stockkeeper"
 export type StaffStatus = "Active" | "Invited"
@@ -513,10 +575,10 @@ export interface AttentionItem {
 export const ATTENTION_ITEMS: AttentionItem[] = [
   {
     id: "low-stock",
-    moduleId: "inventory",
-    href: "/m/inventory",
+    moduleId: "products",
+    href: "/inventory/products",
     line: "Products low on stock",
-    amount: "7",
+    amount: "9",
   },
   {
     id: "credit-overdue",
@@ -534,10 +596,10 @@ export const ATTENTION_ITEMS: AttentionItem[] = [
   },
   {
     id: "transfers-pending",
-    moduleId: "store-warehouse",
-    href: "/m/store-warehouse",
+    moduleId: "movements",
+    href: "/stock/movements",
     line: "Stock transfers awaiting approval",
-    amount: "2",
+    amount: "1",
   },
   {
     id: "appointments-today",
@@ -563,7 +625,7 @@ export interface GettingStartedItem {
 }
 
 export const NEW_STORE_ATTENTION_ITEMS: GettingStartedItem[] = [
-  { id: "add-products", href: "/m/inventory", line: "Add your first products" },
+  { id: "add-products", href: "/inventory/products", line: "Add your first products" },
   { id: "add-supplier", href: "/people/suppliers", line: "Add a supplier" },
   { id: "first-sale", href: "/register", line: "Record your first sale" },
 ]

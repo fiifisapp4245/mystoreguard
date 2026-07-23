@@ -11,20 +11,24 @@ import { TotalsRail } from "@/components/register/totals-rail"
 import { PaymentSheet } from "@/components/register/payment-sheet"
 import { HeldSalesSheet } from "@/components/register/held-sales-sheet"
 import { AddCustomerDialog } from "@/components/hubs/people/add-customer-dialog"
-import type { Customer } from "@/lib/mock-data"
+import { DEFAULT_SHOP_LOCATION_ID, type Customer } from "@/lib/mock-data"
 import {
   ALL_PRODUCTS,
+  availableAt,
   cartSubtotal,
   deductOnHandForSale,
   findProductByBarcode,
+  getProduct,
   INITIAL_HELD_SALES,
   looksLikeBarcode,
+  purchaseUnitsAt,
   searchProducts,
   type CartLine,
   type HeldSale,
   type Product,
   type TenderType,
 } from "@/lib/pos-data"
+import { splitStock } from "@/lib/stock-movements-data"
 
 export function RegisterScreen() {
   const router = useRouter()
@@ -49,6 +53,7 @@ export function RegisterScreen() {
   const [addCustomerOpen, setAddCustomerOpen] = useState(false)
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  const [splitPromptProduct, setSplitPromptProduct] = useState<Product | null>(null)
 
   const scanInputRef = useRef<HTMLInputElement>(null)
 
@@ -68,21 +73,49 @@ export function RegisterScreen() {
     [scanValue]
   )
 
-  const addProduct = useCallback((product: Product) => {
-    setCart((prev) => {
-      const existing = prev.find((line) => line.product.id === product.id)
-      if (existing) {
-        return prev.map((line) =>
-          line.product.id === product.id ? { ...line, quantity: line.quantity + 1 } : line
-        )
+  const addProduct = useCallback(
+    (product: Product) => {
+      if (!product.pack.soldByMeasure) {
+        const existingQty = cart.find((line) => line.product.id === product.id)?.quantity ?? 0
+        const avail = availableAt(product, DEFAULT_SHOP_LOCATION_ID) - existingQty
+        if (avail <= 0 && purchaseUnitsAt(product, DEFAULT_SHOP_LOCATION_ID) > 0) {
+          setSplitPromptProduct(product)
+          return
+        }
       }
-      return [...prev, { product, quantity: 1 }]
-    })
-    setJustAddedProductId(product.id)
-    window.setTimeout(() => {
-      setJustAddedProductId((current) => (current === product.id ? null : current))
-    }, 1200)
-  }, [])
+
+      setCart((prev) => {
+        const existing = prev.find((line) => line.product.id === product.id)
+        if (existing) {
+          return prev.map((line) =>
+            line.product.id === product.id ? { ...line, quantity: line.quantity + 1 } : line
+          )
+        }
+        return [...prev, { product, quantity: 1 }]
+      })
+      setJustAddedProductId(product.id)
+      window.setTimeout(() => {
+        setJustAddedProductId((current) => (current === product.id ? null : current))
+      }, 1200)
+    },
+    [cart]
+  )
+
+  function handleConfirmSplit() {
+    if (!splitPromptProduct) return
+    const movement = splitStock(false, DEFAULT_SHOP_LOCATION_ID, splitPromptProduct.id, 1, "Register")
+    if (!movement) {
+      toast.error("Nothing sealed to split at this location.")
+      setSplitPromptProduct(null)
+      refocusScan()
+      return
+    }
+    toast.success("Carton split", { description: `${movement.baseUnitsCreated} × ${splitPromptProduct.pack.baseUnit} now available.` })
+    const refreshed = getProduct(splitPromptProduct.id)
+    setSplitPromptProduct(null)
+    if (refreshed) addProduct(refreshed)
+    refocusScan()
+  }
 
   const showScanError = useCallback((message: string) => {
     setScanError(message)
@@ -235,7 +268,7 @@ export function RegisterScreen() {
       const target = event.target as HTMLElement | null
       const isTypingTarget = target?.tagName === "INPUT" || target?.tagName === "TEXTAREA"
       const anyOverlayOpen =
-        addCustomerOpen || clearConfirmOpen || heldSalesOpen || shortcutsOpen || customerPopoverOpen
+        addCustomerOpen || clearConfirmOpen || heldSalesOpen || shortcutsOpen || customerPopoverOpen || splitPromptProduct !== null
 
       if (event.key === "Escape") {
         if (paymentOpen) {
@@ -246,6 +279,9 @@ export function RegisterScreen() {
           refocusScan()
         } else if (shortcutsOpen) {
           setShortcutsOpen(false)
+          refocusScan()
+        } else if (splitPromptProduct !== null) {
+          setSplitPromptProduct(null)
           refocusScan()
         } else if (!addCustomerOpen && !clearConfirmOpen && !customerPopoverOpen) {
           exitRegister()
@@ -326,6 +362,7 @@ export function RegisterScreen() {
     clearConfirmOpen,
     customerPopoverOpen,
     customer,
+    splitPromptProduct,
   ])
 
   return (
@@ -436,6 +473,34 @@ export function RegisterScreen() {
               <Button variant="destructive" onClick={confirmClearCart}>
                 Clear cart
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {splitPromptProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4">
+          <div className="flex w-full max-w-sm flex-col gap-4 rounded-xl bg-popover p-5 shadow-lg ring-1 ring-foreground/10">
+            <div>
+              <p className="font-medium">
+                No {splitPromptProduct.pack.baseUnit.toLowerCase()}s available — split a {splitPromptProduct.pack.purchaseUnit?.toLowerCase()}?
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {splitPromptProduct.name} has sealed {splitPromptProduct.pack.purchaseUnit?.toLowerCase()}s in stock. Splitting one gives{" "}
+                {splitPromptProduct.pack.unitsPerPurchaseUnit} {splitPromptProduct.pack.baseUnit.toLowerCase()}s to sell from.
+              </p>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSplitPromptProduct(null)
+                  refocusScan()
+                }}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleConfirmSplit}>Split {splitPromptProduct.pack.purchaseUnit}</Button>
             </div>
           </div>
         </div>

@@ -4,6 +4,8 @@ import { PageHeader } from "@/components/dashboard/page-header"
 import { QuotationsTab } from "@/components/hubs/estimator/quotations-tab"
 import { TemplatesTab } from "@/components/hubs/estimator/templates-tab"
 import { HubTabsNav } from "@/components/hubs/hub-tabs-nav"
+import { ProductsTab } from "@/components/hubs/inventory/products-tab"
+import { PurchaseOrdersTab } from "@/components/hubs/inventory/purchase-orders-tab"
 import { InvoicesTab } from "@/components/hubs/invoice/invoices-tab"
 import { PaymentsTab } from "@/components/hubs/invoice/payments-tab"
 import { MoneyHubTab } from "@/components/hubs/money-hub-tab"
@@ -12,6 +14,9 @@ import { StaffTab } from "@/components/hubs/people/staff-tab"
 import { SuppliersTab } from "@/components/hubs/people/suppliers-tab"
 import { AllSalesTab } from "@/components/hubs/sales/all-sales-tab"
 import { ReturnsTab } from "@/components/hubs/sales/returns-tab"
+import { MovementsTab } from "@/components/hubs/stock/movements-tab"
+import { StockLevelsTab } from "@/components/hubs/stock/stock-levels-tab"
+import { StocktakesTab } from "@/components/hubs/stock/stocktakes-tab"
 import { GROUPS, getHub, getModule } from "@/lib/modules"
 
 export function generateStaticParams() {
@@ -62,6 +67,11 @@ export default async function HubTabPage({
       {hubId === "invoice" && tab === "payments" && <PaymentsTab />}
       {hubId === "estimator" && tab === "quotations" && <QuotationsTab />}
       {hubId === "estimator" && tab === "templates" && <TemplatesTab />}
+      {hubId === "inventory" && tab === "products" && <ProductsTab />}
+      {hubId === "inventory" && tab === "purchase-orders" && <PurchaseOrdersTab />}
+      {hubId === "stock" && tab === "stock-levels" && <StockLevelsTab />}
+      {hubId === "stock" && tab === "movements" && <MovementsTab />}
+      {hubId === "stock" && tab === "stocktakes" && <StocktakesTab />}
       {hubId === "money" && <MoneyHubTab moduleId={tab} />}
     </div>
   )

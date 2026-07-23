@@ -57,7 +57,7 @@ export function InvoiceItemsSection({
           onKeyDown={(event) => {
             if (event.key === "Enter") {
               event.preventDefault()
-              if (matches[0]) addProduct(matches[0].name, matches[0].price)
+              if (matches[0]) addProduct(matches[0].name, matches[0].sellingPrice)
               else addFreeText()
             }
           }}
@@ -68,11 +68,11 @@ export function InvoiceItemsSection({
               <button
                 key={product.id}
                 type="button"
-                onClick={() => addProduct(product.name, product.price)}
+                onClick={() => addProduct(product.name, product.sellingPrice)}
                 className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-accent"
               >
                 <span>{product.name}</span>
-                <span className="text-muted-foreground">{formatGHS(product.price)}</span>
+                <span className="text-muted-foreground">{formatGHS(product.sellingPrice)}</span>
               </button>
             ))}
           </div>

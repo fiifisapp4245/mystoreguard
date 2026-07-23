@@ -10,6 +10,13 @@ import { SaleDetailSheet } from "@/components/hubs/sales/sale-detail-sheet"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   Table,
   TableBody,
   TableCell,
@@ -17,8 +24,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { cn } from "@/lib/utils"
 import { formatGHS } from "@/lib/mock-data"
+import { LARRY_SALES_RECORDS } from "@/lib/larry-data"
 import {
   getStandardPeriodRange,
   isDateInRange,
@@ -26,16 +33,23 @@ import {
   type StandardPeriod,
 } from "@/lib/period-utils"
 import { RETURNS_RECORDS, SALES_RECORDS, type SaleRecord, type SaleTenderType } from "@/lib/sales-data"
+import { useDemoState } from "@/hooks/use-demo-state"
 
-type FilterChip = "All" | SaleTenderType
+type FilterOption = "All" | SaleTenderType
 
-const FILTER_CHIPS: FilterChip[] = ["All", "Cash", "Momo", "Credit", "Deposit", "On-hold"]
+const TENDER_TYPES: SaleTenderType[] = ["Cash", "Momo", "Credit", "Deposit", "On-hold"]
+const NO_RETURNS: never[] = []
 
 export function AllSalesTab() {
+  const { state } = useDemoState()
+  const isLarry = state.storePersona === "larry"
+  const salesRecords: SaleRecord[] = isLarry ? LARRY_SALES_RECORDS : SALES_RECORDS
+  const returnsRecords = isLarry ? NO_RETURNS : RETURNS_RECORDS
+
   const [period, setPeriod] = useState<StandardPeriod>("today")
   const [customFrom, setCustomFrom] = useState("")
   const [customTo, setCustomTo] = useState("")
-  const [filter, setFilter] = useState<FilterChip>("All")
+  const [filter, setFilter] = useState<FilterOption>("All")
   const [search, setSearch] = useState("")
   const [selected, setSelected] = useState<SaleRecord | null>(null)
 
@@ -46,8 +60,8 @@ export function AllSalesTab() {
   const periodLabel = STANDARD_PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? "Today"
 
   const inPeriod = useMemo(
-    () => SALES_RECORDS.filter((sale) => isDateInRange(sale.dateISO, periodRange)),
-    [periodRange]
+    () => salesRecords.filter((sale) => isDateInRange(sale.dateISO, periodRange)),
+    [salesRecords, periodRange]
   )
 
   const filtered = useMemo(() => {
@@ -65,7 +79,7 @@ export function AllSalesTab() {
   const stats = useMemo(() => {
     const completedInPeriod = inPeriod.filter((sale) => sale.type !== "On-hold")
     const salesTotal = completedInPeriod.reduce((sum, sale) => sum + sale.amount, 0)
-    const returnsInPeriod = RETURNS_RECORDS.filter((r) => isDateInRange(r.dateISO, periodRange))
+    const returnsInPeriod = returnsRecords.filter((r) => isDateInRange(r.dateISO, periodRange))
 
     return [
       { label: "Sales", caption: periodLabel, value: formatGHS(salesTotal) },
@@ -73,7 +87,7 @@ export function AllSalesTab() {
       { label: "Credit outstanding", caption: "as of now", value: "GHS 6,840.00" },
       { label: "Returns", caption: periodLabel, value: String(returnsInPeriod.length) },
     ]
-  }, [inPeriod, periodRange, periodLabel])
+  }, [inPeriod, periodRange, periodLabel, returnsRecords])
 
   return (
     <div className="flex flex-col gap-6">
@@ -85,23 +99,19 @@ export function AllSalesTab() {
 
       <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-1.5">
-            {FILTER_CHIPS.map((chip) => (
-              <button
-                key={chip}
-                type="button"
-                onClick={() => setFilter(chip)}
-                className={cn(
-                  "rounded-full border px-3 py-1 text-sm font-medium transition-colors",
-                  filter === chip
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-accent"
-                )}
-              >
-                {chip}
-              </button>
-            ))}
-          </div>
+          <Select value={filter} onValueChange={(v) => setFilter(v as FilterOption)}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All types</SelectItem>
+              {TENDER_TYPES.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {type}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <div className="flex flex-wrap items-center gap-2">
             <PeriodSelect value={period} onValueChange={setPeriod} />
             <div className="relative">

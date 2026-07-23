@@ -27,6 +27,13 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   Table,
   TableBody,
   TableCell,
@@ -35,7 +42,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { cn } from "@/lib/utils"
 import { formatGHS } from "@/lib/mock-data"
 import {
   assignRider,
@@ -57,11 +63,10 @@ import {
   type StandardPeriod,
 } from "@/lib/period-utils"
 
-type FilterChip = "All" | DeliveryStatus
+type FilterOption = "All" | DeliveryStatus
 type ViewMode = "list" | "board"
 
-const FILTER_CHIPS: FilterChip[] = [
-  "All",
+const DELIVERY_STATUSES: DeliveryStatus[] = [
   "Scheduled",
   "Assigned",
   "Out for delivery",
@@ -76,7 +81,7 @@ export function DeliveriesScreen() {
   const [period, setPeriod] = useState<StandardPeriod>("today")
   const [customFrom, setCustomFrom] = useState("")
   const [customTo, setCustomTo] = useState("")
-  const [filter, setFilter] = useState<FilterChip>("All")
+  const [filter, setFilter] = useState<FilterOption>("All")
   const [search, setSearch] = useState("")
 
   const [selected, setSelected] = useState<Delivery | null>(null)
@@ -259,23 +264,19 @@ export function DeliveriesScreen() {
 
       <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-1.5">
-            {FILTER_CHIPS.map((chip) => (
-              <button
-                key={chip}
-                type="button"
-                onClick={() => setFilter(chip)}
-                className={cn(
-                  "rounded-full border px-3 py-1 text-sm font-medium transition-colors",
-                  filter === chip
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-accent"
-                )}
-              >
-                {chip}
-              </button>
-            ))}
-          </div>
+          <Select value={filter} onValueChange={(v) => setFilter(v as FilterOption)}>
+            <SelectTrigger className="w-44">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All statuses</SelectItem>
+              {DELIVERY_STATUSES.map((status) => (
+                <SelectItem key={status} value={status}>
+                  {status}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <div className="flex flex-wrap items-center gap-2">
             <PeriodSelect value={period} onValueChange={setPeriod} />
             <div className="relative">

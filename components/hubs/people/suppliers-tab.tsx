@@ -18,16 +18,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { LARRY_SUPPLIERS } from "@/lib/larry-data"
 import { SUPPLIERS, type Supplier } from "@/lib/mock-data"
-
-const STATS = [
-  {
-    label: "Suppliers",
-    value: "18",
-    trend: { value: 2, direction: "up" as const, tone: "positive" as const },
-  },
-  { label: "Open purchase orders", value: "5" },
-]
+import { useDemoState } from "@/hooks/use-demo-state"
 
 function CategoryBadges({ categories }: { categories: string[] }) {
   const shown = categories.slice(0, 2)
@@ -50,10 +43,27 @@ function CategoryBadges({ categories }: { categories: string[] }) {
 }
 
 export function SuppliersTab() {
-  const [suppliers, setSuppliers] = useState<Supplier[]>(SUPPLIERS)
+  const { state } = useDemoState()
+  const isLarry = state.storePersona === "larry"
+
+  const [suppliers, setSuppliers] = useState<Supplier[]>(() => (isLarry ? LARRY_SUPPLIERS : SUPPLIERS))
+  const [prevIsLarry, setPrevIsLarry] = useState(isLarry)
+  if (isLarry !== prevIsLarry) {
+    setPrevIsLarry(isLarry)
+    setSuppliers(isLarry ? LARRY_SUPPLIERS : SUPPLIERS)
+  }
+
   const [search, setSearch] = useState("")
   const [addOpen, setAddOpen] = useState(false)
   const [selected, setSelected] = useState<Supplier | null>(null)
+
+  const stats = useMemo(
+    () => [
+      { label: "Suppliers", value: String(suppliers.length) },
+      { label: "Open purchase orders", value: String(suppliers.reduce((sum, s) => sum + s.openPurchaseOrders, 0)) },
+    ],
+    [suppliers]
+  )
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -74,7 +84,7 @@ export function SuppliersTab() {
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {STATS.map((stat) => (
+        {stats.map((stat) => (
           <StatCard key={stat.label} {...stat} />
         ))}
       </div>
