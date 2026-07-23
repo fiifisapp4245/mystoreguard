@@ -1,7 +1,11 @@
 import { notFound } from "next/navigation"
 
 import { PageHeader } from "@/components/dashboard/page-header"
+import { QuotationsTab } from "@/components/hubs/estimator/quotations-tab"
+import { TemplatesTab } from "@/components/hubs/estimator/templates-tab"
 import { HubTabsNav } from "@/components/hubs/hub-tabs-nav"
+import { InvoicesTab } from "@/components/hubs/invoice/invoices-tab"
+import { PaymentsTab } from "@/components/hubs/invoice/payments-tab"
 import { MoneyHubTab } from "@/components/hubs/money-hub-tab"
 import { CustomersTab } from "@/components/hubs/people/customers-tab"
 import { StaffTab } from "@/components/hubs/people/staff-tab"
@@ -54,6 +58,10 @@ export default async function HubTabPage({
       {hubId === "people" && tab === "staff" && <StaffTab />}
       {hubId === "sales" && tab === "all" && <AllSalesTab />}
       {hubId === "sales" && tab === "returns" && <ReturnsTab />}
+      {hubId === "invoice" && tab === "invoices" && <InvoicesTab />}
+      {hubId === "invoice" && tab === "payments" && <PaymentsTab />}
+      {hubId === "estimator" && tab === "quotations" && <QuotationsTab />}
+      {hubId === "estimator" && tab === "templates" && <TemplatesTab />}
       {hubId === "money" && <MoneyHubTab moduleId={tab} />}
     </div>
   )

@@ -20,7 +20,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { UpgradeDialog } from "@/components/upgrade-dialog"
-import { demoStateToParams, type DemoState } from "@/hooks/use-demo-state"
+import { demoStateToParams, STORE_PERSONA_LABEL, type DemoState } from "@/hooks/use-demo-state"
 import {
   TIER_LABEL,
   isModuleLocked,
@@ -200,7 +200,7 @@ export function AppSidebar({ state }: { state: DemoState }) {
             MyStoreGuard
           </span>
           <span className="text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
-            Adwoa&apos;s Provisions — Makola, Accra
+            {STORE_PERSONA_LABEL[state.storePersona].name} — {STORE_PERSONA_LABEL[state.storePersona].location}
           </span>
         </div>
 

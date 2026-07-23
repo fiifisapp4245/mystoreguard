@@ -12,6 +12,7 @@ import {
   MessageSquare,
   Package,
   Receipt,
+  Ruler,
   Settings,
   ShoppingCart,
   Truck,
@@ -173,18 +174,31 @@ export const MODULES: ModuleConfig[] = [
     tier: "light",
   },
   {
-    id: "invoice",
-    name: "Invoice",
+    id: "invoices",
+    name: "Invoices",
     icon: FileText,
-    description: "Invoicing customers for goods and services.",
+    description: "Creating and tracking invoices through draft, sent, partially paid, and paid.",
     features: [
       {
         name: "Invoices",
         description: "Creating and tracking invoices through draft, sent, partially paid, and paid.",
       },
       {
-        name: "Audit logs",
-        description: "A record of invoice creation, edits, and status changes. Included in every tier.",
+        name: "Record payment",
+        description: "Recording a payment against an invoice, recalculating its status automatically.",
+      },
+    ],
+    tier: "prime",
+  },
+  {
+    id: "payments",
+    name: "Payments received",
+    icon: Receipt,
+    description: "Every payment recorded against an invoice, across every method.",
+    features: [
+      {
+        name: "Payments received",
+        description: "A record of every payment taken against an invoice, with method and reference.",
       },
     ],
     tier: "prime",
@@ -393,22 +407,31 @@ export const MODULES: ModuleConfig[] = [
     tier: "ultra",
   },
   {
-    id: "estimator",
-    name: "Estimator",
+    id: "quotations",
+    name: "Quotations",
     icon: Calculator,
-    description: "Quotations and estimates prepared before a sale is made.",
+    description: "Parametric quotations computed from measurements — curtains, aluminium, printing, and similar trades.",
     features: [
       {
-        name: "Template",
-        description: "Reusable structures for building estimates quickly and consistently.",
+        name: "Quotations",
+        description: "Customer-facing quotations built from templates or the product catalogue, trackable through to conversion.",
       },
       {
-        name: "Estimate",
-        description: "A formal quotation showing what a job or order will cost before it becomes a sale.",
+        name: "Convert to invoice",
+        description: "Turning an accepted quotation into an invoice without retyping anything.",
       },
+    ],
+    tier: "prime",
+  },
+  {
+    id: "templates",
+    name: "Templates",
+    icon: Ruler,
+    description: "Reusable pricing templates — input fields and formulas that compute yardage, area, and price from measurements.",
+    features: [
       {
-        name: "Audit logs",
-        description: "A record of estimates created and modified. Included in every tier.",
+        name: "Template fields & formulas",
+        description: "The input fields (e.g. height, width) and computation formulas each template runs to produce a price.",
       },
     ],
     tier: "prime",
@@ -534,6 +557,12 @@ export interface GroupConfig {
   icon?: LucideIcon
   /** Page-header subtitle for the hub's tab page. Only meaningful when type is "hub". */
   description?: string
+  /**
+   * True for a hub that's referenced inside another group's moduleIds (e.g.
+   * Sales/Invoice/Estimator nested inside Sell) — it still exists and routes
+   * as a real hub, it just isn't rendered as its own top-level sidebar row.
+   */
+  nestedOnly?: boolean
 }
 
 /**
@@ -549,11 +578,30 @@ export const GROUPS: GroupConfig[] = [
     type: "hub",
     icon: ShoppingCart,
     description: "Every sale in one place — cash, momo, credit, and deposit — plus returns.",
+    nestedOnly: true,
+  },
+  {
+    id: "invoice",
+    label: "Invoice",
+    moduleIds: ["invoices", "payments"],
+    type: "hub",
+    icon: FileText,
+    description: "Invoices and the payments recorded against them, in one place.",
+    nestedOnly: true,
+  },
+  {
+    id: "estimator",
+    label: "Estimator",
+    moduleIds: ["quotations", "templates"],
+    type: "hub",
+    icon: Calculator,
+    description: "Parametric quotations and the templates that compute them.",
+    nestedOnly: true,
   },
   {
     id: "sell",
     label: "Sell",
-    moduleIds: ["invoice", "deliveries", "estimator"],
+    moduleIds: ["sales", "invoice", "deliveries", "estimator"],
     type: "group",
   },
   {
@@ -608,6 +656,30 @@ export function hubFirstTabPath(hubId: string): string {
   const hub = getHub(hubId)
   const firstTab = hub?.moduleIds[0]
   return firstTab ? `/${hubId}/${firstTab}` : `/${hubId}`
+}
+
+/**
+ * Resolves an id referenced inside a group's moduleIds. Most ids are real
+ * modules; a few (Sales, Invoice, Estimator) are actually hubs nested inside
+ * the "Sell" group — for those, build a module-shaped link to that hub's
+ * first tab instead, the same shape hubAsModule builds for a standalone
+ * top-level hub.
+ */
+function resolveGroupMember(id: string): ModuleConfig | undefined {
+  const hub = getHub(id)
+  if (hub) {
+    const firstTabModule = getModule(hub.moduleIds[0])
+    return {
+      id: hub.id,
+      name: hub.label,
+      icon: hub.icon ?? firstTabModule?.icon ?? Package,
+      description: hub.description ?? "",
+      features: [],
+      tier: firstTabModule?.tier ?? "light",
+      href: hubFirstTabPath(hub.id),
+    }
+  }
+  return getModule(id)
 }
 
 /** Current sidebar: a flat, ungrouped list in this exact order. */
@@ -675,6 +747,37 @@ const SALES_FLAT_ENTRY: ModuleConfig = {
   href: hubFirstTabPath("sales"),
 }
 
+/**
+ * The flat view still shows single "Invoice" and "Estimator" items — they
+ * now route to their hubs instead of their own pages. Not real modules, so
+ * they aren't in MODULES; resolveFlat() substitutes them in.
+ */
+const INVOICE_FLAT_ENTRY: ModuleConfig = {
+  id: "invoice",
+  name: "Invoice",
+  icon: FileText,
+  description: "Invoices and the payments recorded against them, in one place.",
+  features: [
+    { name: "Invoices", description: "Creating and tracking invoices through draft, sent, partially paid, and paid." },
+    { name: "Payments received", description: "Every payment recorded against an invoice, across every method." },
+  ],
+  tier: "prime",
+  href: hubFirstTabPath("invoice"),
+}
+
+const ESTIMATOR_FLAT_ENTRY: ModuleConfig = {
+  id: "estimator",
+  name: "Estimator",
+  icon: Calculator,
+  description: "Parametric quotations and the templates that compute them.",
+  features: [
+    { name: "Quotations", description: "Customer-facing quotations built from templates or the product catalogue." },
+    { name: "Templates", description: "Reusable pricing templates — input fields and formulas that compute price from measurements." },
+  ],
+  tier: "prime",
+  href: hubFirstTabPath("estimator"),
+}
+
 export const TIER_LABEL: Record<Tier, string> = {
   light: "Light",
   prime: "Prime",
@@ -733,7 +836,7 @@ export interface ResolvedNav {
 export function resolveNav(toggles: NavToggles): ResolvedNav {
   const home = GROUPS.find((g) => g.id === "home")
   const system = GROUPS.find((g) => g.id === "system")
-  const middleGroups = GROUPS.filter((g) => g.id !== "home" && g.id !== "system")
+  const middleGroups = GROUPS.filter((g) => g.id !== "home" && g.id !== "system" && !g.nestedOnly)
 
   let bottomUtilityIds: string[] = []
 
@@ -752,7 +855,7 @@ export function resolveNav(toggles: NavToggles): ResolvedNav {
     bottomUtilityIds = ["message"]
   }
 
-  const toModules = (ids: string[]) => ids.map(getModule).filter((m): m is ModuleConfig => Boolean(m))
+  const toModules = (ids: string[]) => ids.map(resolveGroupMember).filter((m): m is ModuleConfig => Boolean(m))
 
   return {
     pinned: home ? toModules(home.moduleIds) : [],
@@ -777,6 +880,8 @@ export function resolveFlat(): ModuleConfig[] {
   return FLAT_ORDER.map((id) => {
     if (id === "users") return USERS_FLAT_ENTRY
     if (id === "sales") return SALES_FLAT_ENTRY
+    if (id === "invoice") return INVOICE_FLAT_ENTRY
+    if (id === "estimator") return ESTIMATOR_FLAT_ENTRY
     return getModule(id)
   }).filter((m): m is ModuleConfig => Boolean(m))
 }

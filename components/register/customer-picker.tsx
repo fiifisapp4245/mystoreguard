@@ -20,12 +20,17 @@ export function CustomerPicker({
   onSelect,
   onAddNew,
   onOpenChange,
+  customers = CUSTOMERS,
+  placeholder = "Walk-in customer",
 }: {
   customer: Customer | null
   onSelect: (customer: Customer | null) => void
   onAddNew: () => void
   /** Called whenever the picker popover itself opens/closes, so the register can pause its global scan listener. */
   onOpenChange?: (open: boolean) => void
+  /** Defaults to the main customer list — pass a different list (e.g. a different store persona's customers) to search against instead. */
+  customers?: Customer[]
+  placeholder?: string
 }) {
   const [open, setOpen] = useState(false)
 
@@ -40,7 +45,7 @@ export function CustomerPicker({
         <PopoverTrigger asChild>
           <Button variant="outline" className="flex-1 justify-start gap-2 font-normal">
             <User className="size-4 text-muted-foreground" />
-            <span className="truncate">{customer?.name ?? "Walk-in customer"}</span>
+            <span className="truncate">{customer?.name ?? placeholder}</span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-72 p-0" align="start">
@@ -50,16 +55,16 @@ export function CustomerPicker({
               <CommandEmpty>No customer found.</CommandEmpty>
               <CommandGroup>
                 <CommandItem
-                  value="Walk-in customer"
+                  value={placeholder}
                   onSelect={() => {
                     onSelect(null)
                     handleOpenChange(false)
                   }}
                 >
                   <User className="size-4" />
-                  Walk-in customer
+                  {placeholder}
                 </CommandItem>
-                {CUSTOMERS.map((c) => (
+                {customers.map((c) => (
                   <CommandItem
                     key={c.id}
                     value={c.name}

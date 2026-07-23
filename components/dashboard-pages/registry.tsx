@@ -3,11 +3,9 @@ import type { ComponentType } from "react"
 import { AffiliatesPage } from "@/components/dashboard-pages/affiliates-page"
 import { DashboardOverviewPage } from "@/components/dashboard-pages/dashboard-overview"
 import { DeliveriesPage } from "@/components/dashboard-pages/deliveries-page"
-import { EstimatorPage } from "@/components/dashboard-pages/estimator-page"
 import { ExpensesPage } from "@/components/dashboard-pages/expenses-page"
 import { GuidePage } from "@/components/dashboard-pages/guide-page"
 import { InventoryPage } from "@/components/dashboard-pages/inventory-page"
-import { InvoicePage } from "@/components/dashboard-pages/invoice-page"
 import { LoyaltyPage } from "@/components/dashboard-pages/loyalty-page"
 import { MessagePage } from "@/components/dashboard-pages/message-page"
 import { OffersRewardsPage } from "@/components/dashboard-pages/offers-rewards-page"
@@ -40,12 +38,10 @@ export const DASHBOARD_PAGES: Record<
   settings: SettingsPage,
   guide: GuidePage,
   // Prime
-  invoice: InvoicePage,
   deliveries: DeliveriesPage,
   reports: ReportsPage,
   message: MessagePage,
   "offers-rewards": OffersRewardsPage,
-  estimator: EstimatorPage,
   // Ultra
   "store-warehouse": StoreWarehousePage,
   loyalty: LoyaltyPage,

@@ -10,6 +10,7 @@ import {
   Clock,
   FileText,
   Package,
+  Plus,
   Settings2,
   ShoppingCart,
   UserCog,
@@ -142,6 +143,12 @@ export function DashboardOverviewPage({ module }: { module: ModulePageData }) {
             <Button variant="outline" size="sm">
               <Settings2 />
               Customize
+            </Button>
+            <Button asChild size="sm">
+              <Link href="/register">
+                <Plus />
+                New sale
+              </Link>
             </Button>
           </div>
         }

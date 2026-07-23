@@ -8,6 +8,7 @@ import type { EstimatorLocation, MessageLocation, Tier } from "@/lib/modules"
 export type NavStructure = "flat" | "grouped"
 export type LockMode = "hidden" | "greyed"
 export type StoreState = "established" | "new"
+export type StorePersona = "adwoa" | "larry"
 
 export interface DemoState {
   nav: NavStructure
@@ -16,6 +17,12 @@ export interface DemoState {
   estimatorLocation: EstimatorLocation
   messageLocation: MessageLocation
   storeState: StoreState
+  storePersona: StorePersona
+}
+
+export const STORE_PERSONA_LABEL: Record<StorePersona, { name: string; location: string }> = {
+  adwoa: { name: "Adwoa's Provisions", location: "Makola, Accra" },
+  larry: { name: "Larry's Curtains & Décor", location: "East Legon, Accra" },
 }
 
 export const DEMO_DEFAULTS: DemoState = {
@@ -25,6 +32,7 @@ export const DEMO_DEFAULTS: DemoState = {
   estimatorLocation: "sell",
   messageLocation: "grow",
   storeState: "established",
+  storePersona: "adwoa",
 }
 
 function parse(searchParams: URLSearchParams): DemoState {
@@ -34,6 +42,7 @@ function parse(searchParams: URLSearchParams): DemoState {
   const estimatorLocation = searchParams.get("estimator")
   const messageLocation = searchParams.get("message")
   const storeState = searchParams.get("store")
+  const storePersona = searchParams.get("persona")
 
   return {
     nav: nav === "flat" ? "flat" : DEMO_DEFAULTS.nav,
@@ -42,6 +51,7 @@ function parse(searchParams: URLSearchParams): DemoState {
     estimatorLocation: estimatorLocation === "system" ? "system" : DEMO_DEFAULTS.estimatorLocation,
     messageLocation: messageLocation === "bottom" ? "bottom" : DEMO_DEFAULTS.messageLocation,
     storeState: storeState === "new" ? "new" : DEMO_DEFAULTS.storeState,
+    storePersona: storePersona === "larry" ? "larry" : DEMO_DEFAULTS.storePersona,
   }
 }
 
@@ -54,6 +64,7 @@ export function demoStateToParams(state: DemoState): URLSearchParams {
   if (state.estimatorLocation !== DEMO_DEFAULTS.estimatorLocation) params.set("estimator", state.estimatorLocation)
   if (state.messageLocation !== DEMO_DEFAULTS.messageLocation) params.set("message", state.messageLocation)
   if (state.storeState !== DEMO_DEFAULTS.storeState) params.set("store", state.storeState)
+  if (state.storePersona !== DEMO_DEFAULTS.storePersona) params.set("persona", state.storePersona)
 
   return params
 }

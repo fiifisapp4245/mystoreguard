@@ -55,18 +55,19 @@ export function DemoControls({
   state: DemoState
   update: (patch: Partial<DemoState>) => void
 }) {
-  const [open, setOpen] = React.useState(true)
+  const [open, setOpen] = React.useState(false)
   const groupedOnly = state.nav !== "grouped"
 
   if (!open) {
     return (
       <Button
         onClick={() => setOpen(true)}
-        className="fixed right-4 bottom-4 z-50 shadow-lg"
+        className="fixed right-4 bottom-4 z-50 size-9 rounded-full p-0 shadow-lg sm:h-8 sm:w-auto sm:rounded-md sm:px-3"
         size="sm"
+        aria-label="Demo controls"
       >
         <SlidersHorizontal className="size-4" />
-        Demo controls
+        <span className="hidden sm:inline">Demo controls</span>
       </Button>
     )
   }
@@ -159,6 +160,14 @@ export function DemoControls({
           rightLabel="New store"
           checked={state.storeState === "new"}
           onCheckedChange={(checked) => update({ storeState: checked ? "new" : "established" })}
+        />
+
+        <ControlRow
+          label="Store persona"
+          leftLabel="Adwoa's Provisions"
+          rightLabel="Larry's Curtains & Décor"
+          checked={state.storePersona === "larry"}
+          onCheckedChange={(checked) => update({ storePersona: checked ? "larry" : "adwoa" })}
         />
       </CardContent>
     </Card>

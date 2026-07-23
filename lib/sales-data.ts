@@ -441,76 +441,8 @@ export const RETURN_REASONS = ["Wrong item", "Damaged/defective", "Changed mind"
 export const REFUND_METHODS = ["Cash refund", "Store credit", "Exchange"]
 
 /**
- * A fixed reference date for period filtering — matches the rest of the
- * app's mock narrative ("today" throughout the dashboard/reports) rather
- * than the real current date, so the demo doesn't drift when opened on a
- * different day.
+ * Period filtering now uses the shared, standardised convention (Today /
+ * This week / This month / Custom) — see lib/period-utils.ts. Re-exported
+ * here so existing imports keep working.
  */
-export const SALES_TODAY_ISO = "2026-07-22"
-
-export type SalesPeriod = "all" | "today" | "week" | "month" | "lastMonth" | "year" | "lastYear" | "custom"
-
-export const SALES_PERIOD_OPTIONS: { value: SalesPeriod; label: string }[] = [
-  { value: "all", label: "All time" },
-  { value: "today", label: "Today" },
-  { value: "week", label: "Last 7 days" },
-  { value: "month", label: "This month" },
-  { value: "lastMonth", label: "Last month" },
-  { value: "year", label: "This year" },
-  { value: "lastYear", label: "Last year" },
-  { value: "custom", label: "Custom range" },
-]
-
-export interface DateRange {
-  from: Date
-  to: Date
-}
-
-function toDate(iso: string): Date {
-  return new Date(`${iso}T00:00:00`)
-}
-
-/** Resolves a period into an inclusive date range. `null` means "all time" — nothing filtered out. */
-export function getSalesPeriodRange(
-  period: SalesPeriod,
-  customFrom?: string,
-  customTo?: string
-): DateRange | null {
-  const today = toDate(SALES_TODAY_ISO)
-
-  switch (period) {
-    case "today":
-      return { from: today, to: today }
-    case "week": {
-      const from = new Date(today)
-      from.setDate(from.getDate() - 6)
-      return { from, to: today }
-    }
-    case "month":
-      return { from: new Date(today.getFullYear(), today.getMonth(), 1), to: today }
-    case "lastMonth": {
-      const from = new Date(today.getFullYear(), today.getMonth() - 1, 1)
-      const to = new Date(today.getFullYear(), today.getMonth(), 0)
-      return { from, to }
-    }
-    case "year":
-      return { from: new Date(today.getFullYear(), 0, 1), to: today }
-    case "lastYear":
-      return { from: new Date(today.getFullYear() - 1, 0, 1), to: new Date(today.getFullYear() - 1, 11, 31) }
-    case "custom": {
-      if (!customFrom && !customTo) return null
-      const from = customFrom ? toDate(customFrom) : new Date(2000, 0, 1)
-      const to = customTo ? toDate(customTo) : today
-      return { from, to }
-    }
-    case "all":
-    default:
-      return null
-  }
-}
-
-export function isDateInRange(dateISO: string, range: DateRange | null): boolean {
-  if (!range) return true
-  const d = toDate(dateISO)
-  return d >= range.from && d <= range.to
-}
+export { TODAY_ISO as SALES_TODAY_ISO } from "@/lib/period-utils"

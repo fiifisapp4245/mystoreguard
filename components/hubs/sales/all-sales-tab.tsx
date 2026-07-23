@@ -3,18 +3,12 @@
 import { useMemo, useState } from "react"
 import { Search } from "lucide-react"
 
+import { CustomDateRangeRow, PeriodSelect } from "@/components/dashboard/period-select"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
 import { SaleDetailSheet } from "@/components/hubs/sales/sale-detail-sheet"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -26,22 +20,19 @@ import {
 import { cn } from "@/lib/utils"
 import { formatGHS } from "@/lib/mock-data"
 import {
-  getSalesPeriodRange,
+  getStandardPeriodRange,
   isDateInRange,
-  RETURNS_RECORDS,
-  SALES_PERIOD_OPTIONS,
-  SALES_RECORDS,
-  type SalesPeriod,
-  type SaleRecord,
-  type SaleTenderType,
-} from "@/lib/sales-data"
+  STANDARD_PERIOD_OPTIONS,
+  type StandardPeriod,
+} from "@/lib/period-utils"
+import { RETURNS_RECORDS, SALES_RECORDS, type SaleRecord, type SaleTenderType } from "@/lib/sales-data"
 
 type FilterChip = "All" | SaleTenderType
 
 const FILTER_CHIPS: FilterChip[] = ["All", "Cash", "Momo", "Credit", "Deposit", "On-hold"]
 
 export function AllSalesTab() {
-  const [period, setPeriod] = useState<SalesPeriod>("all")
+  const [period, setPeriod] = useState<StandardPeriod>("today")
   const [customFrom, setCustomFrom] = useState("")
   const [customTo, setCustomTo] = useState("")
   const [filter, setFilter] = useState<FilterChip>("All")
@@ -49,10 +40,10 @@ export function AllSalesTab() {
   const [selected, setSelected] = useState<SaleRecord | null>(null)
 
   const periodRange = useMemo(
-    () => getSalesPeriodRange(period, customFrom, customTo),
+    () => getStandardPeriodRange(period, customFrom, customTo),
     [period, customFrom, customTo]
   )
-  const periodLabel = SALES_PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? "All time"
+  const periodLabel = STANDARD_PERIOD_OPTIONS.find((option) => option.value === period)?.label ?? "Today"
 
   const inPeriod = useMemo(
     () => SALES_RECORDS.filter((sale) => isDateInRange(sale.dateISO, periodRange)),
@@ -112,18 +103,7 @@ export function AllSalesTab() {
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Select value={period} onValueChange={(value) => setPeriod(value as SalesPeriod)}>
-              <SelectTrigger size="sm" className="w-36">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {SALES_PERIOD_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <PeriodSelect value={period} onValueChange={setPeriod} />
             <div className="relative">
               <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -137,26 +117,7 @@ export function AllSalesTab() {
         </div>
 
         {period === "custom" && (
-          <div className="flex flex-wrap items-center gap-2">
-            <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              From
-              <Input
-                type="date"
-                value={customFrom}
-                onChange={(event) => setCustomFrom(event.target.value)}
-                className="w-40"
-              />
-            </label>
-            <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              To
-              <Input
-                type="date"
-                value={customTo}
-                onChange={(event) => setCustomTo(event.target.value)}
-                className="w-40"
-              />
-            </label>
-          </div>
+          <CustomDateRangeRow from={customFrom} to={customTo} onFromChange={setCustomFrom} onToChange={setCustomTo} />
         )}
       </div>
 

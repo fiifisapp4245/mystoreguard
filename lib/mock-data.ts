@@ -527,8 +527,8 @@ export const ATTENTION_ITEMS: AttentionItem[] = [
   },
   {
     id: "invoices-unpaid",
-    moduleId: "invoice",
-    href: "/m/invoice",
+    moduleId: "invoices",
+    href: "/invoice/invoices",
     line: "Invoices unpaid",
     amount: "3 · GHS 12,400",
   },
