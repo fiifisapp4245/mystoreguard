@@ -1,10 +1,11 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import Link from "next/link"
-import { Plus } from "lucide-react"
+import { Library, Plus } from "lucide-react"
 
 import { StatCard } from "@/components/dashboard/stat-card"
+import { LibraryTemplateDialog } from "@/components/hubs/estimator/library-template-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -18,6 +19,7 @@ export function TemplatesTab() {
   const templates = useMemo(() => (isLarry ? getTemplatesStore() : []), [isLarry])
   const demoQuery = demoStateToParams(state).toString()
   const withDemoQuery = (path: string) => (demoQuery ? `${path}${path.includes("?") ? "&" : "?"}${demoQuery}` : path)
+  const [libraryOpen, setLibraryOpen] = useState(false)
 
   const domains = useMemo(() => new Set(templates.map((template) => template.domain)).size, [templates])
   const active = templates.filter((template) => template.status === "Active").length
@@ -49,13 +51,25 @@ export function TemplatesTab() {
         <p className="text-sm text-muted-foreground">
           Input fields and formulas that compute yardage, area, and price from measurements.
         </p>
-        <Button asChild>
-          <Link href={withDemoQuery("/estimator/templates/new")}>
-            <Plus />
-            New template
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setLibraryOpen(true)}>
+            <Library />
+            Start from a library template
+          </Button>
+          <Button asChild>
+            <Link href={withDemoQuery("/estimator/templates/new")}>
+              <Plus />
+              New template
+            </Link>
+          </Button>
+        </div>
       </div>
+
+      <LibraryTemplateDialog
+        open={libraryOpen}
+        onOpenChange={setLibraryOpen}
+        editHrefFor={(id) => withDemoQuery(`/estimator/templates/${id}/edit`)}
+      />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {templates.map((template) => (

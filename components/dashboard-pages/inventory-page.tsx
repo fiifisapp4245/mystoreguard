@@ -1,3 +1,5 @@
+"use client"
+
 import { PageHeader } from "@/components/dashboard/page-header"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
@@ -17,74 +19,15 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { ModulePageData } from "@/components/dashboard-pages/registry"
+import { formatGHS } from "@/lib/mock-data"
+import { availableStock, getProductsStore, type Product } from "@/lib/pos-data"
 
-const STATS = [
-  {
-    label: "Total products",
-    value: "184",
-    trend: { value: 6, direction: "up" as const, tone: "positive" as const },
-  },
-  {
-    label: "Low stock items",
-    value: "9",
-    trend: { value: 3, direction: "up" as const, tone: "negative" as const },
-  },
-  {
-    label: "Purchase orders pending",
-    value: "4",
-    trend: { value: 1, direction: "down" as const, tone: "positive" as const },
-  },
-  {
-    label: "Stock value",
-    value: "GHS 62,400",
-    trend: { value: 8, direction: "up" as const, tone: "positive" as const },
-  },
-]
-
-const PRODUCTS = [
-  {
-    name: "Ideal Milk 380g",
-    unit: "Carton of 24",
-    stock: 132,
-    price: "GHS 8.50",
-    status: "In stock",
-  },
-  {
-    name: "Frytol Cooking Oil 3L",
-    unit: "Carton of 6",
-    stock: 6,
-    price: "GHS 62.00",
-    status: "Low stock",
-  },
-  {
-    name: "Indomie Chicken Noodles",
-    unit: "Carton of 40",
-    stock: 210,
-    price: "GHS 3.20",
-    status: "In stock",
-  },
-  {
-    name: "Milo 400g",
-    unit: "Carton of 12",
-    stock: 0,
-    price: "GHS 34.00",
-    status: "Out of stock",
-  },
-  {
-    name: "Peak Milk Powder 400g",
-    unit: "Carton of 24",
-    stock: 88,
-    price: "GHS 32.50",
-    status: "In stock",
-  },
-  {
-    name: "Golden Stork Margarine",
-    unit: "Carton of 24",
-    stock: 14,
-    price: "GHS 11.00",
-    status: "Low stock",
-  },
-]
+function stockStatus(product: Product): string {
+  const available = availableStock(product)
+  if (available <= 0) return "Out of stock"
+  if (available <= 20) return "Low stock"
+  return "In stock"
+}
 
 const PURCHASE_ORDERS = [
   {
@@ -108,6 +51,21 @@ const PURCHASE_ORDERS = [
 ]
 
 export function InventoryPage({ module }: { module: ModulePageData }) {
+  const products = getProductsStore()
+  const lowStock = products.filter((p) => {
+    const available = availableStock(p)
+    return available > 0 && available <= 20
+  }).length
+  const outOfStock = products.filter((p) => availableStock(p) <= 0).length
+  const stockValue = products.reduce((sum, p) => sum + p.onHand * p.price, 0)
+
+  const stats = [
+    { label: "Total products", value: String(products.length) },
+    { label: "Low stock items", value: String(lowStock) },
+    { label: "Out of stock", value: String(outOfStock) },
+    { label: "Stock value (on hand)", value: formatGHS(stockValue) },
+  ]
+
   return (
     <div className="flex flex-1 flex-col gap-6">
       <PageHeader
@@ -117,7 +75,7 @@ export function InventoryPage({ module }: { module: ModulePageData }) {
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {STATS.map((stat) => (
+        {stats.map((stat) => (
           <StatCard key={stat.label} {...stat} />
         ))}
       </div>
@@ -126,7 +84,7 @@ export function InventoryPage({ module }: { module: ModulePageData }) {
         <CardHeader>
           <CardTitle className="font-sans">Products</CardTitle>
           <CardDescription>
-            Every item the store sells, and what&apos;s on the shelf right now.
+            Every item the store sells, and what&apos;s available to sell right now.
           </CardDescription>
         </CardHeader>
         <CardContent className="px-0 sm:px-6">
@@ -134,23 +92,32 @@ export function InventoryPage({ module }: { module: ModulePageData }) {
             <TableHeader>
               <TableRow>
                 <TableHead>Product</TableHead>
-                <TableHead>Unit</TableHead>
-                <TableHead>Stock on hand</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Available</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {PRODUCTS.map((product) => (
-                <TableRow key={product.name}>
+              {products.map((product) => (
+                <TableRow key={product.id}>
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell className="text-muted-foreground">
-                    {product.unit}
+                    {product.category}
                   </TableCell>
-                  <TableCell>{product.stock}</TableCell>
-                  <TableCell>{product.price}</TableCell>
                   <TableCell>
-                    <StatusBadge label={product.status} />
+                    <div className="flex flex-col">
+                      <span className="font-medium">{availableStock(product)}</span>
+                      {product.setAside > 0 && (
+                        <span className="text-xs text-muted-foreground">
+                          {product.onHand} on hand · {product.setAside} set aside for delivery
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>{formatGHS(product.price)}</TableCell>
+                  <TableCell>
+                    <StatusBadge label={stockStatus(product)} />
                   </TableCell>
                 </TableRow>
               ))}

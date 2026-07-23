@@ -287,6 +287,7 @@ export const MODULES: ModuleConfig[] = [
       },
     ],
     tier: "prime",
+    href: "/deliveries",
   },
   {
     id: "loyalty",

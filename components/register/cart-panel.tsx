@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { formatGHS } from "@/lib/mock-data"
-import { cartLineTotal, QUICK_KEY_ITEMS, type CartLine, type Product } from "@/lib/pos-data"
+import { availableStock, cartLineTotal, QUICK_KEY_ITEMS, type CartLine, type Product } from "@/lib/pos-data"
 
 function LiveClock() {
   const [now, setNow] = useState<Date | null>(null)
@@ -120,7 +120,13 @@ export function CartPanel({
                   index === dropdownIndex ? "bg-accent" : "hover:bg-accent/50"
                 )}
               >
-                <span>{product.name}</span>
+                <span className="flex flex-col">
+                  <span>{product.name}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {availableStock(product)} available
+                    {product.setAside > 0 && ` · ${product.onHand} on hand, ${product.setAside} set aside for delivery`}
+                  </span>
+                </span>
                 <span className="text-muted-foreground">{formatGHS(product.price)}</span>
               </button>
             ))}

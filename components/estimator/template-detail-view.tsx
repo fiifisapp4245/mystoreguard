@@ -5,20 +5,33 @@ import { Pencil } from "lucide-react"
 
 import { PageHeader } from "@/components/dashboard/page-header"
 import { StatCard } from "@/components/dashboard/stat-card"
+import { AdvancedFormulaToggle } from "@/components/estimator/advanced-formula-toggle"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatGHS } from "@/lib/mock-data"
-import type { Template } from "@/lib/estimator-data"
+import { describeBlock, describeBlocksFormula, getTemplatesStore } from "@/lib/estimator-data"
 import { formatDateDisplay } from "@/lib/period-utils"
 import { demoStateToParams, useDemoState } from "@/hooks/use-demo-state"
 
-export function TemplateDetailView({ template }: { template: Template }) {
+export function TemplateDetailView({ templateId }: { templateId: string }) {
   const { state } = useDemoState()
   const demoQuery = demoStateToParams(state).toString()
   const editHref = demoQuery
-    ? `/estimator/templates/${template.id}/edit?${demoQuery}`
-    : `/estimator/templates/${template.id}/edit`
+    ? `/estimator/templates/${templateId}/edit?${demoQuery}`
+    : `/estimator/templates/${templateId}/edit`
+
+  const template = getTemplatesStore().find((t) => t.id === templateId)
+
+  if (!template) {
+    return (
+      <Card className="items-center gap-3 py-16 text-center">
+        <CardContent className="px-5">
+          <p className="text-sm text-muted-foreground">Template not found.</p>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-6">
@@ -66,9 +79,27 @@ export function TemplateDetailView({ template }: { template: Template }) {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-sans text-base">Fields</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-1">
+          {template.fields.map((field) => (
+            <p key={field.key} className="text-sm">
+              {field.label}{" "}
+              <span className="text-muted-foreground">
+                ({field.type}
+                {field.unit ? `, ${field.unit}` : ""}
+                {field.required ? "" : ", optional"})
+              </span>
+            </p>
+          ))}
+        </CardContent>
+      </Card>
+
       <div className="flex flex-col gap-4">
         <p className="text-sm font-medium">Line items</p>
-        {template.lineItems.map((lineItem) => (
+        {template.lineItems.map((lineItem, index) => (
           <Card key={lineItem.variableKey}>
             <CardHeader className="gap-1">
               <div className="flex flex-wrap items-center gap-2">
@@ -87,30 +118,20 @@ export function TemplateDetailView({ template }: { template: Template }) {
               </div>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
-              {lineItem.fields.length > 0 && (
-                <div>
-                  <p className="mb-1.5 text-xs text-muted-foreground">Fields</p>
-                  <div className="flex flex-col gap-1">
-                    {lineItem.fields.map((field) => (
-                      <p key={field.key} className="text-sm">
-                        {field.label}{" "}
-                        <span className="text-muted-foreground">
-                          ({field.type}{field.unit ? `, ${field.unit}` : ""})
-                        </span>
-                      </p>
-                    ))}
-                  </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-xs text-muted-foreground">Computation</p>
+                <div className="flex flex-col gap-1.5 rounded-md bg-muted/60 px-3 py-2 text-sm">
+                  {lineItem.computation.blocks.map((block, index) => (
+                    <p key={index}>{describeBlock(block)}</p>
+                  ))}
                 </div>
-              )}
-              <div>
-                <p className="mb-1.5 text-xs text-muted-foreground">Computation</p>
-                <code className="block rounded-md bg-muted px-3 py-2 font-mono text-sm">
-                  {lineItem.computation.formula}
-                </code>
-                <p className="mt-1.5 text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Outputs a quantity in <span className="font-medium text-foreground">{lineItem.computation.outputUnit}</span>
-                  {lineItem.ratePerUnit ? ` · ${formatGHS(lineItem.ratePerUnit)} per ${lineItem.unit}` : ""}
+                  {lineItem.ratePerUnit
+                    ? ` · ${formatGHS(lineItem.ratePerUnit)} per ${template.lineItems[index - 1]?.unit ?? lineItem.unit}`
+                    : ""}
                 </p>
+                <AdvancedFormulaToggle formula={describeBlocksFormula(lineItem.computation.blocks)} />
               </div>
             </CardContent>
           </Card>

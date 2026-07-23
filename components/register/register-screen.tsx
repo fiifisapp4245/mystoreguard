@@ -15,6 +15,7 @@ import type { Customer } from "@/lib/mock-data"
 import {
   ALL_PRODUCTS,
   cartSubtotal,
+  deductOnHandForSale,
   findProductByBarcode,
   INITIAL_HELD_SALES,
   looksLikeBarcode,
@@ -209,6 +210,9 @@ export function RegisterScreen() {
   }
 
   function handleCheckoutComplete() {
+    for (const line of cart) {
+      deductOnHandForSale(line.product.id, line.quantity)
+    }
     setPaymentOpen(false)
     resetSaleState()
     toast.success("Sale complete")

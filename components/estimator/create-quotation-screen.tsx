@@ -1,8 +1,8 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { X } from "lucide-react"
+import { Copy, Plus, X } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -25,7 +25,7 @@ import { demoStateToParams, STORE_PERSONA_LABEL, useDemoState } from "@/hooks/us
 import { formatGHS, type Customer } from "@/lib/mock-data"
 import {
   applyTemplatePricing,
-  computeTemplateLineItems,
+  computeTemplate,
   getQuotationsStore,
   getTemplatesStore,
   LARRY_CUSTOMERS,
@@ -33,11 +33,18 @@ import {
   setQuotationsStore,
   type ComputedLineItem,
   type Quotation,
+  type QuotationLineItem,
   type QuotationStatus,
 } from "@/lib/estimator-data"
 import { TODAY_ISO } from "@/lib/period-utils"
 
 type CreationPath = "template" | "catalogue"
+
+interface MeasurementUnit {
+  id: string
+  label: string
+  fieldValues: Record<string, string>
+}
 
 export function CreateQuotationScreen({ editId }: { editId?: string }) {
   const router = useRouter()
@@ -53,12 +60,17 @@ export function CreateQuotationScreen({ editId }: { editId?: string }) {
   )
 
   const templates = getTemplatesStore()
+  const unitIdCounter = useRef(1)
+  function newUnitId() {
+    unitIdCounter.current += 1
+    return `unit-${unitIdCounter.current}`
+  }
 
   const [creationPath, setCreationPath] = useState<CreationPath>(
     existingQuotation && !existingQuotation.templateId ? "catalogue" : "template"
   )
   const [templateId, setTemplateId] = useState(existingQuotation?.templateId ?? "")
-  const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
+  const [units, setUnits] = useState<MeasurementUnit[]>([{ id: "unit-1", label: "", fieldValues: {} }])
   const [catalogueLineItems, setCatalogueLineItems] = useState<ComputedLineItem[]>(
     existingQuotation && !existingQuotation.templateId ? existingQuotation.lineItems : []
   )
@@ -78,7 +90,7 @@ export function CreateQuotationScreen({ editId }: { editId?: string }) {
 
   function handleSelectTemplate(id: string) {
     setTemplateId(id)
-    setFieldValues({})
+    setUnits([{ id: "unit-1", label: "", fieldValues: {} }])
     const template = templates.find((t) => t.id === id)
     if (template) {
       const due = new Date(`${TODAY_ISO}T00:00:00`)
@@ -87,23 +99,58 @@ export function CreateQuotationScreen({ editId }: { editId?: string }) {
     }
   }
 
-  const allFields = useMemo(() => {
-    const template = getTemplatesStore().find((t) => t.id === templateId)
-    return template?.lineItems.flatMap((li) => li.fields) ?? []
-  }, [templateId])
+  function updateUnitField(unitIndex: number, key: string, value: string) {
+    setUnits((prev) =>
+      prev.map((unit, i) => (i === unitIndex ? { ...unit, fieldValues: { ...unit.fieldValues, [key]: value } } : unit))
+    )
+  }
 
-  const computedLineItems = useMemo(() => {
+  function updateUnitLabel(unitIndex: number, label: string) {
+    setUnits((prev) => prev.map((unit, i) => (i === unitIndex ? { ...unit, label } : unit)))
+  }
+
+  function addUnit() {
+    setUnits((prev) => [...prev, { id: newUnitId(), label: "", fieldValues: {} }])
+  }
+
+  function duplicateUnit(unitIndex: number) {
+    setUnits((prev) => {
+      const source = prev[unitIndex]
+      const copy: MeasurementUnit = { id: newUnitId(), label: source.label, fieldValues: { ...source.fieldValues } }
+      return [...prev.slice(0, unitIndex + 1), copy, ...prev.slice(unitIndex + 1)]
+    })
+  }
+
+  function removeUnit(unitIndex: number) {
+    setUnits((prev) => prev.filter((_, i) => i !== unitIndex))
+  }
+
+  const unitResults = useMemo(() => {
     const template = getTemplatesStore().find((t) => t.id === templateId)
     if (!template) return []
-    const numericValues: Record<string, number> = {}
-    for (const field of template.lineItems.flatMap((li) => li.fields)) {
-      numericValues[field.key] = Number.parseFloat(fieldValues[field.key] || "0") || 0
-    }
-    return computeTemplateLineItems(template, numericValues)
-  }, [templateId, fieldValues])
+    return units.map((unit) => {
+      const numericValues: Record<string, number> = {}
+      for (const field of template.fields) {
+        numericValues[field.key] = Number.parseFloat(unit.fieldValues[field.key] || "0") || 0
+      }
+      return { unit, result: computeTemplate(template, numericValues) }
+    })
+  }, [templateId, units])
 
-  const activeLineItems = creationPath === "template" ? computedLineItems : catalogueLineItems
-  const isKnownTemplate = creationPath === "template" && selectedTemplate && computedLineItems.length > 0
+  const templateLineItems: QuotationLineItem[] = useMemo(() => {
+    return unitResults.flatMap(({ unit, result }, index) => {
+      const suffix = unit.label || (unitResults.length > 1 ? `Unit ${index + 1}` : "")
+      return result.lineItems.map((li) => ({
+        ...li,
+        name: suffix ? `${li.name} — ${suffix}` : li.name,
+      }))
+    })
+  }, [unitResults])
+
+  const totalComputedQuantity = unitResults.reduce((sum, { result }) => sum + (result.lineItems[0]?.quantity ?? 0), 0)
+  const quantityUnitLabel = selectedTemplate?.lineItems[0]?.unit ?? ""
+
+  const activeLineItems = creationPath === "template" ? templateLineItems : catalogueLineItems
   const baseCost = activeLineItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
 
   const pricing =
@@ -143,6 +190,7 @@ export function CreateQuotationScreen({ editId }: { editId?: string }) {
       status,
       note: note.trim() || undefined,
       convertedToInvoiceId: existingQuotation?.convertedToInvoiceId,
+      depositAmount: existingQuotation?.depositAmount,
     }
 
     const current = getQuotationsStore()
@@ -212,38 +260,73 @@ export function CreateQuotationScreen({ editId }: { editId?: string }) {
                   </Select>
                 </div>
 
-                {selectedTemplate && !isKnownTemplate && (
-                  <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
-                    This is a custom template — its formula is stored for reference, but live computation isn&apos;t
-                    wired up for custom templates in this prototype. Use one of the three built-in templates to see
-                    the live calculation.
-                  </p>
-                )}
-
-                {selectedTemplate && allFields.length > 0 && (
-                  <div className="flex flex-col gap-3 rounded-lg border p-3">
+                {selectedTemplate && (
+                  <div className="flex flex-col gap-3">
                     <p className="text-xs text-muted-foreground">Measurements</p>
-                    {allFields.map((field) => (
-                      <div key={field.key} className="flex flex-col gap-1.5">
-                        <Label htmlFor={`field-${field.key}`}>
-                          {field.label} {field.unit && <span className="text-muted-foreground">({field.unit})</span>}
-                        </Label>
-                        <Input
-                          id={`field-${field.key}`}
-                          type="number"
-                          value={fieldValues[field.key] ?? ""}
-                          onChange={(event) =>
-                            setFieldValues((prev) => ({ ...prev, [field.key]: event.target.value }))
-                          }
-                        />
+                    {unitResults.map(({ unit, result }, index) => (
+                      <div key={unit.id} className="flex flex-col gap-2 rounded-lg border p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <Input
+                            value={unit.label}
+                            onChange={(event) => updateUnitLabel(index, event.target.value)}
+                            placeholder={`Unit ${index + 1} label (optional)`}
+                            className="h-8 flex-1 text-sm"
+                          />
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="icon-sm" onClick={() => duplicateUnit(index)} aria-label="Duplicate unit">
+                              <Copy className="size-3.5" />
+                            </Button>
+                            {units.length > 1 && (
+                              <Button variant="ghost" size="icon-sm" onClick={() => removeUnit(index)} aria-label="Remove unit">
+                                <X className="size-3.5" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {selectedTemplate.fields.map((field) => (
+                            <div key={field.key} className="flex flex-col gap-1">
+                              <Label htmlFor={`field-${unit.id}-${field.key}`} className="text-xs">
+                                {field.label} {field.unit && <span className="text-muted-foreground">({field.unit})</span>}
+                              </Label>
+                              <Input
+                                id={`field-${unit.id}-${field.key}`}
+                                type="number"
+                                value={unit.fieldValues[field.key] ?? ""}
+                                onChange={(event) => updateUnitField(index, field.key, event.target.value)}
+                                className="h-8"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        {result.lineItems.length > 0 && (
+                          <div className="rounded-md bg-muted/60 p-2 text-xs">
+                            <span className="text-muted-foreground">Computed: </span>
+                            <span className="font-medium">{result.lineItems[0]?.computedDetail}</span>
+                          </div>
+                        )}
                       </div>
                     ))}
-                    {isKnownTemplate && (
-                      <div className="rounded-md bg-muted/60 p-2.5 text-sm">
-                        <span className="text-muted-foreground">Computed: </span>
-                        <span className="font-medium">{computedLineItems[0]?.computedDetail}</span>
-                      </div>
-                    )}
+                    <Button variant="outline" size="sm" className="w-fit" onClick={addUnit}>
+                      <Plus />
+                      Add another unit
+                    </Button>
+                  </div>
+                )}
+
+                {selectedTemplate && unitResults.length > 0 && (
+                  <div className="flex flex-col gap-1.5 rounded-lg border p-3 text-sm">
+                    <p className="text-xs text-muted-foreground">Running total</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Units</span>
+                      <span>{units.length}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Total computed quantity</span>
+                      <span>
+                        {totalComputedQuantity.toFixed(1)} {quantityUnitLabel}
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>

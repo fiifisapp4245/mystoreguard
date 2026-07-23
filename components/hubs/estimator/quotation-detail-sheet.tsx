@@ -22,6 +22,7 @@ export function QuotationDetailSheet({
   onConvert,
   onDuplicate,
   onMarkRejected,
+  onRecordDeposit,
 }: {
   quotation: Quotation | null
   onOpenChange: (open: boolean) => void
@@ -30,6 +31,7 @@ export function QuotationDetailSheet({
   onConvert: () => void
   onDuplicate: () => void
   onMarkRejected: () => void
+  onRecordDeposit: () => void
 }) {
   return (
     <Sheet open={quotation !== null} onOpenChange={onOpenChange}>
@@ -57,6 +59,12 @@ export function QuotationDetailSheet({
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Converted to</span>
                     <span className="font-medium">{quotation.convertedToInvoiceId}</span>
+                  </div>
+                )}
+                {quotation.depositAmount !== undefined && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Deposit taken</span>
+                    <span className="font-medium">{formatGHS(quotation.depositAmount)}</span>
                   </div>
                 )}
               </div>
@@ -103,6 +111,13 @@ export function QuotationDetailSheet({
               >
                 Convert to invoice
               </Button>
+              <Button
+                variant="outline"
+                onClick={onRecordDeposit}
+                disabled={quotation.status !== "Accepted" || quotation.depositAmount !== undefined}
+              >
+                Record deposit
+              </Button>
               <Button variant="outline" onClick={onEdit}>
                 Edit
               </Button>
@@ -114,7 +129,6 @@ export function QuotationDetailSheet({
               </Button>
               <Button
                 variant="outline"
-                className="col-span-2"
                 onClick={onMarkRejected}
                 disabled={quotation.status === "Rejected" || quotation.status === "Converted"}
               >

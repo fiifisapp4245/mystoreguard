@@ -2,7 +2,6 @@ import type { ComponentType } from "react"
 
 import { AffiliatesPage } from "@/components/dashboard-pages/affiliates-page"
 import { DashboardOverviewPage } from "@/components/dashboard-pages/dashboard-overview"
-import { DeliveriesPage } from "@/components/dashboard-pages/deliveries-page"
 import { ExpensesPage } from "@/components/dashboard-pages/expenses-page"
 import { GuidePage } from "@/components/dashboard-pages/guide-page"
 import { InventoryPage } from "@/components/dashboard-pages/inventory-page"
@@ -38,7 +37,6 @@ export const DASHBOARD_PAGES: Record<
   settings: SettingsPage,
   guide: GuidePage,
   // Prime
-  deliveries: DeliveriesPage,
   reports: ReportsPage,
   message: MessagePage,
   "offers-rewards": OffersRewardsPage,

@@ -9,6 +9,7 @@ import { toast } from "sonner"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
 import { QuotationDetailSheet } from "@/components/hubs/estimator/quotation-detail-sheet"
+import { RecordDepositDialog } from "@/components/hubs/estimator/record-deposit-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -30,6 +31,7 @@ import { formatGHS } from "@/lib/mock-data"
 import {
   buildInvoiceLineItemsFromQuotation,
   getQuotationsStore,
+  recordDeposit,
   setQuotationsStore,
   type Quotation,
   type QuotationStatus,
@@ -69,6 +71,7 @@ export function QuotationsTab() {
   }
   const [filter, setFilter] = useState<FilterChip>("All")
   const [selected, setSelected] = useState<Quotation | null>(null)
+  const [depositTarget, setDepositTarget] = useState<Quotation | null>(null)
 
   function persist(next: Quotation[]) {
     setQuotations(next)
@@ -157,6 +160,15 @@ export function QuotationsTab() {
   function handleSend(quotation: Quotation) {
     persist(quotations.map((q) => (q.id === quotation.id && q.status === "Draft" ? { ...q, status: "Sent" as QuotationStatus } : q)))
     toast.success("Quotation sent", { description: `${quotation.id} sent to ${quotation.customer}.` })
+  }
+
+  function handleRecordDeposit(amount: number) {
+    if (!depositTarget) return
+    recordDeposit(depositTarget.id, amount)
+    persist(getQuotationsStore())
+    setDepositTarget(null)
+    setSelected(null)
+    toast.success("Deposit recorded", { description: `${formatGHS(amount)} for ${depositTarget.id}.` })
   }
 
   if (!isLarry) {
@@ -285,6 +297,12 @@ export function QuotationsTab() {
                         >
                           Convert to invoice
                         </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={quotation.status !== "Accepted" || quotation.depositAmount !== undefined}
+                          onClick={() => setDepositTarget(quotation)}
+                        >
+                          Record deposit
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleDuplicate(quotation)}>Duplicate</DropdownMenuItem>
                         <DropdownMenuItem
                           variant="destructive"
@@ -318,6 +336,13 @@ export function QuotationsTab() {
         onConvert={() => selected && handleConvertToInvoice(selected)}
         onDuplicate={() => selected && handleDuplicate(selected)}
         onMarkRejected={() => selected && handleMarkRejected(selected)}
+        onRecordDeposit={() => selected && setDepositTarget(selected)}
+      />
+
+      <RecordDepositDialog
+        quotation={depositTarget}
+        onOpenChange={(open) => !open && setDepositTarget(null)}
+        onRecord={handleRecordDeposit}
       />
     </div>
   )
