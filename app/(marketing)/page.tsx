@@ -1,9 +1,9 @@
 import type { Metadata } from "next"
+import Image from "next/image"
 
 import { CtaGroup } from "@/components/cta-group"
 import { FlowDiagram } from "@/components/flow-diagram"
 import { PricingTiers } from "@/components/pricing-tiers"
-import { Screenshot } from "@/components/screenshot"
 import { testimonials } from "@/lib/testimonials"
 
 export const metadata: Metadata = {
@@ -26,12 +26,12 @@ export default function HomePage() {
   return (
     <>
       {/* Hero */}
-      <section className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-20 sm:px-6 sm:py-28 lg:flex-row lg:items-center lg:gap-16 lg:py-36">
-        <div className="flex max-w-xl flex-col gap-6">
+      <section className="mx-auto flex max-w-4xl flex-col items-center gap-10 px-4 py-20 text-center sm:px-6 sm:py-28 lg:py-36">
+        <div className="flex max-w-2xl flex-col items-center gap-6">
           <h1 className="font-heading text-4xl font-medium tracking-tight text-balance sm:text-5xl lg:text-6xl">
             Know what&apos;s in your store, what sold, and who sold it.
           </h1>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col items-center gap-2">
             <p className="text-lg text-muted-foreground sm:text-xl">
               Stock, sales, and staff for Ghanaian shops — one clear picture, from delivery to receipt.
             </p>
@@ -39,14 +39,19 @@ export default function HomePage() {
               For provisions stores, pharmacies, and boutiques.
             </p>
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col items-center gap-2">
             <CtaGroup />
             <p className="text-sm text-muted-foreground">First month on us.</p>
           </div>
         </div>
-        <div className="w-full lg:max-w-md xl:max-w-lg">
-          <Screenshot name="dashboard-home" />
-        </div>
+        <Image
+          src="/hero_image.png"
+          alt=""
+          width={1536}
+          height={1024}
+          priority
+          className="w-full max-w-3xl rounded-xl"
+        />
       </section>
 
       {/* Problem strip */}

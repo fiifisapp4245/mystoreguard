@@ -17,7 +17,7 @@ crop captures to match:
 
 | Name | Aspect | Capture |
 |---|---|---|
-| `dashboard-home` | wide | The main Dashboard screen: revenue, expenses, profit, top product stat cards. This is the hero image — it should look good large. |
+| ~~`dashboard-home`~~ | wide | **Replaced** — the hero now renders `/public/hero_image.png` directly (see the Hero section in `app/(marketing)/page.tsx`), not the `<Screenshot />` placeholder. That image is a decorative illustration, not a product screenshot — it breaks the "no stock photography" rule below on purpose, as a deliberate call for this one slot. Swap in a real dashboard capture here if that's reconsidered. |
 | `flow-receive` | standard | Inventory / Store & Warehouse screen showing a delivery being logged or stock being split into sellable units. |
 | `flow-sell` | standard | Sales or Invoice screen mid-transaction — a daily sale or an invoice being created. |
 | `flow-track` | standard | A screen showing a sale or expense attributed to a specific staff member, or the audit log in Settings. |
@@ -39,8 +39,10 @@ One per module group, matching the dashboard sidebar groups exactly:
 
 ## Notes
 
-- 12 placeholders total.
-- Every placeholder renders `data-screenshot="{name}"` in the DOM, so they're
-  easy to find with a browser search once real images are wired in.
-- No stock photography anywhere on the site — every image slot is a real
-  product screenshot.
+- 11 `<Screenshot />` placeholders remain (`dashboard-home` is now a real
+  image, not a placeholder — see above).
+- Every remaining placeholder renders `data-screenshot="{name}"` in the DOM,
+  so they're easy to find with a browser search once real images are wired
+  in.
+- No stock photography anywhere else on the site — every other image slot is
+  a real product screenshot.
