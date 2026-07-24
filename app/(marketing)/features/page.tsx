@@ -74,7 +74,7 @@ export default function FeaturesPage() {
                   ))}
                 </ul>
               </div>
-              <div className="w-full lg:flex-1">
+              <div className="w-full lg:max-w-md xl:max-w-lg">
                 <Screenshot name={`group-${group.id}`} />
               </div>
             </div>

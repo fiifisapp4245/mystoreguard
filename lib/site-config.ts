@@ -46,8 +46,8 @@ export interface CtaCopy {
 }
 
 const CTA_COPY: Record<CtaVariant, CtaCopy> = {
-  trial: { primary: "Start free — first month on us", secondary: "Book a demo" },
-  demo: { primary: "Book a free demo", secondary: "Start free trial" },
+  trial: { primary: "Start free", secondary: "Book a demo" },
+  demo: { primary: "Book a demo", secondary: "Start free" },
 }
 
 export function getCtaCopy(variant: CtaVariant): CtaCopy {

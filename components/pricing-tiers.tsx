@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { useSiteConfig } from "@/hooks/use-site-config"
-import { dashboardTierPath, getCtaCopy, siteConfig, type SiteConfig } from "@/lib/site-config"
+import { dashboardTierPath, siteConfig, type SiteConfig } from "@/lib/site-config"
 import {
   ANNUAL_MONTHS_FREE,
   TIERS,
@@ -19,7 +19,6 @@ import {
 import { cn } from "@/lib/utils"
 
 function PricingTiersView({ config, teaser = false }: { config: SiteConfig; teaser?: boolean }) {
-  const copy = getCtaCopy(config.ctaVariant)
   const [annual, setAnnual] = useState(false)
   const toggleId = useId()
 
@@ -132,13 +131,13 @@ function PricingTiersView({ config, teaser = false }: { config: SiteConfig; teas
                     >
                       <Link href="/pricing">See all features</Link>
                     </Button>
-                  ) : config.ctaVariant === "demo" ? (
+                  ) : tier.id === "ultra" ? (
                     <Button
                       asChild
                       className="w-full"
                       variant={isPopular ? "default" : "outline"}
                     >
-                      <a href={config.demoBookingUrl}>Book a free demo</a>
+                      <a href={config.demoBookingUrl}>Talk to us</a>
                     </Button>
                   ) : (
                     <Button
@@ -146,9 +145,7 @@ function PricingTiersView({ config, teaser = false }: { config: SiteConfig; teas
                       className="w-full"
                       variant={isPopular ? "default" : "outline"}
                     >
-                      <Link href={dashboardTierPath(tier.id)}>
-                        Start free on {tier.name}
-                      </Link>
+                      <Link href={dashboardTierPath(tier.id)}>Start free</Link>
                     </Button>
                   )}
                 </CardFooter>
@@ -160,8 +157,7 @@ function PricingTiersView({ config, teaser = false }: { config: SiteConfig; teas
 
       {teaser && (
         <p className="text-center text-sm text-muted-foreground">
-          Free first month on every tier. {copy.secondary} if you&apos;d rather
-          talk it through first.
+          Free first month on every tier. Book a demo if you&apos;d rather talk it through first.
         </p>
       )}
     </div>

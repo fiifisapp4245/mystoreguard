@@ -26,7 +26,7 @@ export function SiteFooter() {
               MyStoreGuard
             </Link>
             <p className="max-w-xs text-sm text-muted-foreground">
-              Stock, sales, staff, and money — one clear picture, from delivery to receipt.
+              Stock, sales, staff, and money in one clear picture.
             </p>
           </div>
 
