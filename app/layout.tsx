@@ -1,20 +1,20 @@
 import type { Metadata } from "next"
-import { Geist_Mono, Inter, Space_Grotesk } from "next/font/google"
+import { Geist_Mono, Inter } from "next/font/google"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
 
+// Inter is the only typeface used for text — headings included (see
+// globals.css, where --font-heading is aliased to --font-sans). Geist Mono
+// stays for the specific numeric/tabular contexts that use font-mono
+// (money amounts, receipts) — that's a functional fixed-width choice, not a
+// second brand font.
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
 const fontMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
-})
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-heading",
 })
 
 const SITE_NAME = "MyStoreGuard"
@@ -59,8 +59,7 @@ export default function RootLayout({
         "antialiased",
         fontMono.variable,
         "font-sans",
-        inter.variable,
-        spaceGrotesk.variable
+        inter.variable
       )}
     >
       <body>
