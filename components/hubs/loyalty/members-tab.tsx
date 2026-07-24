@@ -6,6 +6,8 @@ import { toast } from "sonner"
 
 import { PeriodSelect } from "@/components/dashboard/period-select"
 import { StatCard } from "@/components/dashboard/stat-card"
+import { TeachingEmptyState } from "@/components/dashboard/teaching-empty-state"
+import { ConceptTooltip } from "@/components/help/concept-tooltip"
 import { AdjustPointsDialog } from "@/components/hubs/loyalty/adjust-points-dialog"
 import { ChangeTierDialog } from "@/components/hubs/loyalty/change-tier-dialog"
 import { EnrolMemberDialog } from "@/components/hubs/loyalty/enrol-member-dialog"
@@ -108,6 +110,7 @@ export function MembersTab() {
         caption: "as of now",
         value: `${pointsOutstanding} pts`,
         footnote: `Value if fully redeemed: ${formatGHS(pointsToGHS(pointsOutstanding))}`,
+        labelExtra: <ConceptTooltip conceptKey="points-liability" />,
       },
       { label: "Redemption rate", value: `${redemptionRate}%`, footnote: "redeemed ÷ earned, all-time" },
     ]
@@ -185,6 +188,13 @@ export function MembersTab() {
         </Button>
       </div>
 
+      {filtered.length === 0 ? (
+        <TeachingEmptyState
+          message="Customers join when a cashier takes their phone number at checkout."
+          actionLabel="Enrol a customer"
+          onAction={() => setEnrolOpen(true)}
+        />
+      ) : (
       <div className="overflow-hidden rounded-xl border">
         <Table>
           <TableHeader>
@@ -243,16 +253,10 @@ export function MembersTab() {
                 </TableCell>
               </TableRow>
             ))}
-            {filtered.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
-                  No members match your filters.
-                </TableCell>
-              </TableRow>
-            )}
           </TableBody>
         </Table>
       </div>
+      )}
 
       <EnrolMemberDialog open={enrolOpen} onOpenChange={setEnrolOpen} onEnrolled={handleEnrolled} />
 

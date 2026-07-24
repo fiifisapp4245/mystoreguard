@@ -299,16 +299,19 @@ export const SUPPLIERS: Supplier[] = [
 ]
 
 export type LocationType = "shop" | "warehouse"
+export type LocationStatus = "active" | "inactive"
 
 export interface Location {
   id: string
   name: string
   type: LocationType
   address: string
+  area?: string
   /** Whether the register/register-like flows can sell from this location. */
   canSell: boolean
   /** Where goods land by default when a purchase order is received. */
   isDefaultReceiving: boolean
+  status: LocationStatus
 }
 
 export const LOCATIONS: Location[] = [
@@ -317,16 +320,20 @@ export const LOCATIONS: Location[] = [
     name: "Makola Shop",
     type: "shop",
     address: "Makola, Accra",
+    area: "Makola",
     canSell: true,
     isDefaultReceiving: true,
+    status: "active",
   },
   {
     id: "loc-warehouse-abossey",
     name: "Warehouse — Abossey Okai",
     type: "warehouse",
     address: "Abossey Okai, Accra",
+    area: "Abossey Okai",
     canSell: false,
     isDefaultReceiving: false,
+    status: "active",
   },
 ]
 

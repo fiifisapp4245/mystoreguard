@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { UpgradeDialog } from "@/components/upgrade-dialog"
 import { demoStateToParams, STORE_PERSONA_LABEL, type DemoState } from "@/hooks/use-demo-state"
+import { openTaskCountForRole } from "@/lib/workflow-data"
 import {
   TIER_LABEL,
   isModuleLocked,
@@ -46,6 +47,7 @@ function ModuleLink({
   lockMode,
   query,
   onLockedClick,
+  countBadge,
 }: {
   module: ModuleConfig
   active: boolean
@@ -53,6 +55,8 @@ function ModuleLink({
   lockMode: DemoState["lockMode"]
   query: string
   onLockedClick: (module: ModuleConfig) => void
+  /** Open-task count shown next to the Workflow entry — see lib/workflow-data.ts. */
+  countBadge?: number
 }) {
   const Icon = module.icon
   const showLockBadge = locked && lockMode === "greyed"
@@ -62,6 +66,11 @@ function ModuleLink({
       <Icon />
       <span className="truncate">{module.name}</span>
       <span className="ml-auto flex items-center gap-1">
+        {!showLockBadge && Boolean(countBadge) && (
+          <Badge variant="secondary" className="pointer-events-none px-1.5 text-[10px] tabular-nums">
+            {countBadge}
+          </Badge>
+        )}
         {showLockBadge && <Lock className="size-3 text-muted-foreground" />}
         {showLockBadge && (
           <Badge variant="secondary" className="pointer-events-none px-1.5 text-[10px]">
@@ -257,6 +266,7 @@ export function AppSidebar({ state }: { state: DemoState }) {
                             lockMode={state.lockMode}
                             query={params ? `?${params}` : ""}
                             onLockedClick={handleLockedClick}
+                            countBadge={group.id === "workflow" ? openTaskCountForRole(state.role) : undefined}
                           />
                         </SidebarMenuItem>
                       </SidebarMenu>

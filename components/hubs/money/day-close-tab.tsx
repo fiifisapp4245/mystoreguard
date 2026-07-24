@@ -7,6 +7,7 @@ import { AlertTriangle } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { HelpPanelTrigger } from "@/components/help/help-panel-trigger"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Dialog,
@@ -696,6 +697,9 @@ export function DayCloseTab() {
   if (!session) {
     return (
       <div className="flex flex-col gap-6">
+        <div className="flex items-center justify-end">
+          <HelpPanelTrigger screenKey="day-close" />
+        </div>
         <Card className="mx-auto w-full max-w-md">
           <CardHeader>
             <CardTitle>Start the day</CardTitle>
@@ -726,6 +730,9 @@ export function DayCloseTab() {
   if (session.status === "Closed") {
     return (
       <div className="flex flex-col gap-6">
+        <div className="flex items-center justify-end">
+          <HelpPanelTrigger screenKey="day-close" />
+        </div>
         <ClosedDaySummary session={session} justClosed={justClosed} onReopenClick={() => setReopenDialogOpen(true)} />
         <HistoryTable sessions={pastSessions} />
         <ReopenDayDialog open={reopenDialogOpen} onOpenChange={setReopenDialogOpen} onSubmit={handleReopenDay} />
@@ -737,10 +744,15 @@ export function DayCloseTab() {
     <div className="flex flex-col gap-6">
       <Card>
         <CardHeader>
-          <CardTitle>Today&rsquo;s session — {formatDateDisplay(session.dateISO)}</CardTitle>
-          <CardDescription>
-            Opened by {session.openedBy} at {session.openedAtLabel} · Opening float {formatGHS(session.openingFloat)}
-          </CardDescription>
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <CardTitle>Today&rsquo;s session — {formatDateDisplay(session.dateISO)}</CardTitle>
+              <CardDescription>
+                Opened by {session.openedBy} at {session.openedAtLabel} · Opening float {formatGHS(session.openingFloat)}
+              </CardDescription>
+            </div>
+            <HelpPanelTrigger screenKey="day-close" />
+          </div>
         </CardHeader>
       </Card>
 

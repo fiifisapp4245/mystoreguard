@@ -6,6 +6,7 @@ import { X } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { HelpPanelTrigger } from "@/components/help/help-panel-trigger"
 import { CartPanel } from "@/components/register/cart-panel"
 import { TotalsRail } from "@/components/register/totals-rail"
 import { PaymentSheet, type CheckoutSummary, type ReceiptInfo } from "@/components/register/payment-sheet"
@@ -552,6 +553,9 @@ export function RegisterScreen() {
         >
           <X className="size-4" />
         </Button>
+        <span className="ml-auto">
+          <HelpPanelTrigger screenKey="register" />
+        </span>
       </div>
 
       <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[62%_38%]">

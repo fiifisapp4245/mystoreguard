@@ -16,7 +16,7 @@ import { getReceivables, getPayables, AGEING_BUCKET_LABELS, type AgeingBucket } 
 import { getLoyaltyMembersStore, pointsToGHS, daysSinceLastVisit } from "@/lib/loyalty-data"
 import { getMovementsStore, MOVEMENT_TYPES, type MovementType } from "@/lib/stock-movements-data"
 import { getOverrideLogStore } from "@/lib/pricing-engine-data"
-import { computeTaxLines, INITIAL_TAX_RATES } from "@/lib/settings-data"
+import { computeTaxLines, getEffectiveTaxRates } from "@/lib/tax-data"
 
 function costOf(lineItemName: string): number {
   return getProductByName(lineItemName)?.costPrice ?? 0
@@ -277,7 +277,7 @@ export interface TaxSummaryReport {
 export function computeTaxSummary(fromISO: string, toISO: string): TaxSummaryReport {
   const sales = completedSalesInRange(fromISO, toISO)
   const taxableRevenue = Math.round(sales.reduce((sum, s) => sum + s.amount, 0) * 100) / 100
-  const lines = computeTaxLines(taxableRevenue, INITIAL_TAX_RATES)
+  const lines = computeTaxLines(taxableRevenue, getEffectiveTaxRates())
   const totalTax = Math.round(lines.reduce((sum, l) => sum + l.amount, 0) * 100) / 100
   return { taxableRevenue, lines, totalTax }
 }

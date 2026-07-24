@@ -4,7 +4,7 @@
  * INV-2037, ...), not per-year.
  */
 
-import { computeTaxLines, type TaxRate } from "@/lib/settings-data"
+import { computeTaxLines, type TaxRate } from "@/lib/tax-data"
 
 export type InvoiceStatus = "Draft" | "Sent" | "Partially paid" | "Paid" | "Overdue" | "Void"
 export type PaymentMethod = "Cash" | "Momo" | "Bank transfer" | "Cheque"

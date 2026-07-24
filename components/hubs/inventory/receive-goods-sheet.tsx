@@ -5,6 +5,7 @@ import { ScanLine } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { HelpPanelTrigger } from "@/components/help/help-panel-trigger"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -149,7 +150,10 @@ export function ReceiveGoodsSheet({
         {po && (
           <>
             <SheetHeader>
-              <SheetTitle className="font-sans">Receive goods — {po.id}</SheetTitle>
+              <div className="flex items-center justify-between gap-2">
+                <SheetTitle className="font-sans">Receive goods — {po.id}</SheetTitle>
+                <HelpPanelTrigger screenKey="receiving-goods" />
+              </div>
               <SheetDescription>{po.supplierName}</SheetDescription>
             </SheetHeader>
 

@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/sheet"
 import { CustomerIdentificationControl } from "@/components/register/customer-identification-control"
 import { formatGHS } from "@/lib/mock-data"
+import { getPaymentMethodsSettings, type TenderMethodKey } from "@/lib/payment-methods-data"
 import { MOMO_NETWORKS, type TenderType } from "@/lib/pos-data"
 import { findGiftCardByNumber, type GiftCard } from "@/lib/gift-cards-data"
 import { getProgrammeSettings, pointsToGHS, type LoyaltyMember } from "@/lib/loyalty-data"
@@ -157,8 +158,11 @@ export function PaymentSheet({
   const pointsValueApplied = pointsToRedeem * programmeSettings.pointValueGHS
   const pointsRemainder = Math.max(0, total - pointsValueApplied)
 
+  const paymentSettings = getPaymentMethodsSettings()
+  const GATED_TENDER_KEYS: TenderMethodKey[] = ["Cash", "Momo", "Credit", "Deposit", "Gift card"]
   const tenders = BASE_TENDERS.filter((t) => {
     if (t.key === "Points") return isUltra && member && member.points >= programmeSettings.minPointsToRedeem
+    if ((GATED_TENDER_KEYS as string[]).includes(t.key)) return paymentSettings.enabledTenders[t.key as TenderMethodKey]
     return true
   })
 

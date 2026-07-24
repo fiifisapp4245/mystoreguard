@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { getCurrentReturnPolicy, REFUND_METHOD_POLICY_LABELS } from "@/lib/return-policy-data"
 import { REFUND_METHODS, RETURN_REASONS, SALES_RECORDS, SALES_TODAY_ISO, type ReturnRecord } from "@/lib/sales-data"
 
 interface FormErrors {
@@ -42,6 +43,9 @@ export function RecordReturnDialog({
   const [errors, setErrors] = useState<FormErrors>({})
 
   const selectedSale = SALES_RECORDS.find((sale) => sale.receiptNo === receiptNo)
+
+  const policy = getCurrentReturnPolicy()
+  const policySummary = `${policy.windowDays}-day return window · ${REFUND_METHOD_POLICY_LABELS[policy.refundMethodPolicy]}${policy.receiptRequired ? " · Receipt required" : ""}`
 
   function reset() {
     setReceiptNo("")
@@ -83,7 +87,7 @@ export function RecordReturnDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Record return</DialogTitle>
-          <DialogDescription>Refund or credit goods brought back to the store.</DialogDescription>
+          <DialogDescription>Refund or credit goods brought back to the store. {policySummary}</DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-4">

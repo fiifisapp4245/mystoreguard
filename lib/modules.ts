@@ -13,11 +13,15 @@ import {
   History,
   Layers,
   LayoutDashboard,
+  LayoutList,
+  ListChecks,
+  ListTodo,
   MessageSquare,
   Package,
   Receipt,
   Ruler,
   Settings,
+  ShieldCheck,
   ShoppingCart,
   SlidersHorizontal,
   Tag,
@@ -532,26 +536,53 @@ export const MODULES: ModuleConfig[] = [
     href: "/appointments",
   },
   {
-    id: "workflow",
-    name: "Workflow",
-    icon: Workflow,
-    description: "Internal task and approval flows for your team.",
+    id: "workflow-my-tasks",
+    name: "My tasks",
+    icon: ListTodo,
+    description: "Tasks assigned to you — raised automatically by the system, or added by hand.",
     features: [
       {
-        name: "Templates",
-        description: "Reusable checklists for things the business does repeatedly, like opening or receiving stock.",
+        name: "My tasks",
+        description: "Tasks assigned to the currently viewed role, grouped by how soon they're due.",
       },
+    ],
+    tier: "ultra",
+  },
+  {
+    id: "workflow-all-tasks",
+    name: "All tasks",
+    icon: LayoutList,
+    description: "Every task across every assignee, for owners and managers.",
+    features: [
       {
-        name: "Tasks",
-        description: "Individual pieces of work assigned to staff and tracked to completion.",
+        name: "All tasks",
+        description: "Every task in one filterable list or board, with bulk actions and manual task creation.",
       },
+    ],
+    tier: "ultra",
+  },
+  {
+    id: "workflow-checklists",
+    name: "Checklists",
+    icon: ListChecks,
+    description: "Reusable routines that instantiate as tasks with sub-items — opening, closing, receiving, and more.",
+    features: [
       {
-        name: "Settings",
-        description: "Configuration for how workflows behave.",
+        name: "Checklists",
+        description: "Templates with steps, a schedule, and a completion rate that shows when a routine is being skipped.",
       },
+    ],
+    tier: "ultra",
+  },
+  {
+    id: "workflow-rules",
+    name: "Rules",
+    icon: Workflow,
+    description: "Where automatic tasks are configured — the substance of Workflow, not plumbing tucked into Settings.",
+    features: [
       {
-        name: "Audit logs",
-        description: "A record of task creation, assignment, and completion. Included in every tier.",
+        name: "Rules",
+        description: "Triggers the system already knows about, each with an assignee, priority, and due-date offset.",
       },
     ],
     tier: "ultra",
@@ -655,92 +686,33 @@ export const MODULES: ModuleConfig[] = [
     id: "settings",
     name: "Settings",
     icon: Settings,
-    description:
-      "Product metadata, prices, pricing rules, tax & tax rules, return policy, store credit, and audit logs.",
+    description: "Business profile, tax, pricing rules, return policy, payment methods, roles, and everything else that governs how the store runs.",
+    features: [],
+    tier: "light",
+    href: "/settings/business-profile",
+  },
+  {
+    id: "audit-log",
+    name: "Audit log",
+    icon: ShieldCheck,
+    description: "An immutable record of every setting, price, approval, and override change across the store.",
     features: [
       {
-        name: "Product metadata",
-        description: "The descriptive attributes used to organise products — categories, brands, units.",
-      },
-      {
-        name: "Product prices",
-        description: "The selling prices attached to products.",
-      },
-      {
-        name: "Pricing rules",
-        description: "How discounts stack and apply in priority order, and the price floor that protects margin.",
-      },
-      {
-        name: "Tax",
-        description: "The taxes the business must charge, such as VAT and levies.",
-      },
-      {
-        name: "Tax rules",
-        description: "When and how each tax applies, so receipts and invoices calculate tax correctly.",
-      },
-      {
-        name: "Return policy",
-        description: "Your own rules for accepting returns — time limits, conditions, refund vs credit.",
-      },
-      {
-        name: "Store credit",
-        description: "Value held on a customer's account that they can spend on future purchases.",
-      },
-      {
-        name: "Locations",
-        description: "Every shop and warehouse the business operates, and what each one is set up to do.",
-      },
-      {
-        name: "Inventory costing",
-        description: "How the cost of stock on hand is calculated as purchases come in at different prices.",
-      },
-      {
-        name: "Expense approvals",
-        description: "The amount above which a staff-recorded expense sits pending until the owner approves it.",
-      },
-      {
-        name: "SMS gateway",
-        description: "Bringing your own SMS provider instead of platform-managed credits.",
-      },
-      {
-        name: "Audit logs",
-        description: "A record of changes to business rules and settings, and every stock movement across locations. Included in every tier.",
+        name: "Audit log",
+        description: "Every setting changed, price changed, override approved, and correction made, with before/after values. Included in every tier.",
       },
     ],
     tier: "light",
+    href: "/audit-log",
   },
   {
     id: "guide",
     name: "Guide",
     icon: BookOpen,
-    description: "Step-by-step in-app guidance for getting the most from MyStoreGuard.",
-    features: [
-      {
-        name: "Loyalty program",
-        description: "How to set up points, tiers, and segments.",
-      },
-      {
-        name: "Pricing setup",
-        description: "How to configure product prices and pricing rules.",
-      },
-      {
-        name: "Return policy",
-        description: "How to define your store's return rules.",
-      },
-      {
-        name: "Store returns",
-        description: "How to process a customer return at the till.",
-      },
-      {
-        name: "Store sales",
-        description: "How to record daily, credit, and deposit sales.",
-      },
-      {
-        name: "Estimator",
-        description: "How to build and send an estimate before a sale.",
-      },
-    ],
+    description: "A searchable index of step-by-step articles for getting the most from MyStoreGuard.",
+    features: [],
     tier: "light",
+    href: "/guide",
   },
 ]
 
@@ -883,9 +855,19 @@ export const GROUPS: GroupConfig[] = [
     description: "Expenses, who owes who, cross-module reports, and the daily cash count.",
   },
   {
+    id: "workflow",
+    label: "Workflow",
+    moduleIds: ["workflow-my-tasks", "workflow-all-tasks", "workflow-checklists", "workflow-rules"],
+    type: "hub",
+    icon: ListTodo,
+    description: "Tasks the system raises from what it already knows, plus the checklists and rules behind them.",
+    // Placement is a judgement call for the team meeting — Workflow could equally sit near Dashboard.
+    // It's one line to move: relocate this entry within GROUPS.
+  },
+  {
     id: "system",
     label: "System",
-    moduleIds: ["settings", "workflow", "guide"],
+    moduleIds: ["settings", "audit-log", "guide"],
     type: "group",
   },
 ]
@@ -950,6 +932,7 @@ export const FLAT_ORDER: string[] = [
   "reports",
   "message",
   "settings",
+  "audit-log",
   "guide",
 ]
 
@@ -1113,6 +1096,26 @@ const MESSAGE_FLAT_ENTRY: ModuleConfig = {
   href: hubFirstTabPath("message"),
 }
 
+/**
+ * The flat view still shows a single "Workflow" item — it now routes to the
+ * Workflow hub instead of its own page. Not a real module, so it isn't in
+ * MODULES; resolveFlat() substitutes it in.
+ */
+const WORKFLOW_FLAT_ENTRY: ModuleConfig = {
+  id: "workflow",
+  name: "Workflow",
+  icon: ListTodo,
+  description: "Tasks the system raises from what it already knows, plus the checklists and rules behind them.",
+  features: [
+    { name: "My tasks", description: "Tasks assigned to the currently viewed role, grouped by how soon they're due." },
+    { name: "All tasks", description: "Every task in one filterable list or board, with bulk actions and manual task creation." },
+    { name: "Checklists", description: "Templates with steps, a schedule, and a completion rate that shows when a routine is being skipped." },
+    { name: "Rules", description: "Triggers the system already knows about, each with an assignee, priority, and due-date offset." },
+  ],
+  tier: "ultra",
+  href: hubFirstTabPath("workflow"),
+}
+
 export const TIER_LABEL: Record<Tier, string> = {
   light: "Light",
   prime: "Prime",
@@ -1231,6 +1234,7 @@ export function resolveFlat(): ModuleConfig[] {
     if (id === "loyalty") return LOYALTY_FLAT_ENTRY
     if (id === "offers-rewards") return OFFERS_REWARDS_FLAT_ENTRY
     if (id === "message") return MESSAGE_FLAT_ENTRY
+    if (id === "workflow") return WORKFLOW_FLAT_ENTRY
     return getModule(id)
   }).filter((m): m is ModuleConfig => Boolean(m))
 }

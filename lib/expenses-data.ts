@@ -57,19 +57,61 @@ export interface Expense {
 }
 
 // ---------------------------------------------------------------------------
-// Approval threshold — configurable in Settings.
+// Approval threshold — Class B in Settings → Approvals: it changes what
+// counts as "needs a decision" going forward, but must not make past,
+// already-approved expenses look like policy violations. getExpenseApprovalThreshold()
+// always resolves the version in force today, so every existing call site
+// (recordExpense, confirmRecurringExpense) keeps working unchanged.
 // ---------------------------------------------------------------------------
 
 export const DEFAULT_EXPENSE_APPROVAL_THRESHOLD = 200
 
-let approvalThresholdStore = DEFAULT_EXPENSE_APPROVAL_THRESHOLD
-
-export function getExpenseApprovalThreshold(): number {
-  return approvalThresholdStore
+export interface ExpenseApprovalThresholdVersion {
+  id: string
+  amount: number
+  effectiveFromISO: string
+  effectiveToISO?: string
 }
 
-export function setExpenseApprovalThreshold(next: number): void {
-  approvalThresholdStore = next
+let approvalThresholdVersions: ExpenseApprovalThresholdVersion[] = [
+  { id: "exp-thr-v1", amount: DEFAULT_EXPENSE_APPROVAL_THRESHOLD, effectiveFromISO: "2022-01-01" },
+]
+
+export function getExpenseApprovalThresholdVersions(): ExpenseApprovalThresholdVersion[] {
+  return approvalThresholdVersions
+}
+
+function thresholdVersionAsOf(asOfISO: string = TODAY_ISO): ExpenseApprovalThresholdVersion | undefined {
+  return [...approvalThresholdVersions].filter((v) => v.effectiveFromISO <= asOfISO).sort((a, b) => b.effectiveFromISO.localeCompare(a.effectiveFromISO))[0]
+}
+
+export function scheduledExpenseApprovalThreshold(asOfISO: string = TODAY_ISO): ExpenseApprovalThresholdVersion | undefined {
+  return approvalThresholdVersions.find((v) => v.effectiveFromISO > asOfISO)
+}
+
+function dayBeforeIso(iso: string): string {
+  const d = new Date(`${iso}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() - 1)
+  return d.toISOString().slice(0, 10)
+}
+
+export function getExpenseApprovalThreshold(): number {
+  return thresholdVersionAsOf()?.amount ?? DEFAULT_EXPENSE_APPROVAL_THRESHOLD
+}
+
+export function addExpenseApprovalThresholdVersion(amount: number, effectiveFromISO: string): void {
+  const closed = approvalThresholdVersions.map((v) =>
+    !v.effectiveToISO || v.effectiveToISO >= effectiveFromISO ? { ...v, effectiveToISO: dayBeforeIso(effectiveFromISO) } : v
+  )
+  approvalThresholdVersions = [...closed, { id: `exp-thr-v${closed.length + 1}-${Date.now().toString(36)}`, amount, effectiveFromISO }]
+}
+
+export function cancelScheduledExpenseApprovalThreshold(): void {
+  const scheduled = scheduledExpenseApprovalThreshold()
+  if (!scheduled) return
+  approvalThresholdVersions = approvalThresholdVersions
+    .filter((v) => v.id !== scheduled.id)
+    .map((v) => (v.effectiveToISO === dayBeforeIso(scheduled.effectiveFromISO) ? { ...v, effectiveToISO: undefined } : v))
 }
 
 // ---------------------------------------------------------------------------

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { MoreHorizontal } from "lucide-react"
 
 import { StatCard } from "@/components/dashboard/stat-card"
+import { ConceptTooltip } from "@/components/help/concept-tooltip"
 import { AdjustStockDialog } from "@/components/hubs/stock/adjust-stock-dialog"
 import { CreateTransferDialog } from "@/components/hubs/stock/create-transfer-dialog"
 import { SplitStockDialog } from "@/components/hubs/stock/split-stock-dialog"
@@ -180,8 +181,12 @@ export function StockLevelsTab() {
             <TableRow>
               <TableHead>Product</TableHead>
               <TableHead>On hand</TableHead>
-              <TableHead>Set aside</TableHead>
-              <TableHead>Available</TableHead>
+              <TableHead>
+                Set aside <ConceptTooltip conceptKey="set-aside" />
+              </TableHead>
+              <TableHead>
+                Available <ConceptTooltip conceptKey="available-vs-onhand" />
+              </TableHead>
               <TableHead>Value</TableHead>
               <TableHead className="w-10" />
             </TableRow>

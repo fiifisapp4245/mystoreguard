@@ -49,6 +49,7 @@ import {
 import { formatDateDisplay, getStandardPeriodRange, isDateInRange, STANDARD_PERIOD_OPTIONS, type StandardPeriod } from "@/lib/period-utils"
 import { CustomDateRangeRow, PeriodSelect } from "@/components/dashboard/period-select"
 import { useDemoState } from "@/hooks/use-demo-state"
+import { canSeeCostPrices } from "@/lib/permissions-data"
 
 type FilterOption = "All" | POStatus
 
@@ -56,6 +57,7 @@ export function PurchaseOrdersTab() {
   const { state } = useDemoState()
   const isLarry = state.storePersona === "larry"
   const suppliers = isLarry ? LARRY_SUPPLIERS : SUPPLIERS
+  const showCostPrices = canSeeCostPrices(state.role)
 
   const [pos, setPos] = useState<PurchaseOrder[]>(() => (isLarry ? getLarryPurchaseOrdersStore() : getPurchaseOrdersStore()))
   const [prevIsLarry, setPrevIsLarry] = useState(isLarry)
@@ -95,9 +97,9 @@ export function PurchaseOrdersTab() {
       { label: "Open POs", value: String(open) },
       { label: "Awaiting delivery", value: String(awaiting) },
       { label: "Received", caption: periodLabel, value: String(receivedThisPeriod) },
-      { label: "Value outstanding", caption: "as of now", value: formatGHS(outstanding) },
+      ...(showCostPrices ? [{ label: "Value outstanding", caption: "as of now", value: formatGHS(outstanding) }] : []),
     ]
-  }, [pos, periodRange, periodLabel])
+  }, [pos, periodRange, periodLabel, showCostPrices])
 
   function handleOrderLowStock() {
     const created = generateLowStockDraftOrders(isLarry, suppliers)
@@ -171,7 +173,7 @@ export function PurchaseOrdersTab() {
               <TableHead>PO no.</TableHead>
               <TableHead>Supplier</TableHead>
               <TableHead>Items</TableHead>
-              <TableHead>Total value</TableHead>
+              {showCostPrices && <TableHead>Total value</TableHead>}
               <TableHead>Expected date</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-10" />
@@ -183,7 +185,7 @@ export function PurchaseOrdersTab() {
                 <TableCell className="font-medium">{po.id}</TableCell>
                 <TableCell>{po.supplierName}</TableCell>
                 <TableCell>{po.lineItems.length}</TableCell>
-                <TableCell>{formatGHS(poTotal(po))}</TableCell>
+                {showCostPrices && <TableCell>{formatGHS(poTotal(po))}</TableCell>}
                 <TableCell className="text-muted-foreground">{formatDateDisplay(po.expectedDate)}</TableCell>
                 <TableCell>
                   <StatusBadge label={po.status} />
@@ -213,7 +215,7 @@ export function PurchaseOrdersTab() {
             ))}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={showCostPrices ? 7 : 6} className="py-8 text-center text-muted-foreground">
                   No purchase orders match this filter.
                 </TableCell>
               </TableRow>

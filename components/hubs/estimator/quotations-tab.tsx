@@ -8,6 +8,7 @@ import { toast } from "sonner"
 
 import { StatCard } from "@/components/dashboard/stat-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
+import { TeachingEmptyState } from "@/components/dashboard/teaching-empty-state"
 import { QuotationDetailSheet } from "@/components/hubs/estimator/quotation-detail-sheet"
 import { RecordDepositDialog } from "@/components/hubs/estimator/record-deposit-dialog"
 import { Button } from "@/components/ui/button"
@@ -246,6 +247,13 @@ export function QuotationsTab() {
         </Button>
       </div>
 
+      {filtered.length === 0 ? (
+        <TeachingEmptyState
+          message="A quotation is a price you send a customer before the sale. If they accept, it becomes an invoice with one click."
+          actionLabel="New quotation"
+          actionHref={withDemoQuery("/estimator/quotations/new")}
+        />
+      ) : (
       <div className="overflow-hidden rounded-xl border">
         <Table>
           <TableHeader>
@@ -320,16 +328,10 @@ export function QuotationsTab() {
                 </TableRow>
               )
             })}
-            {filtered.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
-                  No quotations match your filters.
-                </TableCell>
-              </TableRow>
-            )}
           </TableBody>
         </Table>
       </div>
+      )}
 
       <QuotationDetailSheet
         quotation={selected}

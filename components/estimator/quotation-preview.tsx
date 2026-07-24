@@ -1,7 +1,7 @@
 import { formatGHS } from "@/lib/mock-data"
 import type { ComputedLineItem } from "@/lib/estimator-data"
 import { formatDateDisplay } from "@/lib/period-utils"
-import { STORE_INFO } from "@/lib/settings-data"
+import { getBusinessProfile } from "@/lib/business-profile-data"
 
 export function QuotationPreview({
   quotationNo,
@@ -13,8 +13,6 @@ export function QuotationPreview({
   total,
   note,
   terms,
-  storeName = STORE_INFO.name,
-  storeAddress = STORE_INFO.addressLine,
 }: {
   quotationNo: string
   customerName: string
@@ -25,16 +23,19 @@ export function QuotationPreview({
   total: number
   note: string
   terms: string
-  storeName?: string
-  storeAddress?: string
 }) {
+  // Quotations model curtain/measurement-based trades — this preview always
+  // renders Larry's letterhead regardless of the active demo persona,
+  // matching the prior hardcoded STORE_PERSONA_LABEL.larry behavior.
+  const businessProfile = getBusinessProfile("larry")
+
   return (
     <div className="mx-auto flex aspect-[1/1.4142] w-full max-w-2xl flex-col gap-6 overflow-y-auto bg-white p-10 text-neutral-900 shadow-lg ring-1 ring-black/5">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-lg font-semibold">{storeName}</p>
-          <p className="text-sm text-neutral-500">{storeAddress}</p>
-          <p className="text-sm text-neutral-500">{STORE_INFO.phone}</p>
+          <p className="text-lg font-semibold">{businessProfile.storeName}</p>
+          <p className="text-sm text-neutral-500">{businessProfile.addressLine}</p>
+          <p className="text-sm text-neutral-500">{businessProfile.phone}</p>
         </div>
         <div className="text-right">
           <p className="text-2xl font-bold tracking-tight text-neutral-800">QUOTATION</p>

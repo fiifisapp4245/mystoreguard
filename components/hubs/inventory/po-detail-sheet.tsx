@@ -13,6 +13,8 @@ import {
 import { formatGHS } from "@/lib/mock-data"
 import { poTotal, type PurchaseOrder } from "@/lib/purchase-orders-data"
 import { formatDateDisplay } from "@/lib/period-utils"
+import { useDemoState } from "@/hooks/use-demo-state"
+import { canSeeCostPrices } from "@/lib/permissions-data"
 
 export function PODetailSheet({
   po,
@@ -25,6 +27,9 @@ export function PODetailSheet({
   onReceive: () => void
   fullyReceived: boolean
 }) {
+  const { state } = useDemoState()
+  const showCostPrices = canSeeCostPrices(state.role)
+
   return (
     <Sheet open={po !== null} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-md">
@@ -56,18 +61,23 @@ export function PODetailSheet({
                     <div key={item.productId} className="flex flex-col gap-0.5 px-3 py-2 text-sm">
                       <div className="flex items-center justify-between">
                         <span>{item.productName}</span>
-                        <span className="font-medium">{formatGHS(item.orderedQty * item.unitCost)}</span>
+                        {showCostPrices && (
+                          <span className="font-medium">{formatGHS(item.orderedQty * item.unitCost)}</span>
+                        )}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {item.receivedQty} of {item.orderedQty} received · {formatGHS(item.unitCost)} each
+                        {item.receivedQty} of {item.orderedQty} received
+                        {showCostPrices ? ` · ${formatGHS(item.unitCost)} each` : ""}
                       </p>
                     </div>
                   ))}
                 </div>
-                <div className="flex items-center justify-between px-1 text-sm font-semibold">
-                  <span>Total</span>
-                  <span>{formatGHS(poTotal(po))}</span>
-                </div>
+                {showCostPrices && (
+                  <div className="flex items-center justify-between px-1 text-sm font-semibold">
+                    <span>Total</span>
+                    <span>{formatGHS(poTotal(po))}</span>
+                  </div>
+                )}
               </div>
 
               {po.bill && (
@@ -77,10 +87,12 @@ export function PODetailSheet({
                     <span className="text-muted-foreground">Invoice</span>
                     <span>{po.bill.invoiceNumber}</span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Amount</span>
-                    <span>{formatGHS(po.bill.amount)}</span>
-                  </div>
+                  {showCostPrices && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Amount</span>
+                      <span>{formatGHS(po.bill.amount)}</span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Payment</span>
                     <span>{po.bill.isPaid ? "Paid" : `Owed — ${po.bill.paymentTerms}`}</span>

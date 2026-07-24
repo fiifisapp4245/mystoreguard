@@ -1,12 +1,13 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { MoreHorizontal, Plus, Search, Upload } from "lucide-react"
+import { MoreHorizontal, Plus, Search, Tags, Upload } from "lucide-react"
 import { toast } from "sonner"
 
 import { PeriodSelect } from "@/components/dashboard/period-select"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
+import { CategoriesBrandsUnitsDialog } from "@/components/hubs/inventory/categories-brands-units-dialog"
 import { ImportProductsDialog } from "@/components/hubs/inventory/import-products-dialog"
 import { ProductDialog, type ProductFormValues } from "@/components/hubs/inventory/product-dialog"
 import { Button } from "@/components/ui/button"
@@ -56,6 +57,8 @@ import { getMovementsStore, getLarryMovementsStore, movementProductLabel, type M
 import { isMultiLocationTier } from "@/lib/modules"
 import type { StandardPeriod } from "@/lib/period-utils"
 import { useDemoState } from "@/hooks/use-demo-state"
+import { canSeeCostPrices } from "@/lib/permissions-data"
+import { markSetupItemDone } from "@/lib/setup-checklist-data"
 
 type StatusFilter = "All" | "In stock" | "Low stock" | "Out of stock"
 
@@ -78,6 +81,7 @@ export function ProductsTab() {
   const { state } = useDemoState()
   const isLarry = state.storePersona === "larry"
   const isMultiLocation = isMultiLocationTier(state.tier)
+  const showCostPrices = canSeeCostPrices(state.role)
 
   const locations = isLarry ? LARRY_LOCATIONS : LOCATIONS
   const suppliers: Supplier[] = isLarry ? LARRY_SUPPLIERS : SUPPLIERS
@@ -99,6 +103,7 @@ export function ProductsTab() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | undefined>(undefined)
   const [importOpen, setImportOpen] = useState(false)
+  const [categoriesDialogOpen, setCategoriesDialogOpen] = useState(false)
   const [historyProduct, setHistoryProduct] = useState<Product | null>(null)
 
   function persist(next: Product[]) {
@@ -187,6 +192,7 @@ export function ProductsTab() {
         locationStock: locations.map((loc) => ({ locationId: loc.id, onHand: 0, setAside: 0, sealedPurchaseUnits: 0 })),
       }
       persist([newProduct, ...products])
+      markSetupItemDone("products")
       toast.success("Product added", { description: newProduct.name })
     }
     setDialogOpen(false)
@@ -262,6 +268,10 @@ export function ProductsTab() {
             <span className="rounded-md border px-3 py-1.5 text-sm text-muted-foreground">{visibleLocations[0]?.name}</span>
           )}
           <PeriodSelect value={period} onValueChange={setPeriod} className="ml-auto" />
+          <Button variant="outline" onClick={() => setCategoriesDialogOpen(true)}>
+            <Tags />
+            Categories, brands &amp; units
+          </Button>
           <Button variant="outline" onClick={() => setImportOpen(true)}>
             <Upload />
             Import products
@@ -283,7 +293,7 @@ export function ProductsTab() {
               <TableHead>On hand</TableHead>
               <TableHead>Set aside</TableHead>
               <TableHead>Available</TableHead>
-              <TableHead>Cost</TableHead>
+              {showCostPrices && <TableHead>Cost</TableHead>}
               <TableHead>Price</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-10" />
@@ -304,7 +314,9 @@ export function ProductsTab() {
                   <TableCell>{onHand}</TableCell>
                   <TableCell>{setAside > 0 ? setAside : <span className="text-muted-foreground">—</span>}</TableCell>
                   <TableCell className="font-medium">{available}</TableCell>
-                  <TableCell className="text-muted-foreground">{formatGHS(product.costPrice)}</TableCell>
+                  {showCostPrices && (
+                    <TableCell className="text-muted-foreground">{formatGHS(product.costPrice)}</TableCell>
+                  )}
                   <TableCell>{formatGHS(product.sellingPrice)}</TableCell>
                   <TableCell>
                     <StatusBadge label={productStatus(product)} />
@@ -331,7 +343,7 @@ export function ProductsTab() {
             })}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={10} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={showCostPrices ? 10 : 9} className="py-8 text-center text-muted-foreground">
                   No products match your filters.
                 </TableCell>
               </TableRow>
@@ -350,6 +362,8 @@ export function ProductsTab() {
       />
 
       <ImportProductsDialog open={importOpen} onOpenChange={setImportOpen} />
+
+      <CategoriesBrandsUnitsDialog open={categoriesDialogOpen} onOpenChange={setCategoriesDialogOpen} />
 
       <Sheet open={historyProduct !== null} onOpenChange={(open) => !open && setHistoryProduct(null)}>
         <SheetContent className="sm:max-w-md">

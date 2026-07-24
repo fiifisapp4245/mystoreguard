@@ -20,7 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { ROLE_PERMISSIONS, STAFF_ROLES, isValidGhanaPhone, type StaffMember, type StaffRole } from "@/lib/mock-data"
+import { STAFF_ROLES, isValidGhanaPhone, type StaffMember, type StaffRole } from "@/lib/mock-data"
+import { summarizeRolePermissions } from "@/lib/permissions-data"
 
 interface FormErrors {
   name?: string
@@ -116,11 +117,12 @@ export function AddStaffDialog({
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">Roles are configured in Settings → Roles & permissions</p>
           </div>
 
           <div className="rounded-lg border bg-muted/40 p-3">
             <p className="text-xs font-medium text-muted-foreground">{role} can:</p>
-            <p className="mt-1 text-sm">{ROLE_PERMISSIONS[role]}</p>
+            <p className="mt-1 text-sm">{summarizeRolePermissions(role)}</p>
           </div>
         </div>
 

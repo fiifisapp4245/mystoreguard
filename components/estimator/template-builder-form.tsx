@@ -9,6 +9,7 @@ import { LiveTestPanel } from "@/components/estimator/live-test-panel"
 import { RuleBlockEditor } from "@/components/estimator/rule-block-editor"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { HelpPanelTrigger } from "@/components/help/help-panel-trigger"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -192,9 +193,12 @@ export function TemplateBuilderForm({ templateId }: { templateId?: string }) {
 
   return (
     <div className="flex flex-1 flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{isEdit ? "Edit template" : "New template"}</h1>
-        <p className="text-sm text-muted-foreground">Input fields and rule blocks that compute price from measurements.</p>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">{isEdit ? "Edit template" : "New template"}</h1>
+          <p className="text-sm text-muted-foreground">Input fields and rule blocks that compute price from measurements.</p>
+        </div>
+        <HelpPanelTrigger screenKey="template-builder" />
       </div>
 
       <div className="flex items-center gap-2">

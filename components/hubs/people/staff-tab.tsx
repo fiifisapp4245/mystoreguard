@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { STAFF, initials, type StaffMember } from "@/lib/mock-data"
+import { markSetupItemDone } from "@/lib/setup-checklist-data"
 
 export function StaffTab() {
   const [staff, setStaff] = useState<StaffMember[]>(STAFF)
@@ -19,6 +20,7 @@ export function StaffTab() {
   function handleAdd(member: StaffMember) {
     setStaff((prev) => [member, ...prev])
     setAddOpen(false)
+    markSetupItemDone("staff")
     toast.success("Staff added", { description: `${member.name} has been invited.` })
   }
 
@@ -28,7 +30,7 @@ export function StaffTab() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
           <StatCard label="Staff accounts" value={String(staff.length)} className="sm:w-48" />
           <p className="max-w-xs text-sm text-muted-foreground">
-            Roles control what each person can see and do.
+            Roles control what each person can see and do. Roles are configured in Settings → Roles & permissions.
           </p>
         </div>
         <Button onClick={() => setAddOpen(true)}>

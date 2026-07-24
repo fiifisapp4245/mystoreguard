@@ -27,6 +27,8 @@ import { formatGHS } from "@/lib/mock-data"
 import type { Supplier } from "@/lib/mock-data"
 import { totalOnHand, type Product } from "@/lib/pos-data"
 import { cn } from "@/lib/utils"
+import { useDemoState } from "@/hooks/use-demo-state"
+import { canSeeCostPrices } from "@/lib/permissions-data"
 
 function randomBarcode(): string {
   let digits = "6"
@@ -90,6 +92,9 @@ export function ProductDialog({
   categories: string[]
   onSave: (values: ProductFormValues) => void
 }) {
+  const { state } = useDemoState()
+  const showCostPrice = canSeeCostPrices(state.role)
+
   const [values, setValues] = useState<ProductFormValues>(() => toFormValues(product))
   const [step, setStep] = useState(0)
   const [prevProductId, setPrevProductId] = useState<string | null>(null)
@@ -268,11 +273,13 @@ export function ProductDialog({
           {step === 2 && (
           <div className="flex flex-col gap-3">
             <p className="text-xs font-medium text-muted-foreground uppercase">Pricing</p>
-            <div className="flex flex-col gap-1.5">
-              <Label>Cost price</Label>
-              <Input value={product ? formatGHS(product.costPrice) : formatGHS(0)} disabled />
-              <p className="text-xs text-muted-foreground">Set automatically when stock is received.</p>
-            </div>
+            {showCostPrice && (
+              <div className="flex flex-col gap-1.5">
+                <Label>Cost price</Label>
+                <Input value={product ? formatGHS(product.costPrice) : formatGHS(0)} disabled />
+                <p className="text-xs text-muted-foreground">Set automatically when stock is received.</p>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="prod-selling-price">

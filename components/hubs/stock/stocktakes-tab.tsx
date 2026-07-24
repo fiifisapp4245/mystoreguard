@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation"
 import { Plus } from "lucide-react"
 
 import { StatusBadge } from "@/components/dashboard/status-badge"
+import { TeachingEmptyState } from "@/components/dashboard/teaching-empty-state"
+import { HelpPanelTrigger } from "@/components/help/help-panel-trigger"
 import { StartCountDialog } from "@/components/hubs/stock/start-count-dialog"
 import { Button } from "@/components/ui/button"
 import {
@@ -74,58 +76,62 @@ export function StocktakesTab() {
         <span className="text-sm text-muted-foreground">
           {isMultiLocation ? "All locations" : visibleLocations[0]?.name}
         </span>
-        <Button onClick={() => setStartOpen(true)}>
-          <Plus />
-          Start a count
-        </Button>
+        <div className="flex items-center gap-2">
+          <HelpPanelTrigger screenKey="stocktake" />
+          <Button onClick={() => setStartOpen(true)}>
+            <Plus />
+            Start a count
+          </Button>
+        </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Count no.</TableHead>
-              <TableHead>Scope</TableHead>
-              <TableHead>Started by</TableHead>
-              <TableHead>Started</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Variances</TableHead>
-              <TableHead>Net variance value</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sorted.map((st) => {
-              const variances = varianceCount(st, products)
-              const netValue = netVarianceValue(st, products)
-              return (
-                <TableRow key={st.id} className="cursor-pointer" onClick={() => handleRowClick(st)}>
-                  <TableCell className="font-medium">{st.id}</TableCell>
-                  <TableCell>
-                    {locationName(st.locationId)} · {st.scope}
-                    {st.scopeDetail ? ` — ${st.scopeDetail}` : ""}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{st.startedBy}</TableCell>
-                  <TableCell className="text-muted-foreground">{st.startedDateISO}</TableCell>
-                  <TableCell>
-                    <StatusBadge label={st.status} tone={statusTone(st.status)} />
-                  </TableCell>
-                  <TableCell>{st.status === "Discarded" ? "—" : variances}</TableCell>
-                  <TableCell className={netValue < 0 ? "text-destructive" : netValue > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}>
-                    {st.status === "Discarded" ? "—" : formatGHS(netValue)}
-                  </TableCell>
-                </TableRow>
-              )
-            })}
-            {sorted.length === 0 && (
+      {sorted.length === 0 ? (
+        <TeachingEmptyState
+          message="A stocktake compares what's on your shelves against what the system says you have — it's how you catch theft, damage and recording mistakes."
+          actionLabel="Start your first count"
+          onAction={() => setStartOpen(true)}
+        />
+      ) : (
+        <div className="overflow-hidden rounded-xl border">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
-                  No stocktakes yet.
-                </TableCell>
+                <TableHead>Count no.</TableHead>
+                <TableHead>Scope</TableHead>
+                <TableHead>Started by</TableHead>
+                <TableHead>Started</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Variances</TableHead>
+                <TableHead>Net variance value</TableHead>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {sorted.map((st) => {
+                const variances = varianceCount(st, products)
+                const netValue = netVarianceValue(st, products)
+                return (
+                  <TableRow key={st.id} className="cursor-pointer" onClick={() => handleRowClick(st)}>
+                    <TableCell className="font-medium">{st.id}</TableCell>
+                    <TableCell>
+                      {locationName(st.locationId)} · {st.scope}
+                      {st.scopeDetail ? ` — ${st.scopeDetail}` : ""}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{st.startedBy}</TableCell>
+                    <TableCell className="text-muted-foreground">{st.startedDateISO}</TableCell>
+                    <TableCell>
+                      <StatusBadge label={st.status} tone={statusTone(st.status)} />
+                    </TableCell>
+                    <TableCell>{st.status === "Discarded" ? "—" : variances}</TableCell>
+                    <TableCell className={netValue < 0 ? "text-destructive" : netValue > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}>
+                      {st.status === "Discarded" ? "—" : formatGHS(netValue)}
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       <StartCountDialog
         open={startOpen}

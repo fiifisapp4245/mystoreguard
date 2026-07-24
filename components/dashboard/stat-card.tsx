@@ -19,6 +19,7 @@ export function StatCard({
   footnote,
   href,
   className,
+  labelExtra,
 }: {
   label: string
   value: string
@@ -30,6 +31,8 @@ export function StatCard({
   /** Wraps the card in a link to the relevant module. */
   href?: string
   className?: string
+  /** Optional small control rendered right after the label, e.g. a ConceptTooltip. */
+  labelExtra?: React.ReactNode
 }) {
   const TrendIcon = trend?.direction === "up" ? TrendingUp : TrendingDown
   const trendClass =
@@ -42,6 +45,7 @@ export function StatCard({
       <CardHeader className="gap-1.5 px-5">
         <div className="flex items-center gap-1.5">
           <p className="text-sm text-muted-foreground">{label}</p>
+          {labelExtra}
           {caption && <span className="text-xs text-muted-foreground">· {caption}</span>}
         </div>
         <div className="flex items-baseline gap-2">

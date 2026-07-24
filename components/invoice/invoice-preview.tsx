@@ -1,7 +1,10 @@
+"use client"
+
 import { formatGHS } from "@/lib/mock-data"
 import type { InvoiceLineItem, TaxLine } from "@/lib/invoice-data"
 import { formatDateDisplay } from "@/lib/period-utils"
-import { STORE_INFO } from "@/lib/settings-data"
+import { getBusinessProfile } from "@/lib/business-profile-data"
+import { useDemoState } from "@/hooks/use-demo-state"
 
 export function InvoicePreview({
   invoiceNo,
@@ -28,13 +31,16 @@ export function InvoicePreview({
   note: string
   paymentInstructions: string
 }) {
+  const { state } = useDemoState()
+  const businessProfile = getBusinessProfile(state.storePersona)
+
   return (
     <div className="mx-auto flex aspect-[1/1.4142] w-full max-w-2xl flex-col gap-6 overflow-y-auto bg-white p-10 text-neutral-900 shadow-lg ring-1 ring-black/5">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-lg font-semibold">{STORE_INFO.name}</p>
-          <p className="text-sm text-neutral-500">{STORE_INFO.addressLine}</p>
-          <p className="text-sm text-neutral-500">{STORE_INFO.phone}</p>
+          <p className="text-lg font-semibold">{businessProfile.storeName}</p>
+          <p className="text-sm text-neutral-500">{businessProfile.addressLine}</p>
+          <p className="text-sm text-neutral-500">{businessProfile.phone}</p>
         </div>
         <div className="text-right">
           <p className="text-2xl font-bold tracking-tight text-neutral-800">INVOICE</p>

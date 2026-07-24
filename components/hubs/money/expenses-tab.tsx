@@ -84,7 +84,6 @@ import {
   TODAY_ISO,
   type StandardPeriod,
 } from "@/lib/period-utils"
-import { cn } from "@/lib/utils"
 
 const CURRENT_USER = "Adjoa Boateng"
 const ADD_CUSTOM_CATEGORY_VALUE = "__add_custom_category__"
@@ -134,13 +133,6 @@ export function ExpensesTab() {
   const stats = useMemo(() => {
     const total = periodApproved.reduce((sum, e) => sum + e.amount, 0)
 
-    const categoryTotals = new Map<string, number>()
-    for (const e of periodApproved) categoryTotals.set(e.category, (categoryTotals.get(e.category) ?? 0) + e.amount)
-    let topCategory: { category: string; total: number } | null = null
-    for (const [category, categoryTotal] of categoryTotals) {
-      if (!topCategory || categoryTotal > topCategory.total) topCategory = { category, total: categoryTotal }
-    }
-
     const pendingApprovalCount = expenses.filter((e) => e.status === "Pending" && !e.isRecurringPending).length
     const recurringActiveCount = RECURRING_DEFINITIONS.filter((d) => d.active).length
 
@@ -150,12 +142,6 @@ export function ExpensesTab() {
         caption: periodLabel,
         value: formatGHS(total),
         footnote: `${periodApproved.length} approved expense${periodApproved.length === 1 ? "" : "s"}`,
-      },
-      {
-        label: "Largest category",
-        caption: periodLabel,
-        value: topCategory ? topCategory.category : "—",
-        footnote: topCategory ? formatGHS(topCategory.total) : "No expenses in this period",
       },
       {
         label: "Pending approval",
@@ -243,7 +229,7 @@ export function ExpensesTab() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {stats.map((stat) => (
           <StatCard key={stat.label} {...stat} />
         ))}
@@ -323,14 +309,13 @@ export function ExpensesTab() {
               <TableRow>
                 <TableHead>Date</TableHead>
                 <TableHead>Category</TableHead>
-                <TableHead>Description</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Paid from</TableHead>
                 <TableHead>Paid to</TableHead>
                 <TableHead>Recorded by</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-10">Receipt</TableHead>
-                <TableHead className="w-32" />
+                <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -338,12 +323,6 @@ export function ExpensesTab() {
                 <TableRow key={expense.id} className="bg-amber-500/10 hover:bg-amber-500/15">
                   <TableCell className="text-muted-foreground">{formatDateDisplay(expense.dateISO)}</TableCell>
                   <TableCell>{expense.category}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1.5">
-                      <Repeat className="size-3.5 text-amber-700 dark:text-amber-400" />
-                      <span>{expense.description}</span>
-                    </div>
-                  </TableCell>
                   <TableCell className="font-medium">{formatGHS(expense.amount)}</TableCell>
                   <TableCell>{expense.paidFrom}</TableCell>
                   <TableCell>{expense.paidTo}</TableCell>
@@ -354,15 +333,20 @@ export function ExpensesTab() {
                   <TableCell>
                     <ReceiptIndicator hasReceipt={expense.hasReceipt} />
                   </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-end gap-1.5">
-                      <Button size="sm" variant="outline" onClick={() => setConfirmTarget({ expense, editing: true })}>
-                        Edit &amp; confirm
-                      </Button>
-                      <Button size="sm" onClick={() => handleConfirmRecurring(expense)}>
-                        Confirm
-                      </Button>
-                    </div>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${expense.description}`}>
+                          <MoreHorizontal className="size-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleConfirmRecurring(expense)}>Confirm</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setConfirmTarget({ expense, editing: true })}>
+                          Edit &amp; confirm
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))}
@@ -371,7 +355,6 @@ export function ExpensesTab() {
                 <TableRow key={expense.id} className="cursor-pointer" onClick={() => setViewTarget(expense)}>
                   <TableCell className="text-muted-foreground">{formatDateDisplay(expense.dateISO)}</TableCell>
                   <TableCell>{expense.category}</TableCell>
-                  <TableCell>{expense.description}</TableCell>
                   <TableCell className="font-medium">{formatGHS(expense.amount)}</TableCell>
                   <TableCell>{expense.paidFrom}</TableCell>
                   <TableCell>{expense.paidTo}</TableCell>
@@ -418,7 +401,7 @@ export function ExpensesTab() {
 
               {filtered.length === 0 && recurringPending.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={10} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
                     No expenses match this filter.
                   </TableCell>
                 </TableRow>
@@ -459,12 +442,16 @@ export function ExpensesTab() {
 }
 
 function ReceiptIndicator({ hasReceipt }: { hasReceipt: boolean }) {
+  if (!hasReceipt) {
+    return (
+      <span className="text-muted-foreground" aria-label="No receipt on file">
+        —
+      </span>
+    )
+  }
   return (
-    <Receipt
-      className={cn("size-4", hasReceipt ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/30")}
-      aria-label={hasReceipt ? "Receipt attached" : "No receipt on file"}
-    >
-      <title>{hasReceipt ? "Receipt attached" : "No receipt on file"}</title>
+    <Receipt className="size-4 text-emerald-600 dark:text-emerald-400" aria-label="Receipt attached">
+      <title>Receipt attached</title>
     </Receipt>
   )
 }

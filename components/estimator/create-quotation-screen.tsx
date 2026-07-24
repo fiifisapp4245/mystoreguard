@@ -21,7 +21,7 @@ import { AddCustomerDialog } from "@/components/hubs/people/add-customer-dialog"
 import { CustomerPicker } from "@/components/register/customer-picker"
 import { InvoiceItemsSection } from "@/components/invoice/invoice-items-section"
 import { QuotationPreview } from "@/components/estimator/quotation-preview"
-import { demoStateToParams, STORE_PERSONA_LABEL, useDemoState } from "@/hooks/use-demo-state"
+import { demoStateToParams, useDemoState } from "@/hooks/use-demo-state"
 import { formatGHS, type Customer } from "@/lib/mock-data"
 import {
   applyTemplatePricing,
@@ -61,7 +61,6 @@ export function CreateQuotationScreen({
 }) {
   const router = useRouter()
   const { state } = useDemoState()
-  const storeLabel = STORE_PERSONA_LABEL.larry
   const quotationsListHref = (() => {
     const qs = demoStateToParams(state).toString()
     return qs ? `/estimator/quotations?${qs}` : "/estimator/quotations"
@@ -429,8 +428,6 @@ export function CreateQuotationScreen({
             total={pricing.total}
             note={note}
             terms={terms}
-            storeName={storeLabel.name}
-            storeAddress={storeLabel.location}
           />
         </div>
       </div>

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
+import { ConceptTooltip } from "@/components/help/concept-tooltip"
 import {
   Dialog,
   DialogContent,
@@ -189,7 +190,9 @@ export function StartCountDialog({
 
           <div className="flex items-start justify-between gap-3 rounded-lg border p-3">
             <div>
-              <p className="text-sm font-medium">Blind count</p>
+              <p className="flex items-center gap-1 text-sm font-medium">
+                Blind count <ConceptTooltip conceptKey="blind-count" />
+              </p>
               <p className="text-xs text-muted-foreground">Hides the system quantity while counting, so the counter records what&apos;s actually there instead of confirming the screen.</p>
             </div>
             <Switch checked={blindCount} onCheckedChange={setBlindCount} />

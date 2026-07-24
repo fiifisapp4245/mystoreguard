@@ -54,7 +54,8 @@ import {
   type LoyaltyMember,
   type Segment,
 } from "@/lib/loyalty-data"
-import { STORE_INFO } from "@/lib/settings-data"
+import { getBusinessProfile } from "@/lib/business-profile-data"
+import { useDemoState } from "@/hooks/use-demo-state"
 import { formatDateDisplay, TODAY_ISO } from "@/lib/period-utils"
 import { cn } from "@/lib/utils"
 
@@ -86,6 +87,8 @@ function nextId(prefix: string): string {
 }
 
 export function ComposeTab() {
+  const { state } = useDemoState()
+  const businessProfile = getBusinessProfile(state.storePersona)
   const searchParams = useSearchParams()
   const segmentParam = searchParams.get("segment")
   const countParam = searchParams.get("count")
@@ -198,7 +201,7 @@ export function ComposeTab() {
     .replaceAll("{customer name}", previewMember.name)
     .replaceAll("{points balance}", String(previewMember.points))
     .replaceAll("{amount owed}", amountOwedParam ?? "0.00")
-    .replaceAll("{store name}", STORE_INFO.name)
+    .replaceAll("{store name}", businessProfile.storeName)
     .replaceAll("{invoice no.}", invoiceNoParam ?? "INV-0000")
     .replaceAll("{due date}", dueDateParam ?? formatDateDisplay(TODAY_ISO))
 

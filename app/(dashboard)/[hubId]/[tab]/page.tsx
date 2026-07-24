@@ -32,6 +32,10 @@ import { AutomatedTab } from "@/components/hubs/message/automated-tab"
 import { ComposeTab } from "@/components/hubs/message/compose-tab"
 import { HistoryTab } from "@/components/hubs/message/history-tab"
 import { TemplatesTab as MessageTemplatesTab } from "@/components/hubs/message/templates-tab"
+import { AllTasksTab } from "@/components/workflow/all-tasks-tab"
+import { ChecklistsTab } from "@/components/workflow/checklists-tab"
+import { MyTasksTab } from "@/components/workflow/my-tasks-tab"
+import { RulesTab } from "@/components/workflow/rules-tab"
 import { GROUPS, getHub, getModule } from "@/lib/modules"
 
 export function generateStaticParams() {
@@ -102,6 +106,10 @@ export default async function HubTabPage({
       {hubId === "message" && tab === "message-automated" && <TabGate moduleId="message-automated"><AutomatedTab /></TabGate>}
       {hubId === "message" && tab === "message-history" && <TabGate moduleId="message-history"><HistoryTab /></TabGate>}
       {hubId === "message" && tab === "message-templates" && <TabGate moduleId="message-templates"><MessageTemplatesTab /></TabGate>}
+      {hubId === "workflow" && tab === "workflow-my-tasks" && <TabGate moduleId="workflow-my-tasks"><MyTasksTab /></TabGate>}
+      {hubId === "workflow" && tab === "workflow-all-tasks" && <TabGate moduleId="workflow-all-tasks"><AllTasksTab /></TabGate>}
+      {hubId === "workflow" && tab === "workflow-checklists" && <TabGate moduleId="workflow-checklists"><ChecklistsTab /></TabGate>}
+      {hubId === "workflow" && tab === "workflow-rules" && <TabGate moduleId="workflow-rules"><RulesTab /></TabGate>}
     </div>
   )
 }

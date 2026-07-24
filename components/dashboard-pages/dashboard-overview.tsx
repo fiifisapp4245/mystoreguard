@@ -4,16 +4,19 @@ import { useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import Link from "next/link"
 import {
+  Award,
+  Banknote,
   Building2,
   CalendarCheck,
   ChevronRight,
+  ClipboardList,
   Clock,
   FileText,
   Package,
   Plus,
   Settings2,
   ShoppingCart,
-  UserCog,
+  Truck,
   Warehouse,
   type LucideIcon,
 } from "lucide-react"
@@ -48,10 +51,9 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { ModulePageData } from "@/components/dashboard-pages/registry"
+import { SetupChecklistCard } from "@/components/dashboard-pages/setup-checklist-card"
 import { useDemoState } from "@/hooks/use-demo-state"
-import { getModule, isModuleLocked } from "@/lib/modules"
 import {
-  ATTENTION_ITEMS,
   DASHBOARD_DATA,
   DASHBOARD_RECENT_SALES,
   formatGHS,
@@ -61,6 +63,7 @@ import {
   OUTSTANDING_CREDIT,
   type DashboardPeriod,
 } from "@/lib/mock-data"
+import { dueBucketFor, mostUrgentTasksForRole, type TaskCategory } from "@/lib/workflow-data"
 
 // Recharts crashes Next's server-side page-data collection if imported
 // statically, even from a "use client" module — isolate it behind a real
@@ -81,16 +84,29 @@ const PERIOD_OPTIONS: { value: PeriodOption; label: string }[] = [
   { value: "custom", label: "Custom" },
 ]
 
-const ATTENTION_ICON: Record<string, LucideIcon> = {
-  "low-stock": Package,
-  "credit-overdue": Clock,
-  "invoices-unpaid": FileText,
-  "transfers-pending": Warehouse,
-  "appointments-today": CalendarCheck,
-  "staff-invite": UserCog,
+const NEW_STORE_ATTENTION_ICON: Record<string, LucideIcon> = {
   "add-products": Package,
   "add-supplier": Building2,
   "first-sale": ShoppingCart,
+}
+
+/** Icon per Workflow task category — the Dashboard panel renders live tasks, so this is the UI-layer mapping onto lib/workflow-data.ts's TaskCategory. */
+const TASK_CATEGORY_ICON: Record<TaskCategory, LucideIcon> = {
+  stock: Package,
+  "purchase-order": FileText,
+  delivery: Truck,
+  invoice: FileText,
+  credit: Clock,
+  stocktake: Warehouse,
+  "day-close": Banknote,
+  transfer: Warehouse,
+  quotation: FileText,
+  override: Settings2,
+  "supplier-bill": Building2,
+  loyalty: Award,
+  expense: Banknote,
+  checklist: CalendarCheck,
+  manual: ClipboardList,
 }
 
 const PAYMENT_COLOR: Record<string, string> = {
@@ -110,14 +126,7 @@ export function DashboardOverviewPage({ module }: { module: ModulePageData }) {
 
   const isNewStore = state.storeState === "new"
 
-  const visibleAttentionItems = useMemo(
-    () =>
-      ATTENTION_ITEMS.filter((item) => {
-        const mod = getModule(item.moduleId)
-        return mod ? !isModuleLocked(mod, state.tier) : true
-      }),
-    [state.tier]
-  )
+  const attentionTasks = useMemo(() => mostUrgentTasksForRole(state.role, 6), [state.role])
 
   const totalRevenueForShare = data.revenue.value
 
@@ -153,6 +162,8 @@ export function DashboardOverviewPage({ module }: { module: ModulePageData }) {
           </div>
         }
       />
+
+      {isNewStore && <SetupChecklistCard />}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
@@ -200,12 +211,21 @@ export function DashboardOverviewPage({ module }: { module: ModulePageData }) {
       <Card className="gap-4 py-5">
         <CardHeader className="px-5">
           <CardTitle className="font-sans">Needs attention</CardTitle>
-          <CardDescription>Things worth a look today.</CardDescription>
+          <CardDescription>
+            {isNewStore ? "Things worth a look today." : "Live from Workflow — nothing here is invented independently."}
+          </CardDescription>
+          {!isNewStore && (
+            <CardAction>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/workflow/my-tasks">View all in Workflow →</Link>
+              </Button>
+            </CardAction>
+          )}
         </CardHeader>
         <CardContent className="flex flex-col divide-y px-0">
           {isNewStore
             ? NEW_STORE_ATTENTION_ITEMS.map((item) => {
-                const Icon = ATTENTION_ICON[item.id] ?? Package
+                const Icon = NEW_STORE_ATTENTION_ICON[item.id] ?? Package
                 return (
                   <Link
                     key={item.id}
@@ -218,21 +238,26 @@ export function DashboardOverviewPage({ module }: { module: ModulePageData }) {
                   </Link>
                 )
               })
-            : visibleAttentionItems.map((item) => {
-                const Icon = ATTENTION_ICON[item.id] ?? Package
+            : attentionTasks.map((task) => {
+                const Icon = TASK_CATEGORY_ICON[task.category] ?? Package
                 return (
                   <Link
-                    key={item.id}
-                    href={item.href}
+                    key={task.id}
+                    href={`/workflow/my-tasks?task=${task.id}`}
                     className="flex items-center gap-3 px-5 py-3 text-sm transition-colors hover:bg-accent/40"
                   >
                     <Icon className="size-4 shrink-0 text-muted-foreground" />
-                    <span className="flex-1">{item.line}</span>
-                    <span className="font-medium text-muted-foreground">{item.amount}</span>
+                    <span className="flex-1">{task.title}</span>
+                    <span className="font-medium text-muted-foreground">{dueBucketFor(task)}</span>
                     <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                   </Link>
                 )
               })}
+          {!isNewStore && attentionTasks.length === 0 && (
+            <p className="px-5 py-6 text-sm text-muted-foreground">
+              Tasks appear here automatically when something needs your attention — low stock, an overdue invoice, a failed delivery.
+            </p>
+          )}
         </CardContent>
       </Card>
 

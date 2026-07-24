@@ -1,3 +1,5 @@
+import { Suspense } from "react"
+
 import { CreateInvoiceScreen } from "@/components/invoice/create-invoice-screen"
 import { Toaster } from "@/components/ui/sonner"
 
@@ -7,9 +9,9 @@ export const metadata = {
 
 export default function NewInvoicePage() {
   return (
-    <>
+    <Suspense fallback={null}>
       <CreateInvoiceScreen />
       <Toaster />
-    </>
+    </Suspense>
   )
 }

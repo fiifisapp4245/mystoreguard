@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { MoreHorizontal, Phone } from "lucide-react"
 import { toast } from "sonner"
 
+import { ConceptTooltip } from "@/components/help/concept-tooltip"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader } from "@/components/ui/card"
@@ -161,7 +162,9 @@ export function MoneyOwedTab() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="gap-3 py-5">
           <CardHeader className="gap-1.5 px-5">
-            <p className="text-sm text-muted-foreground">Owed to me</p>
+            <p className="flex items-center gap-1 text-sm text-muted-foreground">
+              Owed to me <ConceptTooltip conceptKey="receivable-payable" />
+            </p>
             <span className="text-2xl font-semibold">{formatGHS(receivablesTotalValue)}</span>
             <p className="text-xs text-muted-foreground">
               {receivables.length} outstanding balance{receivables.length === 1 ? "" : "s"}

@@ -16,16 +16,20 @@ export const LARRY_LOCATIONS: Location[] = [
     name: "Showroom — East Legon",
     type: "shop",
     address: "East Legon, Accra",
+    area: "East Legon",
     canSell: true,
     isDefaultReceiving: true,
+    status: "active",
   },
   {
     id: "loc-larry-workshop",
     name: "Workshop — Adenta",
     type: "warehouse",
     address: "Adenta, Accra",
+    area: "Adenta",
     canSell: false,
     isDefaultReceiving: false,
+    status: "active",
   },
 ]
 

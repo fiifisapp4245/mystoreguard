@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select"
 import type { DemoState } from "@/hooks/use-demo-state"
 import { TIER_LABEL, type Tier } from "@/lib/modules"
+import { STAFF_ROLES, type StaffRole } from "@/lib/mock-data"
 
 function ControlRow({
   label,
@@ -125,6 +126,27 @@ export function DemoControls({
           checked={state.lockMode === "greyed"}
           onCheckedChange={(checked) => update({ lockMode: checked ? "greyed" : "hidden" })}
         />
+
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm text-foreground">Viewing as role</span>
+          <Select value={state.role} onValueChange={(value) => update({ role: value as StaffRole })}>
+            <SelectTrigger size="sm" className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STAFF_ROLES.map((role) => (
+                <SelectItem key={role} value={role}>
+                  {role}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {state.role !== "Owner" && (
+          <p className="text-xs text-muted-foreground">
+            Settings and cost prices are restricted per Settings → Roles & permissions.
+          </p>
+        )}
 
         <Separator />
 

@@ -15,6 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { formatGHS } from "@/lib/mock-data"
+import { getCurrentReturnPolicy, REFUND_METHOD_POLICY_LABELS } from "@/lib/return-policy-data"
 import { RETURNS_RECORDS, type ReturnRecord } from "@/lib/sales-data"
 
 export function ReturnsTab() {
@@ -27,12 +28,13 @@ export function ReturnsTab() {
     toast.success("Return recorded", { description: `${returnRecord.item} from ${returnRecord.customer}.` })
   }
 
+  const policy = getCurrentReturnPolicy()
+  const policySummary = `${policy.windowDays}-day return window · ${REFUND_METHOD_POLICY_LABELS[policy.refundMethodPolicy]}${policy.receiptRequired ? " · Receipt required" : ""}`
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Goods brought back, handled under the store&apos;s return policy.
-        </p>
+        <p className="text-sm text-muted-foreground">{policySummary}</p>
         <Button onClick={() => setAddOpen(true)}>
           <Plus />
           Record return

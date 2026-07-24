@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { formatGHS } from "@/lib/mock-data"
 import { getRider, type Delivery } from "@/lib/deliveries-data"
 import { formatDateDisplay } from "@/lib/period-utils"
-import { STORE_INFO } from "@/lib/settings-data"
+import { getBusinessProfile } from "@/lib/business-profile-data"
+import { useDemoState } from "@/hooks/use-demo-state"
 
 export function WaybillDialog({
   delivery,
@@ -16,6 +17,8 @@ export function WaybillDialog({
   delivery: Delivery | null
   onOpenChange: (open: boolean) => void
 }) {
+  const { state } = useDemoState()
+  const businessProfile = getBusinessProfile(state.storePersona)
   const rider = getRider(delivery?.riderId)
   const total = delivery?.lineItems.reduce((sum, li) => sum + li.quantity * li.unitPrice, 0) ?? 0
 
@@ -29,7 +32,7 @@ export function WaybillDialog({
         {delivery && (
           <div className="flex flex-col gap-4 rounded-lg border bg-white p-5 text-neutral-900">
             <div className="flex items-start justify-between">
-              <p className="font-semibold">{STORE_INFO.name}</p>
+              <p className="font-semibold">{businessProfile.storeName}</p>
               <p className="text-sm text-neutral-500">{delivery.id}</p>
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm">

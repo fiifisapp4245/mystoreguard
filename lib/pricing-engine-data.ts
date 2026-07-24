@@ -104,11 +104,107 @@ let pricingSettingsStore: PricingSettings = {
 }
 
 export function getPricingSettings(): PricingSettings {
-  return pricingSettingsStore
+  return {
+    ...pricingSettingsStore,
+    priceFloor: priceFloorVersionAsOf()?.settings ?? pricingSettingsStore.priceFloor,
+    managerOverride: { cashierMaxDiscountPercent: cashierLimitVersionAsOf()?.percent ?? pricingSettingsStore.managerOverride.cashierMaxDiscountPercent },
+  }
 }
 
+/** Priority order and stacking rules only — Class C, no retroactive-history concern. */
 export function setPricingSettings(next: PricingSettings): void {
-  pricingSettingsStore = next
+  pricingSettingsStore = { ...pricingSettingsStore, priorityOrder: next.priorityOrder, stacking: next.stacking }
+}
+
+// ---------------------------------------------------------------------------
+// Price floor & cashier discount limit — Class B in Settings → Pricing &
+// discounts: changing them retroactively would make past sales look like
+// policy violations, so each is its own version history with an effective
+// date. getPricingSettings() above always resolves today's version, so
+// Register, the totals rail, and the manager-override dialog keep reading a
+// single flat PricingSettings shape unchanged.
+// ---------------------------------------------------------------------------
+
+export interface PriceFloorVersion {
+  id: string
+  settings: PriceFloorSettings
+  effectiveFromISO: string
+  effectiveToISO?: string
+}
+
+export interface CashierLimitVersion {
+  id: string
+  percent: number
+  effectiveFromISO: string
+  effectiveToISO?: string
+}
+
+let priceFloorVersions: PriceFloorVersion[] = [
+  { id: "floor-v1", settings: { ...DEFAULT_PRICING_SETTINGS.priceFloor }, effectiveFromISO: "2022-01-01" },
+]
+
+let cashierLimitVersions: CashierLimitVersion[] = [
+  { id: "climit-v1", percent: DEFAULT_PRICING_SETTINGS.managerOverride.cashierMaxDiscountPercent, effectiveFromISO: "2022-01-01" },
+]
+
+function dayBeforeIso(iso: string): string {
+  const d = new Date(`${iso}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() - 1)
+  return d.toISOString().slice(0, 10)
+}
+
+export function getPriceFloorVersions(): PriceFloorVersion[] {
+  return priceFloorVersions
+}
+
+export function priceFloorVersionAsOf(asOfISO: string = TODAY_ISO): PriceFloorVersion | undefined {
+  return [...priceFloorVersions].filter((v) => v.effectiveFromISO <= asOfISO).sort((a, b) => b.effectiveFromISO.localeCompare(a.effectiveFromISO))[0]
+}
+
+export function scheduledPriceFloorVersion(asOfISO: string = TODAY_ISO): PriceFloorVersion | undefined {
+  return priceFloorVersions.find((v) => v.effectiveFromISO > asOfISO)
+}
+
+export function addPriceFloorVersion(settings: PriceFloorSettings, effectiveFromISO: string): void {
+  const closed = priceFloorVersions.map((v) =>
+    !v.effectiveToISO || v.effectiveToISO >= effectiveFromISO ? { ...v, effectiveToISO: dayBeforeIso(effectiveFromISO) } : v
+  )
+  priceFloorVersions = [...closed, { id: `floor-v${closed.length + 1}-${Date.now().toString(36)}`, settings, effectiveFromISO }]
+}
+
+export function cancelScheduledPriceFloor(): void {
+  const scheduled = scheduledPriceFloorVersion()
+  if (!scheduled) return
+  priceFloorVersions = priceFloorVersions
+    .filter((v) => v.id !== scheduled.id)
+    .map((v) => (v.effectiveToISO === dayBeforeIso(scheduled.effectiveFromISO) ? { ...v, effectiveToISO: undefined } : v))
+}
+
+export function getCashierLimitVersions(): CashierLimitVersion[] {
+  return cashierLimitVersions
+}
+
+export function cashierLimitVersionAsOf(asOfISO: string = TODAY_ISO): CashierLimitVersion | undefined {
+  return [...cashierLimitVersions].filter((v) => v.effectiveFromISO <= asOfISO).sort((a, b) => b.effectiveFromISO.localeCompare(a.effectiveFromISO))[0]
+}
+
+export function scheduledCashierLimitVersion(asOfISO: string = TODAY_ISO): CashierLimitVersion | undefined {
+  return cashierLimitVersions.find((v) => v.effectiveFromISO > asOfISO)
+}
+
+export function addCashierLimitVersion(percent: number, effectiveFromISO: string): void {
+  const closed = cashierLimitVersions.map((v) =>
+    !v.effectiveToISO || v.effectiveToISO >= effectiveFromISO ? { ...v, effectiveToISO: dayBeforeIso(effectiveFromISO) } : v
+  )
+  cashierLimitVersions = [...closed, { id: `climit-v${closed.length + 1}-${Date.now().toString(36)}`, percent, effectiveFromISO }]
+}
+
+export function cancelScheduledCashierLimit(): void {
+  const scheduled = scheduledCashierLimitVersion()
+  if (!scheduled) return
+  cashierLimitVersions = cashierLimitVersions
+    .filter((v) => v.id !== scheduled.id)
+    .map((v) => (v.effectiveToISO === dayBeforeIso(scheduled.effectiveFromISO) ? { ...v, effectiveToISO: undefined } : v))
 }
 
 /** Cost GHS 75, minimum margin 10% → floor GHS 82.50. */

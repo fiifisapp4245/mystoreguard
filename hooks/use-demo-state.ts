@@ -4,6 +4,7 @@ import { useCallback, useMemo } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
 import type { EstimatorLocation, MessageLocation, Tier } from "@/lib/modules"
+import type { StaffRole } from "@/lib/mock-data"
 
 export type NavStructure = "flat" | "grouped"
 export type LockMode = "hidden" | "greyed"
@@ -18,6 +19,8 @@ export interface DemoState {
   messageLocation: MessageLocation
   storeState: StoreState
   storePersona: StorePersona
+  /** "Viewing as role" — demonstrates the permission model live (see lib/permissions-data.ts). */
+  role: StaffRole
 }
 
 export const STORE_PERSONA_LABEL: Record<StorePersona, { name: string; location: string }> = {
@@ -33,6 +36,7 @@ export const DEMO_DEFAULTS: DemoState = {
   messageLocation: "grow",
   storeState: "established",
   storePersona: "adwoa",
+  role: "Owner",
 }
 
 function parse(searchParams: URLSearchParams): DemoState {
@@ -43,6 +47,7 @@ function parse(searchParams: URLSearchParams): DemoState {
   const messageLocation = searchParams.get("message")
   const storeState = searchParams.get("store")
   const storePersona = searchParams.get("persona")
+  const role = searchParams.get("role")
 
   return {
     nav: nav === "flat" ? "flat" : DEMO_DEFAULTS.nav,
@@ -52,6 +57,7 @@ function parse(searchParams: URLSearchParams): DemoState {
     messageLocation: messageLocation === "bottom" ? "bottom" : DEMO_DEFAULTS.messageLocation,
     storeState: storeState === "new" ? "new" : DEMO_DEFAULTS.storeState,
     storePersona: storePersona === "larry" ? "larry" : DEMO_DEFAULTS.storePersona,
+    role: role === "Manager" || role === "Cashier" || role === "Stockkeeper" ? role : DEMO_DEFAULTS.role,
   }
 }
 
@@ -65,6 +71,7 @@ export function demoStateToParams(state: DemoState): URLSearchParams {
   if (state.messageLocation !== DEMO_DEFAULTS.messageLocation) params.set("message", state.messageLocation)
   if (state.storeState !== DEMO_DEFAULTS.storeState) params.set("store", state.storeState)
   if (state.storePersona !== DEMO_DEFAULTS.storePersona) params.set("persona", state.storePersona)
+  if (state.role !== DEMO_DEFAULTS.role) params.set("role", state.role)
 
   return params
 }
