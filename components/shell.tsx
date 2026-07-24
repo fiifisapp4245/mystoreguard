@@ -2,10 +2,12 @@
 
 import { Suspense } from "react"
 import Link from "next/link"
-import { ClipboardCheck } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { ArrowLeft, ClipboardCheck } from "lucide-react"
 
 import { AppSidebar } from "@/components/app-sidebar"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { ContentContainer } from "@/components/dashboard/content-container"
 import { DemoControls } from "@/components/demo-controls"
 import { CommandPalette } from "@/components/help/command-palette"
@@ -64,6 +66,8 @@ function ShellDemoControlsLive() {
 }
 
 export function Shell({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
+
   return (
     <TooltipProvider>
       <SidebarProvider>
@@ -73,6 +77,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <SidebarInset>
           <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
             <SidebarTrigger />
+            <Button variant="ghost" size="icon-sm" onClick={() => router.back()} aria-label="Go back">
+              <ArrowLeft className="size-4" />
+            </Button>
             <Separator orientation="vertical" className="h-4!" />
             <span className="text-sm text-muted-foreground">
               Navigation-structure prototype — for internal review only
