@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { LiveResultCount } from "@/components/dashboard/live-result-count"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
 import { CustomDateRangeRow, PeriodSelect } from "@/components/dashboard/period-select"
@@ -241,7 +242,7 @@ export function ExpensesTab() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search description or paid to..."
+              placeholder="Search description or paid to..." aria-label="Search description or paid to"
               className="w-full sm:w-56"
             />
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
@@ -300,6 +301,7 @@ export function ExpensesTab() {
           </div>
         </div>
         {period === "custom" && <CustomDateRangeRow from={customFrom} to={customTo} onFromChange={setCustomFrom} onToChange={setCustomTo} />}
+        <LiveResultCount count={filtered.length} itemLabel="expense" />
       </div>
 
       <div className="overflow-hidden rounded-xl border">
@@ -545,7 +547,13 @@ function ExpenseFormDialog({
   }
 
   const amountNum = Number.parseFloat(values.amount)
-  const canSubmit = values.category.trim() !== "" && values.description.trim() !== "" && values.paidTo.trim() !== "" && amountNum > 0
+  const missingExpenseFields = [
+    !values.category.trim() && "a category",
+    !values.description.trim() && "a description",
+    !values.paidTo.trim() && "who it was paid to",
+    !(amountNum > 0) && "a valid amount",
+  ].filter(Boolean) as string[]
+  const canSubmit = missingExpenseFields.length === 0
 
   function handleSubmit() {
     if (!canSubmit) return
@@ -608,7 +616,7 @@ function ExpenseFormDialog({
                 <Input
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
-                  placeholder="Category name"
+                  placeholder="Category name" aria-label="Category name"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
@@ -621,6 +629,9 @@ function ExpenseFormDialog({
                   Add
                 </Button>
               </div>
+              {!customName.trim() && (
+                <p className="text-xs text-muted-foreground">Still needs: a category name</p>
+              )}
               <Button type="button" variant="ghost" size="sm" className="self-start" onClick={() => setCustomPanelOpen(false)}>
                 Cancel
               </Button>
@@ -686,6 +697,9 @@ function ExpenseFormDialog({
           </div>
         </div>
 
+        {missingExpenseFields.length > 0 && (
+          <p className="text-right text-xs text-muted-foreground">Still needs: {missingExpenseFields.join(", ")}</p>
+        )}
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
@@ -804,6 +818,7 @@ function RejectExpenseDialog({
               </Label>
               <Textarea id="reject-reason" rows={3} autoFocus value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Missing receipt, needs re-submission" />
             </div>
+            {!canSubmit && <p className="text-right text-xs text-muted-foreground">Still needs: a reason</p>}
             <DialogFooter>
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
@@ -855,6 +870,7 @@ function DeleteExpenseDialog({
               </Label>
               <Textarea id="delete-reason" rows={3} autoFocus value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Entered in error, duplicate" />
             </div>
+            {!canSubmit && <p className="text-right text-xs text-muted-foreground">Still needs: a reason</p>}
             <DialogFooter>
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
@@ -898,7 +914,11 @@ function ConfirmRecurringDialog({
   }
 
   const amountNum = Number.parseFloat(amount)
-  const canSubmit = amountNum > 0 && paidTo.trim() !== ""
+  const missingConfirmFields = [
+    !(amountNum > 0) && "a valid amount",
+    !paidTo.trim() && "who it was paid to",
+  ].filter(Boolean) as string[]
+  const canSubmit = missingConfirmFields.length === 0
 
   return (
     <Dialog open={target !== null} onOpenChange={onOpenChange}>
@@ -925,6 +945,9 @@ function ConfirmRecurringDialog({
               <Label htmlFor="confirm-rec-paid-to">Paid to</Label>
               <Input id="confirm-rec-paid-to" value={paidTo} onChange={(e) => setPaidTo(e.target.value)} />
             </div>
+            {missingConfirmFields.length > 0 && (
+              <p className="text-right text-xs text-muted-foreground">Still needs: {missingConfirmFields.join(", ")}</p>
+            )}
             <DialogFooter>
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel

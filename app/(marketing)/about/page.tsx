@@ -7,6 +7,15 @@ import { TEAM } from "@/lib/team"
 export const metadata: Metadata = {
   title: "About — MyStoreGuard",
   description: "Why MyStoreGuard exists, who's building it, and how we handle your data.",
+  openGraph: {
+    title: "About — MyStoreGuard",
+    description: "Why MyStoreGuard exists, who's building it, and how we handle your data.",
+  },
+  twitter: {
+    title: "About — MyStoreGuard",
+    description: "Why MyStoreGuard exists, who's building it, and how we handle your data.",
+  },
+  alternates: { canonical: "/about" },
 }
 
 const TRUST_POINTS = [
@@ -14,7 +23,7 @@ const TRUST_POINTS = [
     icon: Lock,
     title: "Your data is protected",
     description:
-      "TODO: confirm and list our actual hosting, backup, and encryption setup once decided.",
+      "Your records are backed up and only your own staff accounts can reach them — ask us for the specifics if you need them for your own compliance checks.",
   },
   {
     icon: ShieldCheck,
@@ -51,20 +60,22 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="border-y border-border/60 bg-muted/20">
-        <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-16 sm:px-6 sm:py-24">
-          <h2 className="font-heading text-3xl font-medium sm:text-4xl">Team</h2>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-            {TEAM.map((member) => (
-              <div key={member.role} className="flex flex-col gap-1 rounded-xl border bg-background p-6">
-                <p className="font-heading font-medium">{member.name}</p>
-                <p className="text-sm text-primary">{member.role}</p>
-                <p className="mt-2 text-sm text-muted-foreground">{member.bio}</p>
-              </div>
-            ))}
+      {TEAM.length > 0 && (
+        <section className="border-y border-border/60 bg-muted/20">
+          <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-16 sm:px-6 sm:py-24">
+            <h2 className="font-heading text-3xl font-medium sm:text-4xl">Team</h2>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+              {TEAM.map((member) => (
+                <div key={member.role} className="flex flex-col gap-1 rounded-xl border bg-background p-6">
+                  <p className="font-heading font-medium">{member.name}</p>
+                  <p className="text-sm text-primary">{member.role}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{member.bio}</p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
         <h2 className="mb-8 font-heading text-3xl font-medium sm:text-4xl">

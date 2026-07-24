@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { MoreHorizontal, Plus, Sparkles } from "lucide-react"
 import { toast } from "sonner"
 
+import { LiveResultCount } from "@/components/dashboard/live-result-count"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
 import { NewPODialog } from "@/components/hubs/inventory/new-po-dialog"
@@ -164,6 +165,7 @@ export function PurchaseOrdersTab() {
           </div>
         </div>
         {period === "custom" && <CustomDateRangeRow from={customFrom} to={customTo} onFromChange={setCustomFrom} onToChange={setCustomTo} />}
+        <LiveResultCount count={filtered.length} itemLabel="purchase order" />
       </div>
 
       <div className="overflow-hidden rounded-xl border">

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import { MoreHorizontal } from "lucide-react"
 
+import { LiveResultCount } from "@/components/dashboard/live-result-count"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { ConceptTooltip } from "@/components/help/concept-tooltip"
 import { AdjustStockDialog } from "@/components/hubs/stock/adjust-stock-dialog"
@@ -174,6 +175,7 @@ export function StockLevelsTab() {
           </Button>
         )}
       </div>
+      <LiveResultCount count={filtered.length} itemLabel="product" />
 
       <div className="overflow-hidden rounded-xl border">
         <Table>

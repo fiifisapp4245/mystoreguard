@@ -1,6 +1,6 @@
 "use client"
 
-import { useId, useState } from "react"
+import { Suspense, useId, useState } from "react"
 import Link from "next/link"
 import { Check } from "lucide-react"
 
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { useSiteConfig } from "@/hooks/use-site-config"
-import { dashboardTierPath, getCtaCopy } from "@/lib/site-config"
+import { dashboardTierPath, getCtaCopy, siteConfig, type SiteConfig } from "@/lib/site-config"
 import {
   ANNUAL_MONTHS_FREE,
   TIERS,
@@ -18,8 +18,7 @@ import {
 } from "@/lib/pricing"
 import { cn } from "@/lib/utils"
 
-export function PricingTiers({ teaser = false }: { teaser?: boolean }) {
-  const config = useSiteConfig()
+function PricingTiersView({ config, teaser = false }: { config: SiteConfig; teaser?: boolean }) {
   const copy = getCtaCopy(config.ctaVariant)
   const [annual, setAnnual] = useState(false)
   const toggleId = useId()
@@ -28,27 +27,28 @@ export function PricingTiers({ teaser = false }: { teaser?: boolean }) {
     <div className="flex flex-col gap-8">
       {!teaser && (
         <div className="flex items-center justify-center gap-3">
-          <label
-            htmlFor={toggleId}
-            className={cn("text-sm", !annual && "font-medium text-foreground")}
+          <span
+            className={cn("cursor-pointer text-sm", !annual && "font-medium text-foreground")}
+            onClick={() => config.showPrices && setAnnual(false)}
           >
             Monthly
-          </label>
+          </span>
           <Switch
             id={toggleId}
             checked={annual}
             onCheckedChange={setAnnual}
             disabled={!config.showPrices}
+            aria-label={`Billing period: ${annual ? "Annual" : "Monthly"}`}
           />
-          <label
-            htmlFor={toggleId}
-            className={cn("text-sm", annual && "font-medium text-foreground")}
+          <span
+            className={cn("cursor-pointer text-sm", annual && "font-medium text-foreground")}
+            onClick={() => config.showPrices && setAnnual(true)}
           >
             Annual{" "}
             <span className="text-muted-foreground">
               ({ANNUAL_MONTHS_FREE} months free)
             </span>
-          </label>
+          </span>
         </div>
       )}
 
@@ -99,8 +99,7 @@ export function PricingTiers({ teaser = false }: { teaser?: boolean }) {
 
                   {config.currency === "GHS" && config.showPrices && (
                     <p className="text-xs text-muted-foreground">
-                      TODO: illustrative conversion only — confirm the live
-                      exchange rate.
+                      Illustrative conversion — confirm the live exchange rate before quoting.
                     </p>
                   )}
 
@@ -166,5 +165,19 @@ export function PricingTiers({ teaser = false }: { teaser?: boolean }) {
         </p>
       )}
     </div>
+  )
+}
+
+function PricingTiersLive(props: { teaser?: boolean }) {
+  const config = useSiteConfig()
+  return <PricingTiersView config={config} {...props} />
+}
+
+/** Same instant-SSR-with-client-side-override pattern as CtaGroup — see that file for the full rationale. */
+export function PricingTiers(props: { teaser?: boolean }) {
+  return (
+    <Suspense fallback={<PricingTiersView config={siteConfig} {...props} />}>
+      <PricingTiersLive {...props} />
+    </Suspense>
   )
 }

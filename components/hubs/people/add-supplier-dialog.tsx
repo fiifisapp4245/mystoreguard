@@ -108,8 +108,15 @@ export function AddSupplierDialog({
               id="supplier-name"
               value={businessName}
               onChange={(event) => setBusinessName(event.target.value)}
+              aria-invalid={Boolean(errors.businessName)}
+              aria-describedby={errors.businessName ? "supplier-name-error" : undefined}
+              aria-required="true"
             />
-            {errors.businessName && <p className="text-xs text-destructive">{errors.businessName}</p>}
+            {errors.businessName && (
+              <p id="supplier-name-error" className="text-xs text-destructive">
+                {errors.businessName}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -118,8 +125,15 @@ export function AddSupplierDialog({
               id="supplier-contact"
               value={contactPerson}
               onChange={(event) => setContactPerson(event.target.value)}
+              aria-invalid={Boolean(errors.contactPerson)}
+              aria-describedby={errors.contactPerson ? "supplier-contact-error" : undefined}
+              aria-required="true"
             />
-            {errors.contactPerson && <p className="text-xs text-destructive">{errors.contactPerson}</p>}
+            {errors.contactPerson && (
+              <p id="supplier-contact-error" className="text-xs text-destructive">
+                {errors.contactPerson}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -129,8 +143,15 @@ export function AddSupplierDialog({
               value={phone}
               onChange={(event) => setPhone(event.target.value)}
               placeholder="030 222 1111"
+              aria-invalid={Boolean(errors.phone)}
+              aria-describedby={errors.phone ? "supplier-phone-error" : undefined}
+              aria-required="true"
             />
-            {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
+            {errors.phone && (
+              <p id="supplier-phone-error" className="text-xs text-destructive">
+                {errors.phone}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-1.5">

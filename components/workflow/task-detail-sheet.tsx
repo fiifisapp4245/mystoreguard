@@ -274,7 +274,7 @@ export function TaskDetailSheet({
                           {subItem.requiresValue && (
                             <Input
                               className="h-8 w-32"
-                              placeholder="Value"
+                              placeholder="Value" aria-label="Value"
                               value={subItemDrafts[subItem.id] ?? ""}
                               onChange={(e) =>
                                 setSubItemDrafts((prev) => ({ ...prev, [subItem.id]: e.target.value }))

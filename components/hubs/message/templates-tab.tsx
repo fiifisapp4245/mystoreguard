@@ -81,6 +81,11 @@ export function TemplatesTab() {
     setDialogOpen(true)
   }
 
+  const missingTemplateFields = [
+    !name.trim() && "a name",
+    !body.trim() && "a body",
+  ].filter(Boolean) as string[]
+
   function handleSave() {
     if (!name.trim() || !body.trim()) return
     const template: MessageTemplate = {
@@ -200,6 +205,9 @@ export function TemplatesTab() {
               <MergeFieldChips onInsert={(field) => insertAtCursor(bodyRef.current, body, field, setBody)} />
             </div>
           </div>
+          {missingTemplateFields.length > 0 && (
+            <p className="text-right text-xs text-muted-foreground">Still needs: {missingTemplateFields.join(", ")}</p>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancel

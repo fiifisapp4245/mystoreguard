@@ -195,6 +195,11 @@ export function CreateDeliveryDialog({
     .filter((l) => l.quantity > 0 && l.productId)
     .map((l) => ({ productId: l.productId, name: l.name, quantity: l.quantity, unitPrice: l.unitPrice }))
 
+  const missingFields = [
+    !customer.trim() && "a customer",
+    lineItemsForCreate.length === 0 && "at least one item",
+  ].filter(Boolean) as string[]
+
   function handleSubmit() {
     if (!customer.trim() || lineItemsForCreate.length === 0) return
     const delivery = createDelivery({
@@ -317,7 +322,7 @@ export function CreateDeliveryDialog({
                   <Input
                     value={productSearch}
                     onChange={(event) => setProductSearch(event.target.value)}
-                    placeholder="Search product from catalogue..."
+                    placeholder="Search product from catalogue..." aria-label="Search product from catalogue"
                   />
                   {matches.length > 0 && (
                     <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border bg-popover shadow-sm">
@@ -442,10 +447,15 @@ export function CreateDeliveryDialog({
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!customer.trim() || lineItemsForCreate.length === 0}>
-            <Plus />
-            Create delivery
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            {missingFields.length > 0 && (
+              <p className="text-xs text-muted-foreground">Still needs: {missingFields.join(", ")}</p>
+            )}
+            <Button onClick={handleSubmit} disabled={!customer.trim() || lineItemsForCreate.length === 0}>
+              <Plus />
+              Create delivery
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

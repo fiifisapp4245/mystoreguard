@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { MoreHorizontal, Plus } from "lucide-react"
 import { toast } from "sonner"
 
+import { LiveResultCount } from "@/components/dashboard/live-result-count"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
 import { EndPromoCodeDialog } from "@/components/hubs/offers/end-promo-code-dialog"
@@ -148,6 +149,7 @@ export function PromoCodesTab() {
           Create promo code
         </Button>
       </div>
+      <LiveResultCount count={filtered.length} itemLabel="promo code" />
 
       <div className="overflow-hidden rounded-xl border">
         <Table>

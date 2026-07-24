@@ -84,9 +84,12 @@ export function MarkFailedDialog({
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={() => onMarkFailed(reason, note)} disabled={!reason}>
-            Mark failed
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            {!reason && <p className="text-xs text-muted-foreground">Needs a reason</p>}
+            <Button variant="destructive" onClick={() => onMarkFailed(reason, note)} disabled={!reason}>
+              Mark failed
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

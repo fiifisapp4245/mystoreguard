@@ -1,8 +1,14 @@
+import type { Metadata } from "next"
+
 import { CtaGroup } from "@/components/cta-group"
 import { FlowDiagram } from "@/components/flow-diagram"
 import { PricingTiers } from "@/components/pricing-tiers"
 import { Screenshot } from "@/components/screenshot"
 import { testimonials } from "@/lib/testimonials"
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+}
 
 const PROBLEMS = [
   "Stock disappears somewhere between the delivery van and the shelf.",

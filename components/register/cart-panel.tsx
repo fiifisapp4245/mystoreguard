@@ -87,7 +87,7 @@ export function CartPanel({
             ref={scanInputRef}
             value={scanValue}
             onChange={(event) => onScanChange(event.target.value)}
-            placeholder="Scan barcode or search product…"
+            placeholder="Scan barcode or search product…" aria-label="Scan barcode or search product"
             className="h-11 pl-10 text-base"
             autoComplete="off"
           />

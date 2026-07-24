@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { toast } from "sonner"
 
+import { TeachingEmptyState } from "@/components/dashboard/teaching-empty-state"
 import { HelpPanelTrigger } from "@/components/help/help-panel-trigger"
 import { SettingsSectionCard } from "@/components/settings/settings-section-card"
 import { Badge } from "@/components/ui/badge"
@@ -63,6 +64,9 @@ export function RolesPermissionsSection() {
       </div>
 
       <SettingsSectionCard title="Permission matrix" settingClass="C" description="What each role can see and do, module by module.">
+        {PERMISSION_MODULES.length === 0 ? (
+          <TeachingEmptyState message="The permission matrix decides what each role can see and do, module by module — from full access down to none." />
+        ) : (
         <div className="overflow-x-auto rounded-md border">
           <Table>
             <TableHeader>
@@ -106,6 +110,7 @@ export function RolesPermissionsSection() {
             </TableBody>
           </Table>
         </div>
+        )}
       </SettingsSectionCard>
 
       <SettingsSectionCard

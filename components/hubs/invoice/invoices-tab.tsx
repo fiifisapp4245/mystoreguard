@@ -5,6 +5,7 @@ import Link from "next/link"
 import { MoreHorizontal, Plus, Search } from "lucide-react"
 import { toast } from "sonner"
 
+import { LiveResultCount } from "@/components/dashboard/live-result-count"
 import { CustomDateRangeRow, PeriodSelect } from "@/components/dashboard/period-select"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
@@ -197,7 +198,7 @@ export function InvoicesTab() {
             <div className="relative">
               <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search invoice no. or customer..."
+                placeholder="Search invoice no. or customer..." aria-label="Search invoice no. or customer"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 className="w-full pl-8 sm:w-64"
@@ -215,6 +216,7 @@ export function InvoicesTab() {
         {period === "custom" && (
           <CustomDateRangeRow from={customFrom} to={customTo} onFromChange={setCustomFrom} onToChange={setCustomTo} />
         )}
+        <LiveResultCount count={filtered.length} itemLabel="invoice" />
       </div>
 
       <div className="overflow-hidden rounded-xl border">

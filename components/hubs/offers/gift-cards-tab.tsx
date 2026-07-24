@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { MoreHorizontal, Plus } from "lucide-react"
 import { toast } from "sonner"
 
+import { LiveResultCount } from "@/components/dashboard/live-result-count"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { CustomDateRangeRow, PeriodSelect } from "@/components/dashboard/period-select"
 import { StatusBadge } from "@/components/dashboard/status-badge"
@@ -134,7 +135,7 @@ export function GiftCardsTab() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by card number or name..."
+              placeholder="Search by card number or name..." aria-label="Search by card number or name"
               className="max-w-xs"
             />
             <Select value={filter} onValueChange={(v) => setFilter(v as FilterOption)}>
@@ -160,6 +161,7 @@ export function GiftCardsTab() {
           </div>
         </div>
         {period === "custom" && <CustomDateRangeRow from={customFrom} to={customTo} onFromChange={setCustomFrom} onToChange={setCustomTo} />}
+        <LiveResultCount count={filtered.length} itemLabel="gift card" />
       </div>
 
       <div className="overflow-hidden rounded-xl border">

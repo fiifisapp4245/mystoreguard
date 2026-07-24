@@ -16,6 +16,15 @@ import { siteConfig } from "@/lib/site-config"
 export const metadata: Metadata = {
   title: "Pricing — MyStoreGuard",
   description: "Light, Prime, and Ultra plans for Ghanaian shops with staff. Free first month on every tier.",
+  openGraph: {
+    title: "Pricing — MyStoreGuard",
+    description: "Light, Prime, and Ultra plans for Ghanaian shops with staff. Free first month on every tier.",
+  },
+  twitter: {
+    title: "Pricing — MyStoreGuard",
+    description: "Light, Prime, and Ultra plans for Ghanaian shops with staff. Free first month on every tier.",
+  },
+  alternates: { canonical: "/pricing" },
 }
 
 export default function PricingPage() {
@@ -98,11 +107,6 @@ export default function PricingPage() {
               </AccordionTrigger>
               <AccordionContent className="flex flex-col gap-2 text-muted-foreground">
                 <p>{entry.answer}</p>
-                {entry.todo && (
-                  <p className="rounded-md bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-400">
-                    TODO: {entry.todo}
-                  </p>
-                )}
               </AccordionContent>
             </AccordionItem>
           ))}

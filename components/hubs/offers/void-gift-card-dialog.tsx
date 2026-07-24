@@ -66,9 +66,12 @@ export function VoidGiftCardDialog({
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button variant="destructive" onClick={handleVoid} disabled={!canSubmit}>
-                Void card
-              </Button>
+              <div className="flex flex-col items-end gap-1">
+                {!canSubmit && <p className="text-xs text-muted-foreground">Needs a reason</p>}
+                <Button variant="destructive" onClick={handleVoid} disabled={!canSubmit}>
+                  Void card
+                </Button>
+              </div>
             </DialogFooter>
           </>
         )}

@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { toast } from "sonner"
 
+import { TeachingEmptyState } from "@/components/dashboard/teaching-empty-state"
 import { EffectiveDateDialog } from "@/components/settings/effective-date-dialog"
 import { SettingsSectionCard } from "@/components/settings/settings-section-card"
 import { Button } from "@/components/ui/button"
@@ -156,6 +157,9 @@ export function ReceiptsDocumentsSection() {
         <p className="text-xs text-muted-foreground">
           Changing a prefix takes effect from a date you choose and never renumbers records already issued.
         </p>
+        {schemes.length === 0 ? (
+          <TeachingEmptyState message="Numbering schemes set the prefix and format for every receipt, invoice, quotation and purchase order your store issues." />
+        ) : (
         <div className="overflow-x-auto rounded-md border">
           <Table>
             <TableHeader>
@@ -230,6 +234,7 @@ export function ReceiptsDocumentsSection() {
             </TableBody>
           </Table>
         </div>
+        )}
       </SettingsSectionCard>
 
       <EffectiveDateDialog

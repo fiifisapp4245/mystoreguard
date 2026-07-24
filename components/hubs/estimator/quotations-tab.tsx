@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { AlertTriangle, MoreHorizontal, Plus } from "lucide-react"
 import { toast } from "sonner"
 
+import { LiveResultCount } from "@/components/dashboard/live-result-count"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
 import { TeachingEmptyState } from "@/components/dashboard/teaching-empty-state"
@@ -246,6 +247,7 @@ export function QuotationsTab() {
           </Link>
         </Button>
       </div>
+      <LiveResultCount count={filtered.length} itemLabel="quotation" />
 
       {filtered.length === 0 ? (
         <TeachingEmptyState

@@ -114,15 +114,23 @@ export function ProductDialog({
     setValues((prev) => ({ ...prev, ...patch }))
   }
 
-  function isStepValid(i: number): boolean {
-    if (i === 0) return values.name.trim() !== ""
+  function missingFieldsForStep(i: number): string[] {
+    if (i === 0) return values.name.trim() !== "" ? [] : ["a name"]
     if (i === 1) {
-      if (!values.baseUnit.trim()) return false
-      if (values.soldByMeasure) return true
-      return values.purchaseUnit.trim() !== "" && Number(values.unitsPerPurchaseUnit) > 0
+      const missing: string[] = []
+      if (!values.baseUnit.trim()) missing.push("a base sellable unit")
+      if (!values.soldByMeasure) {
+        if (values.purchaseUnit.trim() === "") missing.push("a purchase unit")
+        if (!(Number(values.unitsPerPurchaseUnit) > 0)) missing.push("units per pack")
+      }
+      return missing
     }
-    if (i === 2) return Number(values.sellingPrice) > 0
-    return true
+    if (i === 2) return Number(values.sellingPrice) > 0 ? [] : ["a valid selling price"]
+    return []
+  }
+
+  function isStepValid(i: number): boolean {
+    return missingFieldsForStep(i).length === 0
   }
 
   function canJumpTo(i: number): boolean {
@@ -133,6 +141,8 @@ export function ProductDialog({
   }
 
   const canSubmit = STEPS.every((_, i) => isStepValid(i))
+  const currentStepMissing = missingFieldsForStep(step)
+  const allMissing = STEPS.flatMap((_, i) => missingFieldsForStep(i))
 
   function handleSave() {
     if (!canSubmit) return
@@ -350,13 +360,23 @@ export function ProductDialog({
             </Button>
           )}
           {step < STEPS.length - 1 ? (
-            <Button onClick={() => setStep((s) => s + 1)} disabled={!isStepValid(step)}>
-              Next
-            </Button>
+            <div className="flex flex-col items-end gap-1">
+              {currentStepMissing.length > 0 && (
+                <p className="text-xs text-muted-foreground">Still needs: {currentStepMissing.join(", ")}</p>
+              )}
+              <Button onClick={() => setStep((s) => s + 1)} disabled={!isStepValid(step)}>
+                Next
+              </Button>
+            </div>
           ) : (
-            <Button onClick={handleSave} disabled={!canSubmit}>
-              {isEdit ? "Save changes" : "Add product"}
-            </Button>
+            <div className="flex flex-col items-end gap-1">
+              {!canSubmit && allMissing.length > 0 && (
+                <p className="text-xs text-muted-foreground">Still needs: {allMissing.join(", ")}</p>
+              )}
+              <Button onClick={handleSave} disabled={!canSubmit}>
+                {isEdit ? "Save changes" : "Add product"}
+              </Button>
+            </div>
           )}
         </DialogFooter>
       </DialogContent>

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { MoreHorizontal, Phone } from "lucide-react"
 import { toast } from "sonner"
 
+import { LiveResultCount } from "@/components/dashboard/live-result-count"
 import { ConceptTooltip } from "@/components/help/concept-tooltip"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -115,6 +116,7 @@ export function MoneyOwedTab() {
   )
 
   const canBulkRemind = recvBucket === "31-60" || recvBucket === "60+"
+  const bulkRemindHint = canBulkRemind ? null : "Select the 31-60 or 60+ days bucket first"
 
   function refreshReceivables() {
     setReceivables([...getReceivables()])
@@ -236,10 +238,14 @@ export function MoneyOwedTab() {
                 )
               })}
             </div>
-            <Button variant="outline" disabled={!canBulkRemind} onClick={handleBulkReminder} className="shrink-0">
-              Send reminder to all overdue
-            </Button>
+            <div className="flex shrink-0 flex-col items-end gap-1">
+              {bulkRemindHint && <p className="text-xs text-muted-foreground">{bulkRemindHint}</p>}
+              <Button variant="outline" disabled={!canBulkRemind} onClick={handleBulkReminder}>
+                Send reminder to all overdue
+              </Button>
+            </div>
           </div>
+          <LiveResultCount count={filteredReceivables.length} itemLabel="receivable" />
 
           <div className="overflow-hidden rounded-xl border">
             <div className="overflow-x-auto">
@@ -342,6 +348,7 @@ export function MoneyOwedTab() {
               Due this week
             </Button>
           </div>
+          <LiveResultCount count={filteredPayables.length} itemLabel="payable" />
 
           <div className="overflow-hidden rounded-xl border">
             <div className="overflow-x-auto">
@@ -466,7 +473,8 @@ function RecordReceivablePaymentDialog({
   }
 
   const amountNum = Number.parseFloat(amount)
-  const canSubmit = amountNum > 0
+  const missingFields = [!(amountNum > 0) && "a valid amount"].filter(Boolean) as string[]
+  const canSubmit = missingFields.length === 0
 
   return (
     <Dialog open={entry !== null} onOpenChange={onOpenChange}>
@@ -518,9 +526,14 @@ function RecordReceivablePaymentDialog({
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button onClick={() => onSubmit(entry, amountNum)} disabled={!canSubmit}>
-                Record payment
-              </Button>
+              <div className="flex flex-col items-end gap-1">
+                {!canSubmit && missingFields.length > 0 && (
+                  <p className="text-xs text-muted-foreground">Still needs: {missingFields.join(", ")}</p>
+                )}
+                <Button onClick={() => onSubmit(entry, amountNum)} disabled={!canSubmit}>
+                  Record payment
+                </Button>
+              </div>
             </DialogFooter>
           </>
         )}
@@ -553,7 +566,8 @@ function RecordSupplierPaymentDialog({
   }
 
   const amountNum = Number.parseFloat(amount)
-  const canSubmit = amountNum > 0
+  const missingFields = [!(amountNum > 0) && "a valid amount"].filter(Boolean) as string[]
+  const canSubmit = missingFields.length === 0
 
   return (
     <Dialog open={entry !== null} onOpenChange={onOpenChange}>
@@ -601,9 +615,14 @@ function RecordSupplierPaymentDialog({
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button onClick={() => onSubmit(entry, amountNum)} disabled={!canSubmit}>
-                Record payment
-              </Button>
+              <div className="flex flex-col items-end gap-1">
+                {!canSubmit && missingFields.length > 0 && (
+                  <p className="text-xs text-muted-foreground">Still needs: {missingFields.join(", ")}</p>
+                )}
+                <Button onClick={() => onSubmit(entry, amountNum)} disabled={!canSubmit}>
+                  Record payment
+                </Button>
+              </div>
             </DialogFooter>
           </>
         )}

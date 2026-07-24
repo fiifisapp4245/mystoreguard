@@ -45,6 +45,10 @@ export function ChangeTierDialog({
     setNote("")
   }
 
+  const missingFields = [
+    Boolean(member) && tier === member?.tier && "a different tier",
+    reason.length === 0 && "a reason",
+  ].filter(Boolean) as string[]
   const canSave = member !== null && reason.length > 0 && tier !== member?.tier
 
   function handleSave() {
@@ -107,9 +111,14 @@ export function ChangeTierDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!canSave}>
-            Change tier
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            {!canSave && missingFields.length > 0 && (
+              <p className="text-xs text-muted-foreground">Still needs: {missingFields.join(", ")}</p>
+            )}
+            <Button onClick={handleSave} disabled={!canSave}>
+              Change tier
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

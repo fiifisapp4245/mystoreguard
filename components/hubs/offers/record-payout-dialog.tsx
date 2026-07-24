@@ -60,6 +60,10 @@ export function RecordPayoutDialog({
 
   const parsedAmount = Number.parseFloat(amount)
   const canSubmit = Number.isFinite(parsedAmount) && parsedAmount > 0 && date !== ""
+  const missingFields = [
+    !(Number.isFinite(parsedAmount) && parsedAmount > 0) && "a valid amount",
+    date === "" && "a date",
+  ].filter(Boolean) as string[]
 
   function handleRecord() {
     if (!affiliate || !canSubmit) return
@@ -126,9 +130,14 @@ export function RecordPayoutDialog({
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleRecord} disabled={!canSubmit}>
-                Record payout
-              </Button>
+              <div className="flex flex-col items-end gap-1">
+                {missingFields.length > 0 && (
+                  <p className="text-xs text-muted-foreground">Still needs: {missingFields.join(", ")}</p>
+                )}
+                <Button onClick={handleRecord} disabled={!canSubmit}>
+                  Record payout
+                </Button>
+              </div>
             </DialogFooter>
           </>
         )}

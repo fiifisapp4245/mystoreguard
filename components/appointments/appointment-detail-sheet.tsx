@@ -286,13 +286,16 @@ export function AppointmentDetailSheet({
                       placeholder="e.g. Customer asked to reschedule to next month"
                     />
                   </div>
-                  <div className="flex justify-end gap-2">
+                  <div className="flex items-end justify-end gap-2">
                     <Button variant="outline" size="sm" onClick={() => setPanel("none")}>
                       Back
                     </Button>
-                    <Button variant="destructive" size="sm" onClick={handleCancelSubmit} disabled={!cancelReason.trim()}>
-                      Confirm cancellation
-                    </Button>
+                    <div className="flex flex-col items-end gap-1">
+                      {!cancelReason.trim() && <p className="text-xs text-muted-foreground">Needs a reason</p>}
+                      <Button variant="destructive" size="sm" onClick={handleCancelSubmit} disabled={!cancelReason.trim()}>
+                        Confirm cancellation
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -310,13 +313,16 @@ export function AppointmentDetailSheet({
                       placeholder="e.g. Customer did not arrive or call ahead"
                     />
                   </div>
-                  <div className="flex justify-end gap-2">
+                  <div className="flex items-end justify-end gap-2">
                     <Button variant="outline" size="sm" onClick={() => setPanel("none")}>
                       Back
                     </Button>
-                    <Button variant="destructive" size="sm" onClick={handleNoShowSubmit} disabled={!noShowReason.trim()}>
-                      Confirm no-show
-                    </Button>
+                    <div className="flex flex-col items-end gap-1">
+                      {!noShowReason.trim() && <p className="text-xs text-muted-foreground">Needs a reason</p>}
+                      <Button variant="destructive" size="sm" onClick={handleNoShowSubmit} disabled={!noShowReason.trim()}>
+                        Confirm no-show
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}

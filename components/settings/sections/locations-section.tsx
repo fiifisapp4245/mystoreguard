@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { toast } from "sonner"
 
+import { TeachingEmptyState } from "@/components/dashboard/teaching-empty-state"
 import { SettingsSectionCard } from "@/components/settings/settings-section-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -74,6 +75,15 @@ export function LocationsSection() {
     })
   }
 
+  const createMissingFields = [
+    !createForm.name.trim() && "a name",
+    !createForm.address.trim() && "an address",
+  ].filter(Boolean) as string[]
+  const editMissingFields = [
+    !editForm.name.trim() && "a name",
+    !editForm.address.trim() && "an address",
+  ].filter(Boolean) as string[]
+
   function handleCreate() {
     addLocation(persona, {
       id: `loc-${Date.now().toString(36)}`,
@@ -125,6 +135,13 @@ export function LocationsSection() {
         </Button>
       </div>
 
+      {locations.length === 0 ? (
+        <TeachingEmptyState
+          message="Locations are the shops and warehouses you sell from, stock at and transfer between."
+          actionLabel="New location"
+          onAction={() => setCreateOpen(true)}
+        />
+      ) : (
       <div className="overflow-x-auto rounded-md border">
         <Table>
           <TableHeader>
@@ -173,6 +190,7 @@ export function LocationsSection() {
           </TableBody>
         </Table>
       </div>
+      )}
 
       <p className="text-xs text-muted-foreground">
         Locations with stock or transaction history can only be deactivated, never deleted.
@@ -190,9 +208,14 @@ export function LocationsSection() {
             <Button variant="outline" onClick={() => setCreateOpen(false)}>
               Cancel
             </Button>
-            <Button disabled={!createForm.name.trim() || !createForm.address.trim()} onClick={handleCreate}>
-              Add location
-            </Button>
+            <div className="flex flex-col items-end gap-1">
+              {createMissingFields.length > 0 && (
+                <p className="text-xs text-muted-foreground">Still needs: {createMissingFields.join(", ")}</p>
+              )}
+              <Button disabled={!createForm.name.trim() || !createForm.address.trim()} onClick={handleCreate}>
+                Add location
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -208,9 +231,14 @@ export function LocationsSection() {
             <Button variant="outline" onClick={() => setEditingId(null)}>
               Cancel
             </Button>
-            <Button disabled={!editForm.name.trim() || !editForm.address.trim()} onClick={handleEditSave}>
-              Save
-            </Button>
+            <div className="flex flex-col items-end gap-1">
+              {editMissingFields.length > 0 && (
+                <p className="text-xs text-muted-foreground">Still needs: {editMissingFields.join(", ")}</p>
+              )}
+              <Button disabled={!editForm.name.trim() || !editForm.address.trim()} onClick={handleEditSave}>
+                Save
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -277,7 +277,7 @@ function CashDropDialog({
           </div>
           <div className="flex flex-col gap-1.5">
             <Label>Note (optional)</Label>
-            <Input value={note} onChange={(event) => setNote(event.target.value)} placeholder="e.g. Midday drop" />
+            <Input value={note} onChange={(event) => setNote(event.target.value)} placeholder="e.g. Midday drop" aria-label="e.g. Midday drop" />
           </div>
         </div>
         <DialogFooter>
@@ -633,6 +633,7 @@ export function DayCloseTab() {
   const expectedTotal = useMemo(() => (session ? expectedCashTotal(session) : 0), [session])
   const countedTotal = useMemo(() => countedCashTotal(counts), [counts])
   const variance = useMemo(() => roundMoney(countedTotal - expectedTotal), [countedTotal, expectedTotal])
+  const missingCloseFields = [variance !== 0 && !varianceReason && "a reason for the variance"].filter(Boolean) as string[]
   const canClose = variance === 0 || Boolean(varianceReason)
 
   function handleOpenDay() {
@@ -764,9 +765,14 @@ export function DayCloseTab() {
         <Button variant="outline" onClick={() => setDropDialogOpen(true)}>
           Record cash drop to safe
         </Button>
-        <Button onClick={handleCloseDay} disabled={!canClose}>
-          Close day
-        </Button>
+        <div className="flex flex-col gap-1">
+          <Button onClick={handleCloseDay} disabled={!canClose}>
+            Close day
+          </Button>
+          {missingCloseFields.length > 0 && (
+            <p className="text-xs text-muted-foreground">Still needs: {missingCloseFields.join(", ")}</p>
+          )}
+        </div>
       </div>
 
       <HistoryTable sessions={pastSessions} />

@@ -124,6 +124,24 @@ export function PromoCodeDialog({
     (!needsMinSpend || Number(values.minSpend) > 0) &&
     (!needsEligibilityDetail || values.eligibilityDetail.trim() !== "")
 
+  const missingFields = [
+    trimmedCode === "" && "a code",
+    needsValue && !(Number(values.value) > 0) && "a value greater than 0",
+    values.validFromISO === "" && "a start date",
+    values.validToISO === "" && "an end date",
+    values.validFromISO !== "" &&
+      values.validToISO !== "" &&
+      values.validFromISO > values.validToISO &&
+      "an end date on or after the start date",
+    needsScopeDetail &&
+      values.scopeDetail.trim() === "" &&
+      (values.scope === "category" ? "a category" : "the specific products"),
+    needsMinSpend && !(Number(values.minSpend) > 0) && "a minimum spend greater than 0",
+    needsEligibilityDetail &&
+      values.eligibilityDetail.trim() === "" &&
+      (values.eligibility === "tier" ? "a tier" : "a segment"),
+  ].filter(Boolean) as string[]
+
   function handleSave() {
     if (!canSubmit) return
     if (!isEdit && findPromoCode(trimmedCode)) {
@@ -339,9 +357,14 @@ export function PromoCodeDialog({
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!canSubmit}>
-            {isEdit ? "Save changes" : "Create promo code"}
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            {missingFields.length > 0 && (
+              <p className="text-xs text-muted-foreground">Still needs: {missingFields.join(", ")}</p>
+            )}
+            <Button onClick={handleSave} disabled={!canSubmit}>
+              {isEdit ? "Save changes" : "Create promo code"}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

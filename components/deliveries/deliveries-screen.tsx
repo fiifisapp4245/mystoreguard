@@ -5,6 +5,7 @@ import { LayoutGrid, List, MoreHorizontal, Plus, Search } from "lucide-react"
 import { toast } from "sonner"
 
 import { CustomDateRangeRow, PeriodSelect } from "@/components/dashboard/period-select"
+import { LiveResultCount } from "@/components/dashboard/live-result-count"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
 import { AssignRiderDialog } from "@/components/deliveries/assign-rider-dialog"
@@ -282,7 +283,7 @@ export function DeliveriesScreen() {
             <div className="relative">
               <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search delivery no., customer, or rider..."
+                placeholder="Search delivery no., customer, or rider..." aria-label="Search delivery no., customer, or rider"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 className="w-full pl-8 sm:w-72"
@@ -302,6 +303,7 @@ export function DeliveriesScreen() {
         {period === "custom" && (
           <CustomDateRangeRow from={customFrom} to={customTo} onFromChange={setCustomFrom} onToChange={setCustomTo} />
         )}
+        <LiveResultCount count={filtered.length} itemLabel="delivery" />
       </div>
 
       {view === "list" ? (

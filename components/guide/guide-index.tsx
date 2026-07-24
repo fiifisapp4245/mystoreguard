@@ -79,7 +79,7 @@ export function GuideIndex() {
       />
 
       <Input
-        placeholder="Search the guide — try 'stocktake' or 'day close'..."
+        placeholder="Search the guide — try 'stocktake' or 'day close'..." aria-label="Search the guide — try 'stocktake' or 'day close'"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         className="h-12 text-base"

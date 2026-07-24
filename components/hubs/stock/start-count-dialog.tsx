@@ -82,6 +82,11 @@ export function StartCountDialog({
         ? stockedProducts.filter((p) => p.category === category).map((p) => p.id)
         : selectedIds
 
+  const missingFields = [
+    !locationId && "a location",
+    productIds.length === 0 && "at least one product to count",
+  ].filter(Boolean) as string[]
+
   function handleStart() {
     if (!locationId || productIds.length === 0) return
     const stocktake = startStocktake(isLarry, {
@@ -203,9 +208,14 @@ export function StartCountDialog({
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleStart} disabled={!locationId || productIds.length === 0}>
-            Start count
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            {missingFields.length > 0 && (
+              <p className="text-xs text-muted-foreground">Still needs: {missingFields.join(", ")}</p>
+            )}
+            <Button onClick={handleStart} disabled={!locationId || productIds.length === 0}>
+              Start count
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

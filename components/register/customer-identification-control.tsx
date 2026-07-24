@@ -5,6 +5,7 @@ import { Award, Search, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -71,6 +72,11 @@ export function CustomerIdentificationControl({
     setShowEnrol(true)
   }
 
+  const enrolMissingFields = [
+    !isValidGhanaPhone(enrolPhone) && "a valid Ghana phone number",
+    !enrolName.trim() && "a name",
+  ].filter(Boolean) as string[]
+
   function handleEnrol() {
     if (!isValidGhanaPhone(enrolPhone) || !enrolName.trim()) return
     const newMember = enrolMember({
@@ -108,8 +114,30 @@ export function CustomerIdentificationControl({
     return (
       <div className="flex flex-col gap-2 rounded-lg border border-dashed p-3">
         <p className="text-xs font-medium text-muted-foreground">Enrol — 30 seconds</p>
-        <Input placeholder="Phone number (required)" value={enrolPhone} onChange={(e) => setEnrolPhone(e.target.value)} />
-        <Input placeholder="Name (required)" value={enrolName} onChange={(e) => setEnrolName(e.target.value)} />
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="enrol-phone" className="sr-only">
+            Phone number (required)
+          </Label>
+          <Input
+            id="enrol-phone"
+            placeholder="Phone number"
+            aria-required="true"
+            value={enrolPhone}
+            onChange={(e) => setEnrolPhone(e.target.value)}
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="enrol-name" className="sr-only">
+            Name (required)
+          </Label>
+          <Input
+            id="enrol-name"
+            placeholder="Name"
+            aria-required="true"
+            value={enrolName}
+            onChange={(e) => setEnrolName(e.target.value)}
+          />
+        </div>
         <Select value={enrolArea} onValueChange={setEnrolArea}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Area (optional)" />
@@ -128,20 +156,25 @@ export function CustomerIdentificationControl({
           </label>
           <Switch id="enrol-consent" checked={enrolConsent} onCheckedChange={setEnrolConsent} />
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={() => {
-              setShowEnrol(false)
-              setQuery("")
-            }}
-          >
-            Skip
-          </Button>
-          <Button className="flex-1" disabled={!isValidGhanaPhone(enrolPhone) || !enrolName.trim()} onClick={handleEnrol}>
-            Enrol
-          </Button>
+        <div className="flex flex-col gap-1">
+          {enrolMissingFields.length > 0 && (
+            <p className="text-xs text-muted-foreground">Still needs: {enrolMissingFields.join(", ")}</p>
+          )}
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                setShowEnrol(false)
+                setQuery("")
+              }}
+            >
+              Skip
+            </Button>
+            <Button className="flex-1" disabled={!isValidGhanaPhone(enrolPhone) || !enrolName.trim()} onClick={handleEnrol}>
+              Enrol
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -153,7 +186,7 @@ export function CustomerIdentificationControl({
         <div className="relative flex-1">
           <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Phone number or loyalty ID"
+            placeholder="Phone number or loyalty ID" aria-label="Phone number or loyalty ID"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSubmit()}

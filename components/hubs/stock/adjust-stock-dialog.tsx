@@ -60,6 +60,7 @@ export function AdjustStockDialog({
 
   const currentQty = product && locationId ? stockAt(product, locationId).onHand : 0
   const delta = (Number.parseFloat(newQty) || 0) - currentQty
+  const missingFields = [!locationId && "a location", !reason && "a reason"].filter(Boolean) as string[]
 
   function handleLocationChange(next: string) {
     setLocationId(next)
@@ -142,9 +143,14 @@ export function AdjustStockDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!reason || !locationId}>
-            Save adjustment
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            {missingFields.length > 0 && (
+              <p className="text-xs text-muted-foreground">Still needs: {missingFields.join(", ")}</p>
+            )}
+            <Button onClick={handleSave} disabled={!reason || !locationId}>
+              Save adjustment
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

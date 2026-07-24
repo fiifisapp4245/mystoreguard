@@ -21,6 +21,14 @@ export interface DemoState {
   storePersona: StorePersona
   /** "Viewing as role" — demonstrates the permission model live (see lib/permissions-data.ts). */
   role: StaffRole
+  /**
+   * Off by default so a shared link never exposes the demo-controls panel
+   * (unreleased tier gating, every plan's features) to a real visitor — see
+   * ID-12 in the July 2026 QA audit. Sticky: once ?demo=1 is set, it's
+   * preserved through every subsequent update() call, not just the first
+   * page load.
+   */
+  demoMode: boolean
 }
 
 export const STORE_PERSONA_LABEL: Record<StorePersona, { name: string; location: string }> = {
@@ -37,6 +45,7 @@ export const DEMO_DEFAULTS: DemoState = {
   storeState: "established",
   storePersona: "adwoa",
   role: "Owner",
+  demoMode: false,
 }
 
 function parse(searchParams: URLSearchParams): DemoState {
@@ -48,6 +57,7 @@ function parse(searchParams: URLSearchParams): DemoState {
   const storeState = searchParams.get("store")
   const storePersona = searchParams.get("persona")
   const role = searchParams.get("role")
+  const demoMode = searchParams.get("demo")
 
   return {
     nav: nav === "flat" ? "flat" : DEMO_DEFAULTS.nav,
@@ -58,6 +68,7 @@ function parse(searchParams: URLSearchParams): DemoState {
     storeState: storeState === "new" ? "new" : DEMO_DEFAULTS.storeState,
     storePersona: storePersona === "larry" ? "larry" : DEMO_DEFAULTS.storePersona,
     role: role === "Manager" || role === "Cashier" || role === "Stockkeeper" ? role : DEMO_DEFAULTS.role,
+    demoMode: demoMode === "1" || demoMode === "true" ? true : DEMO_DEFAULTS.demoMode,
   }
 }
 
@@ -72,6 +83,7 @@ export function demoStateToParams(state: DemoState): URLSearchParams {
   if (state.storeState !== DEMO_DEFAULTS.storeState) params.set("store", state.storeState)
   if (state.storePersona !== DEMO_DEFAULTS.storePersona) params.set("persona", state.storePersona)
   if (state.role !== DEMO_DEFAULTS.role) params.set("role", state.role)
+  if (state.demoMode !== DEMO_DEFAULTS.demoMode) params.set("demo", "1")
 
   return params
 }

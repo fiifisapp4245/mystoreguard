@@ -1,12 +1,21 @@
 import type { Metadata } from "next"
-import { Calendar, Mail, MessageCircle, Phone } from "lucide-react"
+import { Calendar, Mail, MessageCircle } from "lucide-react"
 
 import { WhatsAppCta } from "@/components/whatsapp-cta"
 import { siteConfig, whatsappLink } from "@/lib/site-config"
 
 export const metadata: Metadata = {
   title: "Contact — MyStoreGuard",
-  description: "Talk to us on WhatsApp, phone, or email — every channel here is one we actually answer.",
+  description: "Talk to us on WhatsApp or email — every channel here is one we actually answer.",
+  openGraph: {
+    title: "Contact — MyStoreGuard",
+    description: "Talk to us on WhatsApp or email — every channel here is one we actually answer.",
+  },
+  twitter: {
+    title: "Contact — MyStoreGuard",
+    description: "Talk to us on WhatsApp or email — every channel here is one we actually answer.",
+  },
+  alternates: { canonical: "/contact" },
 }
 
 export default function ContactPage() {
@@ -36,15 +45,7 @@ export default function ContactPage() {
         </WhatsAppCta>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-        <div className="flex flex-col gap-2">
-          <Phone className="size-5 text-primary" aria-hidden="true" />
-          <h3 className="font-medium">Phone</h3>
-          <a href={`tel:${siteConfig.whatsappNumber}`} className="text-sm text-muted-foreground hover:text-foreground">
-            {siteConfig.whatsappNumber}
-          </a>
-          <p className="text-xs text-muted-foreground">TODO: confirm this is a call-capable line, not WhatsApp-only.</p>
-        </div>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <div className="flex flex-col gap-2">
           <Mail className="size-5 text-primary" aria-hidden="true" />
           <h3 className="font-medium">Email</h3>
@@ -61,7 +62,6 @@ export default function ContactPage() {
           <a href={siteConfig.demoBookingUrl} className="text-sm text-muted-foreground hover:text-foreground">
             Pick a time that suits you
           </a>
-          <p className="text-xs text-muted-foreground">TODO: replace with the real booking link.</p>
         </div>
       </div>
 

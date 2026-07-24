@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Download, Search } from "lucide-react"
 import { toast } from "sonner"
 
+import { LiveResultCount } from "@/components/dashboard/live-result-count"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -139,13 +140,14 @@ export function AuditLogScreen() {
           <div className="relative">
             <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search target, reason, or user..."
+              placeholder="Search target, reason, or user..." aria-label="Search target, reason, or user"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-8 sm:w-64"
             />
           </div>
         </div>
+        <LiveResultCount count={filtered.length} itemLabel="entry" />
       </div>
 
       <div className="overflow-hidden rounded-xl border">

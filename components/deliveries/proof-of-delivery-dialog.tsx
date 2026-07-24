@@ -120,6 +120,12 @@ export function ProofOfDeliveryDialog({
   const proofSatisfied =
     method === "Signature" ? hasSignature : method === "Photo" ? photoFileName !== "" : codeInput.trim() === delivery?.confirmationCode
 
+  const proofMissingLabel =
+    method === "Signature" ? "a signature" : method === "Photo" ? "a photo" : "the matching confirmation code"
+  const missingFields = [!receivedBy.trim() && "who received it", !proofSatisfied && proofMissingLabel].filter(
+    Boolean
+  ) as string[]
+
   function handleSubmit() {
     if (!delivery || !receivedBy.trim() || !proofSatisfied) return
     const collected = Number.parseFloat(cashCollected) || 0
@@ -207,9 +213,14 @@ export function ProofOfDeliveryDialog({
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!receivedBy.trim() || !proofSatisfied}>
-            Mark delivered
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            {missingFields.length > 0 && (
+              <p className="text-xs text-muted-foreground">Still needs: {missingFields.join(", ")}</p>
+            )}
+            <Button onClick={handleSubmit} disabled={!receivedBy.trim() || !proofSatisfied}>
+              Mark delivered
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

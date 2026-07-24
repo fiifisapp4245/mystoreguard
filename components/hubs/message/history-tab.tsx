@@ -4,6 +4,7 @@ import { Fragment, useMemo, useState } from "react"
 import { ChevronDown, ChevronRight } from "lucide-react"
 import { toast } from "sonner"
 
+import { LiveResultCount } from "@/components/dashboard/live-result-count"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
 import { CustomDateRangeRow, PeriodSelect } from "@/components/dashboard/period-select"
@@ -143,6 +144,7 @@ export function HistoryTab() {
         {period === "custom" && (
           <CustomDateRangeRow from={customFrom} to={customTo} onFromChange={setCustomFrom} onToChange={setCustomTo} />
         )}
+        <LiveResultCount count={filtered.length} itemLabel="message" />
       </div>
 
       <div className="overflow-x-auto rounded-xl border">

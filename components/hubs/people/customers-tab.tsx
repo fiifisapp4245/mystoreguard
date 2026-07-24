@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { Plus, Search } from "lucide-react"
 import { toast } from "sonner"
 
+import { LiveResultCount } from "@/components/dashboard/live-result-count"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
 import { AddCustomerDialog } from "@/components/hubs/people/add-customer-dialog"
@@ -100,7 +101,7 @@ export function CustomersTab() {
           <div className="relative">
             <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search by name or phone..."
+              placeholder="Search by name or phone..." aria-label="Search by name or phone"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               className="w-full pl-8 sm:w-56"
@@ -133,6 +134,7 @@ export function CustomersTab() {
           Add customer
         </Button>
       </div>
+      <LiveResultCount count={filtered.length} itemLabel="customer" />
 
       <div className="overflow-hidden rounded-xl border">
         <Table>

@@ -88,8 +88,19 @@ export function AddStaffDialog({
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="staff-name">Full name</Label>
-            <Input id="staff-name" value={name} onChange={(event) => setName(event.target.value)} />
-            {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
+            <Input
+              id="staff-name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              aria-invalid={Boolean(errors.name)}
+              aria-describedby={errors.name ? "staff-name-error" : undefined}
+              aria-required="true"
+            />
+            {errors.name && (
+              <p id="staff-name-error" className="text-xs text-destructive">
+                {errors.name}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -99,8 +110,15 @@ export function AddStaffDialog({
               value={phone}
               onChange={(event) => setPhone(event.target.value)}
               placeholder="024 111 2222"
+              aria-invalid={Boolean(errors.phone)}
+              aria-describedby={errors.phone ? "staff-phone-error" : undefined}
+              aria-required="true"
             />
-            {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
+            {errors.phone && (
+              <p id="staff-phone-error" className="text-xs text-destructive">
+                {errors.phone}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-1.5">

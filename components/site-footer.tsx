@@ -11,11 +11,9 @@ const NAV_LINKS = [
   { href: "/contact", label: "Contact" },
 ]
 
-// TODO: replace with real legal pages before launch.
-const LEGAL_LINKS = [
-  { href: "#", label: "Privacy policy" },
-  { href: "#", label: "Terms of service" },
-]
+// No Privacy policy / Terms of service pages exist yet. Omitted rather than
+// linked as dead "#" anchors — add real pages (and the links back) before
+// public launch.
 
 export function SiteFooter() {
   return (
@@ -68,13 +66,6 @@ export function SiteFooter() {
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">Made in Ghana 🇬🇭</p>
-          <div className="flex gap-6">
-            {LEGAL_LINKS.map((link) => (
-              <Link key={link.label} href={link.href} className="text-xs text-muted-foreground hover:text-foreground">
-                {link.label}
-              </Link>
-            ))}
-          </div>
         </div>
       </div>
     </footer>

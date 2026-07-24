@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { MoreHorizontal, Plus, Search, Tags, Upload } from "lucide-react"
 import { toast } from "sonner"
 
+import { LiveResultCount } from "@/components/dashboard/live-result-count"
 import { PeriodSelect } from "@/components/dashboard/period-select"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
@@ -224,7 +225,7 @@ export function ProductsTab() {
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative flex-1 sm:max-w-64">
             <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Search products..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8" />
+            <Input placeholder="Search products..." aria-label="Search products" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8" />
           </div>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger className="w-40">
@@ -281,6 +282,7 @@ export function ProductsTab() {
             Add product
           </Button>
         </div>
+        <LiveResultCount count={filtered.length} itemLabel="product" />
       </div>
 
       <div className="overflow-hidden rounded-xl border">

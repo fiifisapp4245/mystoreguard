@@ -36,7 +36,10 @@ export function IssueGiftCardDialog({
   const [note, setNote] = useState("")
 
   const amount = Number.parseFloat(value)
-  const canSubmit = Number.isFinite(amount) && amount > 0
+  const missingFields = [!(Number.isFinite(amount) && amount > 0) && "a value greater than 0"].filter(
+    Boolean
+  ) as string[]
+  const canSubmit = missingFields.length === 0
 
   function resetForm() {
     setValue("")
@@ -123,9 +126,14 @@ export function IssueGiftCardDialog({
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleIssue} disabled={!canSubmit}>
-            Issue gift card
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            {!canSubmit && missingFields.length > 0 && (
+              <p className="text-xs text-muted-foreground">Still needs: {missingFields.join(", ")}</p>
+            )}
+            <Button onClick={handleIssue} disabled={!canSubmit}>
+              Issue gift card
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

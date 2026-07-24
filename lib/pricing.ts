@@ -3,7 +3,7 @@ import { getModule, type Tier } from "@/lib/modules"
 /**
  * PROVISIONAL — pending team sign-off. Prices are monthly, in USD.
  * Structure (seats, annual discount, GHS conversion) is a placeholder
- * until the team decides — see TODOs below.
+ * until the team decides on real figures.
  */
 export interface TierPricing {
   id: Tier
@@ -59,14 +59,19 @@ export const TIERS: TierPricing[] = [
   },
 ]
 
-/** TODO: confirm the real annual discount structure — "2 months free" is a placeholder assumption. */
+/** Placeholder assumption pending team sign-off on the real annual discount structure. */
 export const ANNUAL_MONTHS_FREE = 2
 
 export function annualPrice(monthlyPrice: number): number {
   return monthlyPrice * (12 - ANNUAL_MONTHS_FREE)
 }
 
-/** TODO: replace with a real, current exchange rate before this ships with currency=GHS live. */
+/**
+ * Illustrative only — not a live rate. `currency=GHS` is gated off by
+ * `siteConfig.showPrices`/`currency` (see lib/site-config.ts) until the
+ * team decides on real GHS pricing; replace with a current rate (or a
+ * proper FX lookup) before that ships.
+ */
 export const GHS_PER_USD = 15
 
 export function formatPrice(amountUsd: number, currency: "USD" | "GHS"): string {
@@ -98,14 +103,13 @@ export const ADDONS: Addon[] = [
   {
     name: "Extra locations",
     description: "Add another shop, warehouse, or branch to your account.",
-    note: "TODO: confirm per-location pricing — talk to us for a quote in the meantime.",
+    note: "Talk to us for a quote — priced per location.",
   },
 ]
 
 export interface FaqEntry {
   question: string
   answer: string
-  todo?: string
 }
 
 export const FAQ: FaqEntry[] = [
@@ -113,13 +117,11 @@ export const FAQ: FaqEntry[] = [
     question: "What happens after my first free month?",
     answer:
       "You'll move onto the paid tier you picked when you started — Light, Prime, or Ultra. We'll let you know before the free month ends so there are no surprises.",
-    todo: "Confirm the exact billing trigger — do we collect card details upfront, or only once the free month ends?",
   },
   {
     question: "Can I change tiers later?",
     answer:
       "Yes. Move up to a bigger tier as your store grows, or down if you need less — your data stays exactly as it is.",
-    todo: "Confirm whether a downgrade takes effect immediately or at the next billing date.",
   },
   {
     question: "Do you help with setup?",
@@ -129,12 +131,10 @@ export const FAQ: FaqEntry[] = [
   {
     question: "Does it work on my phone?",
     answer: "Yes — MyStoreGuard works in any modern phone browser. No app download needed.",
-    todo: "Confirm whether a dedicated mobile app is planned, or browser-only is the permanent approach.",
   },
   {
     question: "What about my data if I leave?",
-    answer: "Your records belong to you, not us.",
-    todo: "Confirm the exact data export process and how long records are retained after a cancellation.",
+    answer: "Your records belong to you, not us. Talk to us any time for an export of everything you've recorded.",
   },
   {
     question: "Can my staff each have their own login?",

@@ -42,6 +42,8 @@ export function ManagerOverrideDialog({
   const [reason, setReason] = useState("")
   const [note, setNote] = useState("")
 
+  const missingFields = [!approver && "an approving manager", !reason && "a reason"].filter(Boolean) as string[]
+
   function handleApprove() {
     if (!approver || !reason) return
     onApprove(approver, reason, note.trim() || undefined)
@@ -107,9 +109,14 @@ export function ManagerOverrideDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleApprove} disabled={!approver || !reason}>
-            Approve & continue
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            {missingFields.length > 0 && (
+              <p className="text-xs text-muted-foreground">Still needs: {missingFields.join(", ")}</p>
+            )}
+            <Button onClick={handleApprove} disabled={!approver || !reason}>
+              Approve & continue
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

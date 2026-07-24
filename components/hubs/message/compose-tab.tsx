@@ -183,8 +183,13 @@ export function ComposeTab() {
   const creditBalanceAfter = creditBalance - sendable.length * segmentsPerMessage
   const insufficient = creditBalanceAfter < 0
   const showCostPanel = resolved.length > 0 && body.trim() !== ""
-  const canSend = channel === "SMS" && sendable.length > 0 && body.trim() !== "" && !insufficient
-  const canSchedule = channel === "SMS" && sendable.length > 0 && body.trim() !== ""
+  const recipientChannelBlockers = [
+    channel !== "SMS" && "the SMS channel (WhatsApp isn't wired up in this prototype)",
+    sendable.length === 0 && "at least one sendable recipient",
+  ].filter(Boolean) as string[]
+  const missingBody = body.trim() === ""
+  const canSchedule = recipientChannelBlockers.length === 0 && !missingBody
+  const canSend = canSchedule && !insufficient
 
   const sampleLoyaltyMember: LoyaltyMember | undefined = useMemo(() => {
     if (recipientMode === "segment") {
@@ -388,7 +393,7 @@ export function ComposeTab() {
               <div className="relative">
                 <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Search by name or phone"
+                  placeholder="Search by name or phone" aria-label="Search by name or phone"
                   value={customerSearch}
                   onChange={(e) => setCustomerSearch(e.target.value)}
                   className="pl-8"
@@ -538,23 +543,36 @@ export function ComposeTab() {
         />
       )}
 
-      <div className="flex flex-wrap gap-2">
-        <Button onClick={handleSendNow} disabled={!canSend}>
-          <Send />
-          Send now
-        </Button>
-        <Button variant="outline" onClick={() => setScheduleOpen(true)} disabled={!canSchedule}>
-          <CalendarClock />
-          Schedule
-        </Button>
-        <Button variant="outline" onClick={() => setSaveTemplateOpen(true)} disabled={body.trim() === ""}>
-          <BookmarkPlus />
-          Save as template
-        </Button>
-        <Button variant="ghost" onClick={handleSaveDraft}>
-          <Save />
-          Save draft
-        </Button>
+      <div className="flex flex-col gap-1.5">
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={handleSendNow} disabled={!canSend}>
+            <Send />
+            Send now
+          </Button>
+          <Button variant="outline" onClick={() => setScheduleOpen(true)} disabled={!canSchedule}>
+            <CalendarClock />
+            Schedule
+          </Button>
+          <Button variant="outline" onClick={() => setSaveTemplateOpen(true)} disabled={body.trim() === ""}>
+            <BookmarkPlus />
+            Save as template
+          </Button>
+          <Button variant="ghost" onClick={handleSaveDraft}>
+            <Save />
+            Save draft
+          </Button>
+        </div>
+        {recipientChannelBlockers.length > 0 && (
+          <p className="text-xs text-muted-foreground">
+            Send now / Schedule need: {recipientChannelBlockers.join(", ")}
+          </p>
+        )}
+        {missingBody && (
+          <p className="text-xs text-muted-foreground">Send now / Schedule / Save as template need: a message body</p>
+        )}
+        {!missingBody && recipientChannelBlockers.length === 0 && insufficient && (
+          <p className="text-xs text-muted-foreground">Send now needs: more SMS credit balance — top up to continue</p>
+        )}
       </div>
 
       <CreditTopUpDialog open={topUpOpen} onOpenChange={setTopUpOpen} onTopUp={() => setCreditBalance(getSmsCreditBalance())} />
@@ -601,6 +619,9 @@ export function ComposeTab() {
               placeholder="e.g. Weekend promo"
             />
           </div>
+          {!newTemplateName.trim() && (
+            <p className="text-xs text-muted-foreground">Still needs: a template name</p>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setSaveTemplateOpen(false)}>
               Cancel

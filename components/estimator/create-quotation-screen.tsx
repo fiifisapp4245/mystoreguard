@@ -291,6 +291,7 @@ export function CreateQuotationScreen({
                             value={unit.label}
                             onChange={(event) => updateUnitLabel(index, event.target.value)}
                             placeholder={`Unit ${index + 1} label (optional)`}
+                            aria-label={`Unit ${index + 1} label (optional)`}
                             className="h-8 flex-1 text-sm"
                           />
                           <div className="flex items-center gap-1">

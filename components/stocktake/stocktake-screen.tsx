@@ -137,7 +137,8 @@ export function StocktakeScreen({ stocktakeId }: { stocktakeId: string }) {
   }, 0)
 
   const isLocked = stocktake.status !== "In progress"
-  const allReasoned = lines.every((l) => reasons[l.productId]?.reason)
+  const unreasonedCount = lines.filter((l) => !reasons[l.productId]?.reason).length
+  const allReasoned = unreasonedCount === 0
 
   function handlePost() {
     if (!allReasoned) {
@@ -189,7 +190,7 @@ export function StocktakeScreen({ stocktakeId }: { stocktakeId: string }) {
               value={scanValue}
               onChange={(e) => setScanValue(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleScanSubmit()}
-              placeholder="Scan barcode — each scan adds one unit"
+              placeholder="Scan barcode — each scan adds one unit" aria-label="Scan barcode — each scan adds one unit"
               className="pl-9"
               autoFocus
             />
@@ -218,7 +219,7 @@ export function StocktakeScreen({ stocktakeId }: { stocktakeId: string }) {
                   min="0"
                   value={counts[snap.productId] ?? ""}
                   onChange={(e) => updateCount(snap.productId, e.target.value)}
-                  placeholder="Count"
+                  placeholder="Count" aria-label="Count"
                   className="h-9 w-24 px-2"
                 />
               </div>
@@ -322,9 +323,16 @@ export function StocktakeScreen({ stocktakeId }: { stocktakeId: string }) {
                 <Button variant="destructive" onClick={handleDiscard}>
                   Discard
                 </Button>
-                <Button onClick={handlePost} disabled={!allReasoned}>
-                  Post
-                </Button>
+                <div className="flex flex-col items-end gap-1">
+                  {!allReasoned && (
+                    <p className="text-xs text-muted-foreground">
+                      {unreasonedCount} variance{unreasonedCount === 1 ? "" : "s"} still need{unreasonedCount === 1 ? "s" : ""} a reason
+                    </p>
+                  )}
+                  <Button onClick={handlePost} disabled={!allReasoned}>
+                    Post
+                  </Button>
+                </div>
               </>
             )}
             {isLocked && (

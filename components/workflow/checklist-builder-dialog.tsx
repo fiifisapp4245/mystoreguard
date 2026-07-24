@@ -100,6 +100,10 @@ export function ChecklistBuilderDialog({
 
   const validSteps = values.steps.filter((s) => s.instruction.trim() !== "")
   const canSubmit = values.name.trim() !== "" && validSteps.length > 0
+  const missingFields = [
+    values.name.trim() === "" && "a name",
+    validSteps.length === 0 && "at least one step with instructions",
+  ].filter(Boolean) as string[]
 
   function handleSubmit() {
     if (!canSubmit) return
@@ -216,11 +220,12 @@ export function ChecklistBuilderDialog({
                         value={step.instruction}
                         onChange={(e) => updateStep(step.key, { instruction: e.target.value })}
                         placeholder={`Step ${index + 1} instruction`}
+                        aria-label={`Step ${index + 1} instruction`}
                       />
                       <Input
                         value={step.note}
                         onChange={(e) => updateStep(step.key, { note: e.target.value })}
-                        placeholder="Note (optional)"
+                        placeholder="Note (optional)" aria-label="Note (optional)"
                         className="text-xs"
                       />
                     </div>
@@ -252,9 +257,14 @@ export function ChecklistBuilderDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!canSubmit}>
-            Create checklist
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            {missingFields.length > 0 && (
+              <p className="text-xs text-muted-foreground">Still needs: {missingFields.join(", ")}</p>
+            )}
+            <Button onClick={handleSubmit} disabled={!canSubmit}>
+              Create checklist
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

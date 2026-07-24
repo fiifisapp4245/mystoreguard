@@ -83,7 +83,8 @@ export function SegmentRuleDialog({
     [conditions, matchType]
   )
 
-  const canSave = name.trim().length > 0
+  const missingFields = [!name.trim() && "a segment name"].filter(Boolean) as string[]
+  const canSave = missingFields.length === 0
 
   function updateCondition(index: number, patch: Partial<SegmentCondition>) {
     setConditions((prev) => prev.map((c, i) => (i === index ? { ...c, ...patch } : c)))
@@ -210,6 +211,9 @@ export function SegmentRuleDialog({
           </p>
         </div>
 
+        {!canSave && missingFields.length > 0 && (
+          <p className="text-right text-xs text-muted-foreground">Still needs: {missingFields.join(", ")}</p>
+        )}
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel

@@ -48,6 +48,11 @@ export function EnrolMemberDialog({
 
   const phoneValid = isValidGhanaPhone(phone)
   const alreadyMember = phoneValid ? findMemberByPhone(phone) : undefined
+  const missingFields = [
+    !phoneValid && "a valid phone number",
+    name.trim().length === 0 && "a full name",
+    Boolean(alreadyMember) && "a phone number that isn't already enrolled",
+  ].filter(Boolean) as string[]
   const canSave = phoneValid && name.trim().length > 0 && !alreadyMember
 
   function handleSave() {
@@ -105,9 +110,14 @@ export function EnrolMemberDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!canSave}>
-            Enrol customer
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            {!canSave && missingFields.length > 0 && (
+              <p className="text-xs text-muted-foreground">Still needs: {missingFields.join(", ")}</p>
+            )}
+            <Button onClick={handleSave} disabled={!canSave}>
+              Enrol customer
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

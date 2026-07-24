@@ -100,7 +100,12 @@ export function RecordReturnDialog({
                 setItemName("")
               }}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger
+                className="w-full"
+                aria-invalid={Boolean(errors.sale)}
+                aria-describedby={errors.sale ? "return-sale-error" : undefined}
+                aria-required="true"
+              >
                 <SelectValue placeholder="Select a receipt..." />
               </SelectTrigger>
               <SelectContent>
@@ -111,13 +116,22 @@ export function RecordReturnDialog({
                 ))}
               </SelectContent>
             </Select>
-            {errors.sale && <p className="text-xs text-destructive">{errors.sale}</p>}
+            {errors.sale && (
+              <p id="return-sale-error" className="text-xs text-destructive">
+                {errors.sale}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-1.5">
             <Label>Item</Label>
             <Select value={itemName} onValueChange={setItemName} disabled={!selectedSale}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger
+                className="w-full"
+                aria-invalid={Boolean(errors.item)}
+                aria-describedby={errors.item ? "return-item-error" : undefined}
+                aria-required="true"
+              >
                 <SelectValue placeholder="Select an item..." />
               </SelectTrigger>
               <SelectContent>
@@ -128,7 +142,14 @@ export function RecordReturnDialog({
                 ))}
               </SelectContent>
             </Select>
-            {errors.item && <p className="text-xs text-destructive">{errors.item}</p>}
+            {!selectedSale && !errors.item && (
+              <p className="text-xs text-muted-foreground">Select the original sale above first</p>
+            )}
+            {errors.item && (
+              <p id="return-item-error" className="text-xs text-destructive">
+                {errors.item}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-1.5">

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import Link from "next/link"
 
 import { CustomDateRangeRow, PeriodSelect } from "@/components/dashboard/period-select"
+import { LiveResultCount } from "@/components/dashboard/live-result-count"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -116,6 +117,7 @@ export function PaymentsTab() {
         {period === "custom" && (
           <CustomDateRangeRow from={customFrom} to={customTo} onFromChange={setCustomFrom} onToChange={setCustomTo} />
         )}
+        <LiveResultCount count={filtered.length} itemLabel="payment" />
       </div>
 
       <div className="overflow-hidden rounded-xl border">

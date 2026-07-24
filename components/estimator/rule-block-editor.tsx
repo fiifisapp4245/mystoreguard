@@ -199,7 +199,7 @@ function SetValueBlockEditor({
           onChange={(event) =>
             onChange({ ...block, targetLabel: event.target.value, targetKey: slugify(event.target.value) })
           }
-          placeholder="Variable name"
+          placeholder="Variable name" aria-label="Variable name"
           className="h-8 w-32 text-xs"
         />
         <span className="text-muted-foreground">to</span>
@@ -258,7 +258,7 @@ function SetByConditionBlockEditor({
           onChange={(event) =>
             onChange({ ...block, targetLabel: event.target.value, targetKey: slugify(event.target.value) })
           }
-          placeholder="Variable name"
+          placeholder="Variable name" aria-label="Variable name"
           className="h-8 w-32 text-xs"
         />
       </div>
@@ -353,7 +353,7 @@ function CalculateBlockEditor({
           onChange={(event) =>
             onChange({ ...block, targetLabel: event.target.value, targetKey: slugify(event.target.value) })
           }
-          placeholder="Result name"
+          placeholder="Result name" aria-label="Result name"
           className="h-8 w-32 text-xs"
         />
         <span className="text-muted-foreground">=</span>
@@ -381,7 +381,7 @@ function CalculateBlockEditor({
         <Input
           value={block.targetUnit}
           onChange={(event) => onChange({ ...block, targetUnit: event.target.value })}
-          placeholder="e.g. Yards"
+          placeholder="e.g. Yards" aria-label="e.g. Yards"
           className="h-8 w-28 text-xs"
         />
       </div>

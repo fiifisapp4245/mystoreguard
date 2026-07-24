@@ -10,6 +10,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+import { TeachingEmptyState } from "@/components/dashboard/teaching-empty-state"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -231,6 +232,9 @@ export function RulesTiersTab() {
           <AccordionContent>
             <div className="flex flex-col gap-3 pt-1 pb-2">
               <p className="text-xs text-muted-foreground">Click a row&apos;s Edit button to change just that tier — the others are untouched.</p>
+              {form.tiers.length === 0 ? (
+                <TeachingEmptyState message="Tiers give customers better discounts and perks as their lifetime spend grows — Bronze, Silver, Gold, or whatever names fit your store." />
+              ) : (
               <div className="overflow-hidden rounded-lg border">
                 <Table>
                   <TableHeader>
@@ -274,6 +278,7 @@ export function RulesTiersTab() {
                   </TableBody>
                 </Table>
               </div>
+              )}
             </div>
           </AccordionContent>
         </AccordionItem>

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { MoreHorizontal, Plus, Search } from "lucide-react"
 import { toast } from "sonner"
 
+import { LiveResultCount } from "@/components/dashboard/live-result-count"
 import { PeriodSelect } from "@/components/dashboard/period-select"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { TeachingEmptyState } from "@/components/dashboard/teaching-empty-state"
@@ -153,7 +154,7 @@ export function MembersTab() {
           <div className="relative">
             <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search by name or phone..."
+              placeholder="Search by name or phone..." aria-label="Search by name or phone"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-8 sm:w-56"
@@ -187,6 +188,7 @@ export function MembersTab() {
           Enrol customer
         </Button>
       </div>
+      <LiveResultCount count={filtered.length} itemLabel="member" />
 
       {filtered.length === 0 ? (
         <TeachingEmptyState

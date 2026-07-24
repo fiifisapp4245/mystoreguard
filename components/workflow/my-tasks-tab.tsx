@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Zap } from "lucide-react"
 
+import { LiveResultCount } from "@/components/dashboard/live-result-count"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { StatusBadge, type StatusTone } from "@/components/dashboard/status-badge"
 import { TeachingEmptyState } from "@/components/dashboard/teaching-empty-state"
@@ -159,6 +160,7 @@ export function MyTasksTab() {
           </Button>
         ))}
       </div>
+      <LiveResultCount count={filteredTasks.length} itemLabel="task" />
 
       {filteredTasks.length === 0 ? (
         <TeachingEmptyState message="Tasks appear here automatically when something needs your attention — low stock, an overdue invoice, a failed delivery." />

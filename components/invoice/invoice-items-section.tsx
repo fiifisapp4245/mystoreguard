@@ -53,7 +53,7 @@ export function InvoiceItemsSection({
         <Input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search product or type a custom item..."
+          placeholder="Search product or type a custom item..." aria-label="Search product or type a custom item"
           onKeyDown={(event) => {
             if (event.key === "Enter") {
               event.preventDefault()

@@ -140,21 +140,26 @@ function MetadataPanel({
         )}
       </div>
 
-      <div className="flex gap-2">
-        <Input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={addPlaceholder}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault()
-              handleAdd()
-            }
-          }}
-        />
-        <Button type="button" onClick={handleAdd} disabled={!name.trim()}>
-          Add
-        </Button>
+      <div className="flex flex-col gap-1">
+        <div className="flex gap-2">
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={addPlaceholder} aria-label={addPlaceholder}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault()
+                handleAdd()
+              }
+            }}
+          />
+          <Button type="button" onClick={handleAdd} disabled={!name.trim()}>
+            Add
+          </Button>
+        </div>
+        {!name.trim() && (
+          <p className="text-xs text-muted-foreground">Still needs: a name</p>
+        )}
       </div>
     </div>
   )

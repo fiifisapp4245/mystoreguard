@@ -5,6 +5,7 @@ import Link from "next/link"
 import { LayoutGrid, List, Plus, Zap } from "lucide-react"
 import { toast } from "sonner"
 
+import { LiveResultCount } from "@/components/dashboard/live-result-count"
 import { StatusBadge, type StatusTone } from "@/components/dashboard/status-badge"
 import { TeachingEmptyState } from "@/components/dashboard/teaching-empty-state"
 import { NewTaskDialog } from "@/components/workflow/new-task-dialog"
@@ -262,6 +263,7 @@ export function AllTasksTab() {
           </div>
         )}
       </div>
+      <LiveResultCount count={filtered.length} itemLabel="task" />
 
       {filtered.length === 0 ? (
         <TeachingEmptyState message="Tasks appear here automatically when something needs your attention — low stock, an overdue invoice, a failed delivery." />

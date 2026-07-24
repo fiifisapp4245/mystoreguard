@@ -110,8 +110,15 @@ export function RecordPaymentDialog({
               type="number"
               value={amount}
               onChange={(event) => setAmount(event.target.value)}
+              aria-invalid={Boolean(errors.amount)}
+              aria-describedby={errors.amount ? "payment-amount-error" : undefined}
+              aria-required="true"
             />
-            {errors.amount && <p className="text-xs text-destructive">{errors.amount}</p>}
+            {errors.amount && (
+              <p id="payment-amount-error" className="text-xs text-destructive">
+                {errors.amount}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -139,8 +146,15 @@ export function RecordPaymentDialog({
               value={reference}
               onChange={(event) => setReference(event.target.value)}
               placeholder="e.g. 8891023"
+              aria-invalid={Boolean(errors.reference)}
+              aria-describedby={errors.reference ? "payment-reference-error" : undefined}
+              aria-required={REFERENCE_REQUIRED_METHODS.includes(method)}
             />
-            {errors.reference && <p className="text-xs text-destructive">{errors.reference}</p>}
+            {errors.reference && (
+              <p id="payment-reference-error" className="text-xs text-destructive">
+                {errors.reference}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-1.5">

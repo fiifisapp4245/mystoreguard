@@ -8,6 +8,15 @@ import { GROUPS, getModule } from "@/lib/modules"
 export const metadata: Metadata = {
   title: "Features — MyStoreGuard",
   description: "Everything MyStoreGuard does, grouped the same way it appears in your dashboard.",
+  openGraph: {
+    title: "Features — MyStoreGuard",
+    description: "Everything MyStoreGuard does, grouped the same way it appears in your dashboard.",
+  },
+  twitter: {
+    title: "Features — MyStoreGuard",
+    description: "Everything MyStoreGuard does, grouped the same way it appears in your dashboard.",
+  },
+  alternates: { canonical: "/features" },
 }
 
 const GROUP_COPY: Record<string, string> = {

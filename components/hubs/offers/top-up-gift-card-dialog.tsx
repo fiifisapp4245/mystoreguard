@@ -65,9 +65,12 @@ export function TopUpGiftCardDialog({
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleTopUp} disabled={!canSubmit}>
-                Top up
-              </Button>
+              <div className="flex flex-col items-end gap-1">
+                {!canSubmit && <p className="text-xs text-muted-foreground">Needs an amount greater than 0</p>}
+                <Button onClick={handleTopUp} disabled={!canSubmit}>
+                  Top up
+                </Button>
+              </div>
             </DialogFooter>
           </>
         )}

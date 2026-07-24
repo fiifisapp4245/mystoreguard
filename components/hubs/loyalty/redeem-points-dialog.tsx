@@ -37,6 +37,10 @@ export function RedeemPointsDialog({
 
   const points = Number.parseInt(amount, 10) || 0
   const exceedsBalance = member ? points > member.points : false
+  const missingFields = [
+    !(points > 0) && "a points amount",
+    exceedsBalance && "an amount within the available balance",
+  ].filter(Boolean) as string[]
   const canSave = member !== null && points > 0 && !exceedsBalance
 
   function handleSave() {
@@ -79,9 +83,14 @@ export function RedeemPointsDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!canSave}>
-            Redeem points
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            {!canSave && missingFields.length > 0 && (
+              <p className="text-xs text-muted-foreground">Still needs: {missingFields.join(", ")}</p>
+            )}
+            <Button onClick={handleSave} disabled={!canSave}>
+              Redeem points
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

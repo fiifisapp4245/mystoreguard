@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Pencil } from "lucide-react"
 
 import { StatusBadge, type StatusTone } from "@/components/dashboard/status-badge"
+import { TeachingEmptyState } from "@/components/dashboard/teaching-empty-state"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import {
@@ -43,6 +44,9 @@ export function RulesTab() {
         These tasks are created by the system from what it already knows. You don&apos;t have to remember them.
       </p>
 
+      {rules.length === 0 ? (
+        <TeachingEmptyState message="Rules are the triggers that raise tasks automatically — reorder points, overdue invoices, failed deliveries, and more." />
+      ) : (
       <div className="overflow-hidden rounded-xl border">
         <div className="overflow-x-auto">
           <Table>
@@ -81,6 +85,7 @@ export function RulesTab() {
           </Table>
         </div>
       </div>
+      )}
 
       <RuleEditDialog rule={editTarget} onOpenChange={(open) => !open && setEditTarget(null)} onSaved={refresh} />
     </div>

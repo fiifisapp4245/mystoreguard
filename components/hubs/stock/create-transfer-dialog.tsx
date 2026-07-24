@@ -90,6 +90,14 @@ export function CreateTransferDialog({
     setLines((prev) => prev.filter((_, i) => i !== index))
   }
 
+  const missingFields = [
+    !fromLocationId && "a source location",
+    !toLocationId && "a destination location",
+    fromLocationId && toLocationId && fromLocationId === toLocationId && "two different locations",
+    lines.length === 0 && "at least one item",
+  ].filter(Boolean) as string[]
+  const canSave = missingFields.length === 0
+
   function handleSave(sendNow: boolean) {
     if (!fromLocationId || !toLocationId || fromLocationId === toLocationId || lines.length === 0) return
     const validLines = lines
@@ -156,7 +164,7 @@ export function CreateTransferDialog({
           <div className="flex flex-col gap-2">
             <Label>Items</Label>
             <div className="relative">
-              <Input value={productSearch} onChange={(e) => setProductSearch(e.target.value)} placeholder="Search product..." />
+              <Input value={productSearch} onChange={(e) => setProductSearch(e.target.value)} placeholder="Search product..." aria-label="Search product" />
               {matches.length > 0 && (
                 <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border bg-popover shadow-sm">
                   {matches.map((product) => (
@@ -193,14 +201,17 @@ export function CreateTransferDialog({
           </div>
         </div>
 
+        {!canSave && missingFields.length > 0 && (
+          <p className="text-right text-xs text-muted-foreground">Still needs: {missingFields.join(", ")}</p>
+        )}
         <DialogFooter>
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
-          <Button variant="outline" onClick={() => handleSave(false)} disabled={!fromLocationId || fromLocationId === toLocationId || lines.length === 0}>
+          <Button variant="outline" onClick={() => handleSave(false)} disabled={!canSave}>
             Save as draft
           </Button>
-          <Button onClick={() => handleSave(true)} disabled={!fromLocationId || fromLocationId === toLocationId || lines.length === 0}>
+          <Button onClick={() => handleSave(true)} disabled={!canSave}>
             Send
           </Button>
         </DialogFooter>

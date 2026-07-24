@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 
+import { TeachingEmptyState } from "@/components/dashboard/teaching-empty-state"
 import { SettingsSectionCard } from "@/components/settings/settings-section-card"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -47,6 +48,9 @@ export function NotificationsSection() {
       settingClass="C"
       description="Who hears about what — in-app and by SMS — when something in the store needs attention."
     >
+      {rules.length === 0 ? (
+        <TeachingEmptyState message="Notification rules decide who hears about what, and how — in-app or by SMS — when something in the store needs attention." />
+      ) : (
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -95,6 +99,7 @@ export function NotificationsSection() {
           </TableBody>
         </Table>
       </div>
+      )}
     </SettingsSectionCard>
   )
 }

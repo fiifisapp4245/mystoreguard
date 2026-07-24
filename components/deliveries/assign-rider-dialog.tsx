@@ -61,6 +61,8 @@ export function AssignRiderDialog({
     onAssign(riderId, dateISO, windowPreset === "Custom" ? customWindow : windowPreset)
   }
 
+  const missingFields = [!riderId && "a rider", !dateISO && "a date"].filter(Boolean) as string[]
+
   return (
     <Dialog open={delivery !== null} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-sm">
@@ -126,9 +128,14 @@ export function AssignRiderDialog({
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!riderId || !dateISO}>
-            Assign
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            {missingFields.length > 0 && (
+              <p className="text-xs text-muted-foreground">Still needs: {missingFields.join(", ")}</p>
+            )}
+            <Button onClick={handleSubmit} disabled={!riderId || !dateISO}>
+              Assign
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

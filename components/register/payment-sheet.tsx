@@ -184,6 +184,40 @@ export function PaymentSheet({
                 : // Points
                   pointsToRedeem > 0 && (pointsValueApplied >= total || Boolean(pointsRemainderTender))
 
+  // Mirrors canConfirm's per-tender logic above, just spelled out as a short
+  // human-readable reason instead of a boolean, so a cashier isn't left
+  // guessing why Confirm is greyed out.
+  const confirmHint: string | null = canConfirm
+    ? null
+    : tender === "Cash"
+      ? `Needs ${formatGHS(Math.max(0, total - receivedValue))} more`
+      : tender === "Momo"
+        ? !momoReference.trim()
+          ? "Needs a transaction reference"
+          : "Needs a valid amount"
+        : tender === "Credit"
+          ? !member
+            ? "Needs a customer attached"
+            : "Needs a due date"
+          : tender === "Deposit"
+            ? !(Number.parseFloat(depositAmount) > 0)
+              ? "Needs a valid deposit amount"
+              : Number.parseFloat(depositAmount) > total
+                ? "Deposit can't exceed the total"
+                : "Needs a due date"
+            : tender === "Split"
+              ? "Split amounts must add up to the total"
+              : tender === "Gift card"
+                ? !foundGiftCard
+                  ? "Needs a gift card number checked"
+                  : foundGiftCard.status !== "Active"
+                    ? "This card can't be used"
+                    : "Needs a tender for the remainder"
+                : // Points
+                  pointsToRedeem <= 0
+                  ? "Needs points to redeem"
+                  : "Needs a tender for the remainder"
+
   function handleConfirm() {
     if (!canConfirm) return
     const summary =
@@ -371,7 +405,7 @@ export function PaymentSheet({
                   <Input
                     value={momoReference}
                     onChange={(event) => setMomoReference(event.target.value)}
-                    placeholder="e.g. 8837201"
+                    placeholder="e.g. 8837201" aria-label="e.g. 8837201"
                   />
                   <p className="text-xs text-muted-foreground">Required — this is what makes the record reconcilable later.</p>
                 </div>
@@ -474,7 +508,7 @@ export function PaymentSheet({
                       setFoundGiftCard(undefined)
                     }}
                     onKeyDown={(e) => e.key === "Enter" && handleCheckGiftCard()}
-                    placeholder="Card number — scan or type"
+                    placeholder="Card number — scan or type" aria-label="Card number — scan or type"
                   />
                   <Button variant="outline" onClick={handleCheckGiftCard}>
                     Check
@@ -571,9 +605,12 @@ export function PaymentSheet({
               </div>
             )}
 
-            <Button size="lg" className="mt-auto h-12 text-base" disabled={!canConfirm} onClick={handleConfirm}>
-              Confirm {formatGHS(total)}
-            </Button>
+            <div className="mt-auto flex flex-col gap-1">
+              {confirmHint && <p className="text-center text-xs text-muted-foreground">{confirmHint}</p>}
+              <Button size="lg" className="h-12 text-base" disabled={!canConfirm} onClick={handleConfirm}>
+                Confirm {formatGHS(total)}
+              </Button>
+            </div>
           </div>
         )}
       </SheetContent>

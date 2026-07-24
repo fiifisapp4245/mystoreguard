@@ -3,6 +3,7 @@
 import { useRef, useState } from "react"
 import { toast } from "sonner"
 
+import { TeachingEmptyState } from "@/components/dashboard/teaching-empty-state"
 import { insertAtCursor, MergeFieldChips } from "@/components/hubs/message/merge-field-chips"
 import { SendCostPanel } from "@/components/hubs/message/send-cost-panel"
 import { Badge } from "@/components/ui/badge"
@@ -111,6 +112,10 @@ export function AutomatedTab() {
   const testCost = Math.round(testSegments * CREDIT_COST_GHS * 100) / 100
   const testBalanceAfter = creditBalance - testSegments
   const testInsufficient = testBalanceAfter < 0
+  const testSendBlockers = [
+    !testPhone.trim() && "a phone number to test with",
+    testInsufficient && "more SMS credit balance",
+  ].filter(Boolean) as string[]
 
   function handleTestSend() {
     if (!editTrigger || !testPhone.trim() || testInsufficient) return
@@ -183,6 +188,9 @@ export function AutomatedTab() {
         SMS credits: {creditBalance.toLocaleString()} · {formatGHS(CREDIT_COST_GHS)} each — top up from Compose.
       </p>
 
+      {triggers.length === 0 ? (
+        <TeachingEmptyState message="Automated triggers send a message the moment something happens — a low-stock alert, an overdue invoice reminder, a delivery update — with no manual sending required." />
+      ) : (
       <div className="overflow-hidden rounded-xl border">
         <Table>
           <TableHeader>
@@ -231,6 +239,7 @@ export function AutomatedTab() {
           </TableBody>
         </Table>
       </div>
+      )}
 
       <Sheet open={editTrigger !== undefined} onOpenChange={(open) => !open && setEditTriggerId(null)}>
         <SheetContent className="flex flex-col gap-0 sm:max-w-lg">
@@ -281,6 +290,9 @@ export function AutomatedTab() {
                       Send test
                     </Button>
                   </div>
+                  {testSendBlockers.length > 0 && (
+                    <p className="text-xs text-muted-foreground">Still needs: {testSendBlockers.join(", ")}</p>
+                  )}
                   <SendCostPanel
                     recipientCount={1}
                     segmentsPerMessage={testSegments}

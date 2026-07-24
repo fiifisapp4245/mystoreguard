@@ -284,7 +284,7 @@ export function TemplateBuilderForm({ templateId }: { templateId?: string }) {
                       <Input
                         value={field.label}
                         onChange={(event) => updateField(index, { label: event.target.value })}
-                        placeholder="e.g. Enter Height"
+                        placeholder="e.g. Enter Height" aria-label="e.g. Enter Height"
                         className="h-8"
                       />
                     </div>
@@ -370,7 +370,7 @@ export function TemplateBuilderForm({ templateId }: { templateId?: string }) {
                       </div>
                       <div className="flex flex-col gap-1.5">
                         <Label className="text-xs">Unit</Label>
-                        <Input value={lineItem.unit} onChange={(event) => updateLineItem(index, { unit: event.target.value })} placeholder="e.g. Yards or GHS" />
+                        <Input value={lineItem.unit} onChange={(event) => updateLineItem(index, { unit: event.target.value })} placeholder="e.g. Yards or GHS" aria-label="e.g. Yards or GHS" />
                       </div>
                       <div className="flex flex-col gap-1.5">
                         <Label className="text-xs">Default discount %</Label>
@@ -427,7 +427,7 @@ export function TemplateBuilderForm({ templateId }: { templateId?: string }) {
                           const value = Number.parseFloat(event.target.value) || 0
                           setLineItems((prev) => prev.map((item) => (item === li ? { ...item, ratePerUnit: value } : item)))
                         }}
-                        placeholder="Informational — the actual rate lives in the Calculate block"
+                        placeholder="Informational — the actual rate lives in the Calculate block" aria-label="Informational — the actual rate lives in the Calculate block"
                       />
                     </div>
                   ))}

@@ -69,6 +69,10 @@ export function NewTaskDialog({
   }
 
   const canSubmit = values.title.trim() !== "" && values.description.trim() !== ""
+  const missingFields = [
+    values.title.trim() === "" && "a title",
+    values.description.trim() === "" && "a description",
+  ].filter(Boolean) as string[]
 
   function handleSubmit() {
     if (!canSubmit) return
@@ -189,9 +193,14 @@ export function NewTaskDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!canSubmit}>
-            Create task
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            {missingFields.length > 0 && (
+              <p className="text-xs text-muted-foreground">Still needs: {missingFields.join(", ")}</p>
+            )}
+            <Button onClick={handleSubmit} disabled={!canSubmit}>
+              Create task
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

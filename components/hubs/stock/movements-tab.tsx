@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import { MoreHorizontal, Plus, Scissors } from "lucide-react"
 
+import { LiveResultCount } from "@/components/dashboard/live-result-count"
 import { StatusBadge } from "@/components/dashboard/status-badge"
 import { CreateTransferDialog } from "@/components/hubs/stock/create-transfer-dialog"
 import { ReceiveTransferDialog } from "@/components/hubs/stock/receive-transfer-dialog"
@@ -149,6 +150,7 @@ export function MovementsTab() {
           )}
         </div>
       </div>
+      <LiveResultCount count={filtered.length} itemLabel="movement" />
 
       <div className="overflow-hidden rounded-xl border">
         <Table>
@@ -291,7 +293,7 @@ export function MovementsTab() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4" onClick={() => setSplitPickerOpen(false)}>
           <div className="flex w-full max-w-sm flex-col gap-3 rounded-xl bg-popover p-5 shadow-lg ring-1 ring-foreground/10" onClick={(e) => e.stopPropagation()}>
             <p className="font-medium">Split stock — choose a product</p>
-            <Input value={splitSearch} onChange={(e) => setSplitSearch(e.target.value)} placeholder="Search product..." autoFocus />
+            <Input value={splitSearch} onChange={(e) => setSplitSearch(e.target.value)} placeholder="Search product..." aria-label="Search product" autoFocus />
             <div className="flex flex-col divide-y">
               {splitMatches.map((product) => (
                 <button

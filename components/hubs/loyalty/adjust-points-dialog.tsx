@@ -48,6 +48,10 @@ export function AdjustPointsDialog({
 
   const delta = Number.parseInt(amount, 10) || 0
   const resultingBalance = member ? Math.max(0, member.points + delta) : 0
+  const missingFields = [
+    delta === 0 && "a points amount",
+    reason.length === 0 && "a reason",
+  ].filter(Boolean) as string[]
   const canSave = member !== null && delta !== 0 && reason.length > 0
 
   function handleSave() {
@@ -110,9 +114,14 @@ export function AdjustPointsDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!canSave}>
-            Save adjustment
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            {!canSave && missingFields.length > 0 && (
+              <p className="text-xs text-muted-foreground">Still needs: {missingFields.join(", ")}</p>
+            )}
+            <Button onClick={handleSave} disabled={!canSave}>
+              Save adjustment
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

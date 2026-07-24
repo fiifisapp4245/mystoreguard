@@ -102,7 +102,7 @@ function ModuleLink({
       isActive={active}
       className="data-active:bg-primary/10 data-active:text-primary data-active:hover:bg-primary/15 data-active:hover:text-primary"
     >
-      <Link href={`${href}${query}`}>{content}</Link>
+      <Link href={`${href}${query}`} aria-current={active ? "page" : undefined}>{content}</Link>
     </SidebarMenuButton>
   )
 }

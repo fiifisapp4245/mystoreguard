@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { Search } from "lucide-react"
 
 import { CustomDateRangeRow, PeriodSelect } from "@/components/dashboard/period-select"
+import { LiveResultCount } from "@/components/dashboard/live-result-count"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
 import { SaleDetailSheet } from "@/components/hubs/sales/sale-detail-sheet"
@@ -117,7 +118,7 @@ export function AllSalesTab() {
             <div className="relative">
               <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search customer or receipt no..."
+                placeholder="Search customer or receipt no..." aria-label="Search customer or receipt no"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 className="w-full pl-8 sm:w-64"
@@ -129,6 +130,7 @@ export function AllSalesTab() {
         {period === "custom" && (
           <CustomDateRangeRow from={customFrom} to={customTo} onFromChange={setCustomFrom} onToChange={setCustomTo} />
         )}
+        <LiveResultCount count={filtered.length} itemLabel="sale" />
       </div>
 
       <div className="overflow-hidden rounded-xl border">

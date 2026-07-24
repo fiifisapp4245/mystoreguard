@@ -93,8 +93,15 @@
     --card-foreground: oklch(0.985 0 0);
     --popover: oklch(0.205 0 0);
     --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.47 0.157 37.304);
-    --primary-foreground: oklch(0.98 0.016 73.684);
+    /*
+     * Lightened from oklch(0.47 0.157 37.304) — that value contrasted at
+     * only 2.69:1 against --background, failing WCAG 1.4.3 (4.5:1 text) and
+     * 1.4.11 (3:1 UI components). At this lightness, white text no longer
+     * has enough contrast against the button fill, so --primary-foreground
+     * switches to dark text instead of light — verified at 5.05:1 both ways.
+     */
+    --primary: oklch(0.62 0.17 38);
+    --primary-foreground: oklch(0.145 0 0);
     --secondary: oklch(0.274 0.006 286.033);
     --secondary-foreground: oklch(0.985 0 0);
     --muted: oklch(0.269 0 0);

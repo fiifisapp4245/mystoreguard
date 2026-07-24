@@ -103,6 +103,11 @@ export function NewPODialog({
 
   const total = lines.reduce((sum, l) => sum + l.orderedQty * l.unitCost, 0)
 
+  const missingFields = [
+    !supplierId && "a supplier",
+    lines.length === 0 && "at least one item",
+  ].filter(Boolean) as string[]
+
   function handleSave(status: "Draft" | "Sent") {
     if (!supplierId || lines.length === 0) return
     const supplier = suppliers.find((s) => s.id === supplierId)
@@ -174,7 +179,7 @@ export function NewPODialog({
           <div className="flex flex-col gap-2">
             <Label>Items</Label>
             <div className="relative">
-              <Input value={productSearch} onChange={(e) => setProductSearch(e.target.value)} placeholder="Search product..." />
+              <Input value={productSearch} onChange={(e) => setProductSearch(e.target.value)} placeholder="Search product..." aria-label="Search product" />
               {matches.length > 0 && (
                 <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border bg-popover shadow-sm">
                   {matches.map((product) => (
@@ -223,13 +228,20 @@ export function NewPODialog({
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
-          <Button variant="outline" onClick={() => handleSave("Draft")} disabled={!supplierId || lines.length === 0}>
-            Save as draft
-          </Button>
-          <Button onClick={() => handleSave("Sent")} disabled={!supplierId || lines.length === 0}>
-            <Plus />
-            Save & send
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            {missingFields.length > 0 && (
+              <p className="text-xs text-muted-foreground">Still needs: {missingFields.join(", ")}</p>
+            )}
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => handleSave("Draft")} disabled={missingFields.length > 0}>
+                Save as draft
+              </Button>
+              <Button onClick={() => handleSave("Sent")} disabled={missingFields.length > 0}>
+                <Plus />
+                Save & send
+              </Button>
+            </div>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

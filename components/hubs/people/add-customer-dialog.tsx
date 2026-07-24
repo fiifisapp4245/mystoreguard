@@ -101,8 +101,19 @@ export function AddCustomerDialog({
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="customer-name">Full name</Label>
-            <Input id="customer-name" value={name} onChange={(event) => setName(event.target.value)} />
-            {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
+            <Input
+              id="customer-name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              aria-invalid={Boolean(errors.name)}
+              aria-describedby={errors.name ? "customer-name-error" : undefined}
+              aria-required="true"
+            />
+            {errors.name && (
+              <p id="customer-name-error" className="text-xs text-destructive">
+                {errors.name}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -112,8 +123,15 @@ export function AddCustomerDialog({
               value={phone}
               onChange={(event) => setPhone(event.target.value)}
               placeholder="024 123 4567"
+              aria-invalid={Boolean(errors.phone)}
+              aria-describedby={errors.phone ? "customer-phone-error" : undefined}
+              aria-required="true"
             />
-            {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
+            {errors.phone && (
+              <p id="customer-phone-error" className="text-xs text-destructive">
+                {errors.phone}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-1.5">

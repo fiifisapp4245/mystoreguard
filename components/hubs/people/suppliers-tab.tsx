@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { Plus, Search } from "lucide-react"
 import { toast } from "sonner"
 
+import { LiveResultCount } from "@/components/dashboard/live-result-count"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { AddSupplierDialog } from "@/components/hubs/people/add-supplier-dialog"
 import { SupplierDetailSheet } from "@/components/hubs/people/supplier-detail-sheet"
@@ -93,7 +94,7 @@ export function SuppliersTab() {
         <div className="relative">
           <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search suppliers..."
+            placeholder="Search suppliers..." aria-label="Search suppliers"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             className="w-full pl-8 sm:w-64"
@@ -104,6 +105,7 @@ export function SuppliersTab() {
           Add supplier
         </Button>
       </div>
+      <LiveResultCount count={filtered.length} itemLabel="supplier" />
 
       <div className="overflow-hidden rounded-xl border">
         <Table>

@@ -89,7 +89,13 @@ export function AffiliateDialog({
   }
 
   const phoneValid = isValidGhanaPhone(values.phone)
-  const canSubmit = values.name.trim() !== "" && phoneValid && values.code.trim() !== "" && Number(values.rate) > 0
+  const missingFields = [
+    !values.name.trim() && "a partner name",
+    !phoneValid && "a valid contact phone",
+    !values.code.trim() && "a unique code",
+    !(Number(values.rate) > 0) && "a rate greater than 0",
+  ].filter(Boolean) as string[]
+  const canSubmit = missingFields.length === 0
 
   function handleSave() {
     if (!canSubmit) return
@@ -192,9 +198,14 @@ export function AffiliateDialog({
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!canSubmit}>
-            {isEdit ? "Save changes" : "Add affiliate"}
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            {!canSubmit && missingFields.length > 0 && (
+              <p className="text-xs text-muted-foreground">Still needs: {missingFields.join(", ")}</p>
+            )}
+            <Button onClick={handleSave} disabled={!canSubmit}>
+              {isEdit ? "Save changes" : "Add affiliate"}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

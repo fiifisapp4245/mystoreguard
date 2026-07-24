@@ -1,24 +1,22 @@
 "use client"
 
+import { Suspense } from "react"
 import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
 import { useSiteConfig } from "@/hooks/use-site-config"
-import { getCtaCopy } from "@/lib/site-config"
+import { getCtaCopy, siteConfig, type SiteConfig } from "@/lib/site-config"
 import { cn } from "@/lib/utils"
 
-export function CtaGroup({
-  variant = "both",
-  size = "lg",
-  className,
-}: {
+interface CtaGroupProps {
   variant?: "both" | "primary"
   size?: "default" | "lg" | "sm"
   className?: string
-}) {
-  const config = useSiteConfig()
-  const copy = getCtaCopy(config.ctaVariant)
+}
 
+/** Pure presentational render — no hooks, so it can serve as both the real output and the Suspense fallback. */
+function CtaGroupView({ config, variant = "both", size = "lg", className }: CtaGroupProps & { config: SiteConfig }) {
+  const copy = getCtaCopy(config.ctaVariant)
   const primaryHref = config.ctaVariant === "trial" ? "/pricing" : config.demoBookingUrl
   const secondaryHref = config.ctaVariant === "trial" ? config.demoBookingUrl : "/pricing"
 
@@ -33,5 +31,26 @@ export function CtaGroup({
         </Button>
       )}
     </div>
+  )
+}
+
+function CtaGroupLive(props: CtaGroupProps) {
+  const config = useSiteConfig()
+  return <CtaGroupView config={config} {...props} />
+}
+
+/**
+ * Renders instantly server-side using the default siteConfig — real
+ * visitors, crawlers, and link-preview bots see full content immediately.
+ * The ?cta=/?prices=/?currency= URL overrides (used for internal review of
+ * unreleased copy variants) still apply, but only kick in client-side after
+ * hydration, inside this component's own tightly-scoped Suspense boundary —
+ * they never block the rest of the page from rendering.
+ */
+export function CtaGroup(props: CtaGroupProps) {
+  return (
+    <Suspense fallback={<CtaGroupView config={siteConfig} {...props} />}>
+      <CtaGroupLive {...props} />
+    </Suspense>
   )
 }
