@@ -3,8 +3,31 @@
  * People hub's convention.
  */
 
-export type SaleTenderType = "Cash" | "Momo" | "Credit" | "Deposit" | "On-hold" | "Split" | "Gift card" | "Points"
+export type SaleTenderType =
+  | "Cash"
+  | "Momo"
+  | "Credit"
+  | "Deposit"
+  | "On-hold"
+  | "Split"
+  | "Gift card"
+  | "Points"
+  | "Bank transfer"
 export type SaleStatus = "Completed" | "Pending" | "On hold"
+
+/**
+ * Which selling channel a sale came through. "counter" is everything the
+ * business did before the online store existed — the register, invoices,
+ * quotations — and stays the default, so an untagged sale reads correctly.
+ * The ledger deliberately owns this type: online orders post into these same
+ * records rather than keeping books of their own (see lib/online-orders-data.ts).
+ */
+export type SalesChannel = "counter" | "online"
+
+export const SALES_CHANNEL_LABEL: Record<SalesChannel, string> = {
+  counter: "In store",
+  online: "Online",
+}
 
 export interface SaleLineItem {
   name: string
@@ -31,9 +54,69 @@ export interface SaleRecord {
   newPointsBalance?: number
   giftCardRemainingBalance?: number
   discountsApplied?: { label: string; amount: number }[]
+  /** Absent means the counter — the channel every existing record came through. */
+  channel?: SalesChannel
+  /** Set on sales posted by a paid online order, so the two can be reconciled. */
+  fromOnlineOrderNo?: string
 }
 
 export const SALES_RECORDS: SaleRecord[] = [
+  /**
+   * Sales that came through the online store. They're ordinary records in
+   * the same ledger — only `channel` and `fromOnlineOrderNo` mark where they
+   * came from, so Dashboard, Reports and Day close need no special case.
+   */
+  {
+    id: "sale-online-1",
+    receiptNo: "RCT-10243",
+    customer: "Kwame Mensah",
+    amount: 235,
+    type: "Momo",
+    date: "22 Jul, 9:52 am",
+    dateISO: "2026-07-22",
+    cashier: "Online store",
+    status: "Completed",
+    lineItems: [
+      { name: "Ideal Milk 380g", quantity: 12, unitPrice: 14.5 },
+      { name: "Key Soap", quantity: 6, unitPrice: 8.5 },
+    ],
+    momoReference: "MM-4471209",
+    channel: "online",
+    fromOnlineOrderNo: "ORD-1046",
+  },
+  {
+    id: "sale-online-2",
+    receiptNo: "RCT-10242",
+    customer: "Akosua Frimpong",
+    amount: 287,
+    type: "Momo",
+    date: "21 Jul, 2:18 pm",
+    dateISO: "2026-07-21",
+    cashier: "Online store",
+    status: "Completed",
+    lineItems: [
+      { name: "Indomie Chicken Noodles", quantity: 40, unitPrice: 6 },
+      { name: "Tema Salt 1kg", quantity: 4, unitPrice: 5.5 },
+    ],
+    momoReference: "MM-4468812",
+    channel: "online",
+    fromOnlineOrderNo: "ORD-1043",
+  },
+  {
+    id: "sale-online-3",
+    receiptNo: "RCT-10231",
+    customer: "Abena Osei",
+    amount: 132,
+    type: "Momo",
+    date: "20 Jul, 4:44 pm",
+    dateISO: "2026-07-20",
+    cashier: "Online store",
+    status: "Completed",
+    lineItems: [{ name: "Sunlight Dishwashing Liquid", quantity: 12, unitPrice: 11 }],
+    momoReference: "MM-4460077",
+    channel: "online",
+    fromOnlineOrderNo: "ORD-1042",
+  },
   {
     id: "sale-1",
     receiptNo: "RCT-10241",

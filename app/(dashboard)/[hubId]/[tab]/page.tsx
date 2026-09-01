@@ -12,6 +12,12 @@ import { AnalyticsTab } from "@/components/hubs/loyalty/analytics-tab"
 import { MembersTab } from "@/components/hubs/loyalty/members-tab"
 import { RulesTiersTab } from "@/components/hubs/loyalty/rules-tiers-tab"
 import { SegmentsTab } from "@/components/hubs/loyalty/segments-tab"
+import { OnlineBiddingTab } from "@/components/online-store/online-bidding-tab"
+import { OnlineOrdersTab } from "@/components/online-store/online-orders-tab"
+import { OnlineProductsTab } from "@/components/online-store/online-products-tab"
+import { OnlineSettingsTab } from "@/components/online-store/online-settings-tab"
+import { OnlineStoreOverview } from "@/components/online-store/online-store-overview"
+import { OnlineStorefrontTab } from "@/components/online-store/online-storefront-tab"
 import { AffiliatesTab } from "@/components/hubs/offers/affiliates-tab"
 import { GiftCardsTab } from "@/components/hubs/offers/gift-cards-tab"
 import { PromoCodesTab } from "@/components/hubs/offers/promo-codes-tab"
@@ -86,6 +92,12 @@ export default async function HubTabPage({
       {hubId === "invoice" && tab === "payments" && <PaymentsTab />}
       {hubId === "estimator" && tab === "quotations" && <QuotationsTab />}
       {hubId === "estimator" && tab === "templates" && <TemplatesTab />}
+      {hubId === "online-store" && tab === "online-overview" && <TabGate moduleId="online-overview"><OnlineStoreOverview /></TabGate>}
+      {hubId === "online-store" && tab === "online-orders" && <TabGate moduleId="online-orders"><OnlineOrdersTab /></TabGate>}
+      {hubId === "online-store" && tab === "online-products" && <TabGate moduleId="online-products"><OnlineProductsTab /></TabGate>}
+      {hubId === "online-store" && tab === "online-bidding" && <TabGate moduleId="online-bidding"><OnlineBiddingTab /></TabGate>}
+      {hubId === "online-store" && tab === "online-storefront" && <TabGate moduleId="online-storefront"><OnlineStorefrontTab /></TabGate>}
+      {hubId === "online-store" && tab === "online-settings" && <TabGate moduleId="online-settings"><OnlineSettingsTab /></TabGate>}
       {hubId === "inventory" && tab === "products" && <ProductsTab />}
       {hubId === "inventory" && tab === "purchase-orders" && <PurchaseOrdersTab />}
       {hubId === "stock" && tab === "stock-levels" && <StockLevelsTab />}

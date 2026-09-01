@@ -8,7 +8,9 @@ import {
   Calculator,
   CalendarCheck,
   FileText,
+  Gavel,
   Gift,
+  Globe,
   Handshake,
   History,
   Layers,
@@ -18,8 +20,11 @@ import {
   ListTodo,
   MessageSquare,
   Package,
+  PackageCheck,
+  Palette,
   Receipt,
   Ruler,
+  ShoppingBag,
   Settings,
   ShieldCheck,
   ShoppingCart,
@@ -388,6 +393,108 @@ export const MODULES: ModuleConfig[] = [
     ],
     tier: "prime",
     href: "/deliveries",
+  },
+  {
+    id: "online-overview",
+    name: "Overview",
+    icon: Globe,
+    description: "Whether the store is live, what's selling, and what needs attention.",
+    features: [
+      {
+        name: "Store status",
+        description: "Whether customers can buy right now, and what's still missing if they can't.",
+      },
+      {
+        name: "Online performance",
+        description: "Orders, revenue collected, products online, and active auctions at a glance.",
+      },
+    ],
+    tier: "prime",
+  },
+  {
+    id: "online-orders",
+    name: "Orders",
+    icon: ShoppingBag,
+    description: "Orders placed on the online store, from payment through to fulfilment.",
+    features: [
+      {
+        name: "Online orders",
+        description: "Every order customers placed themselves, with payment and fulfilment state on one row.",
+      },
+      {
+        name: "Fulfilment handover",
+        description: "A packed order is handed to Deliveries — the same riders, proof of delivery, and cash reconciliation as a counter sale.",
+      },
+    ],
+    tier: "prime",
+  },
+  {
+    id: "online-products",
+    name: "Products online",
+    icon: PackageCheck,
+    description: "Which of your existing products are on sale online, at what price, and how they're sold.",
+    features: [
+      {
+        name: "Sell existing products online",
+        description: "Pick from the catalogue you already have — nothing is retyped, and stock stays one shared number.",
+      },
+      {
+        name: "Online price and selling method",
+        description: "An optional online price, and whether a product is bought outright, bid on, or both.",
+      },
+    ],
+    tier: "prime",
+  },
+  {
+    id: "online-bidding",
+    name: "Bidding",
+    icon: Gavel,
+    description: "Products customers bid on instead of buying outright, and the bids they've placed.",
+    features: [
+      {
+        name: "Auctions",
+        description: "A starting price, a bid step, and a closing time — with reserve and buy-now if you want them.",
+      },
+      {
+        name: "Bids and winners",
+        description: "Who's leading, what the next valid bid is, and turning a winning bid into an order.",
+      },
+    ],
+    tier: "ultra",
+  },
+  {
+    id: "online-storefront",
+    name: "Storefront",
+    icon: Palette,
+    description: "What customers see when they land on the store — welcome text, featured products, and collections.",
+    features: [
+      {
+        name: "Homepage",
+        description: "The welcome line, brand colour, and the products featured at the top of the page.",
+      },
+      {
+        name: "Collections",
+        description: "Named groups of existing products, so a customer can browse the way they shop.",
+      },
+    ],
+    tier: "prime",
+  },
+  {
+    id: "online-settings",
+    name: "Store settings",
+    icon: SlidersHorizontal,
+    description: "Store name and web address, where you deliver, and how customers pay.",
+    features: [
+      {
+        name: "Store information",
+        description: "Name, web address, and the contact details customers see.",
+      },
+      {
+        name: "Delivery and payments",
+        description: "Delivery areas and fees, collection from the shop, and which of your payment methods work online.",
+      },
+    ],
+    tier: "prime",
   },
   {
     id: "loyalty-members",
@@ -776,6 +883,28 @@ export const GROUPS: GroupConfig[] = [
     nestedOnly: true,
   },
   {
+    /**
+     * The online store is a second sales *channel* over the same business,
+     * so it belongs in Sell alongside the register, invoices and quotations
+     * — not in a new top-level group. Its Products tab is a publishing view
+     * of the existing catalogue, not a second catalogue.
+     */
+    id: "online-store",
+    label: "Online store",
+    moduleIds: [
+      "online-overview",
+      "online-orders",
+      "online-products",
+      "online-bidding",
+      "online-storefront",
+      "online-settings",
+    ],
+    type: "hub",
+    icon: Globe,
+    description: "Sell the products you already stock to customers who aren't in the shop.",
+    nestedOnly: true,
+  },
+  {
     id: "inventory",
     label: "Inventory",
     moduleIds: ["products", "purchase-orders"],
@@ -823,7 +952,7 @@ export const GROUPS: GroupConfig[] = [
   {
     id: "sell",
     label: "Sell",
-    moduleIds: ["sales", "invoice", "deliveries", "estimator"],
+    moduleIds: ["sales", "online-store", "invoice", "deliveries", "estimator"],
     type: "group",
   },
   {
@@ -920,6 +1049,7 @@ export const FLAT_ORDER: string[] = [
   "inventory",
   "stock",
   "sales",
+  "online-store",
   "invoice",
   "expenses",
   "users",
@@ -977,6 +1107,28 @@ const SALES_FLAT_ENTRY: ModuleConfig = {
   ],
   tier: "light",
   href: hubFirstTabPath("sales"),
+}
+
+/**
+ * The flat view shows a single "Online store" item routing to the hub's
+ * first tab, matching every other hub. Not a real module, so it isn't in
+ * MODULES; resolveFlat() substitutes it in.
+ */
+const ONLINE_STORE_FLAT_ENTRY: ModuleConfig = {
+  id: "online-store",
+  name: "Online store",
+  icon: Globe,
+  description: "Sell the products you already stock to customers who aren't in the shop.",
+  features: [
+    { name: "Overview", description: "Whether the store is live, what's selling, and what needs attention." },
+    { name: "Orders", description: "Orders placed online, from payment through to fulfilment." },
+    { name: "Products online", description: "Which existing products are on sale online, and how they're sold." },
+    { name: "Bidding", description: "Products customers bid on instead of buying outright." },
+    { name: "Storefront", description: "What customers see when they land on the store." },
+    { name: "Store settings", description: "Web address, delivery areas, and online payment methods." },
+  ],
+  tier: "prime",
+  href: hubFirstTabPath("online-store"),
 }
 
 /**
@@ -1227,6 +1379,7 @@ export function resolveFlat(): ModuleConfig[] {
   return FLAT_ORDER.map((id) => {
     if (id === "users") return USERS_FLAT_ENTRY
     if (id === "sales") return SALES_FLAT_ENTRY
+    if (id === "online-store") return ONLINE_STORE_FLAT_ENTRY
     if (id === "invoice") return INVOICE_FLAT_ENTRY
     if (id === "estimator") return ESTIMATOR_FLAT_ENTRY
     if (id === "inventory") return INVENTORY_FLAT_ENTRY

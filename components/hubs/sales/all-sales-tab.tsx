@@ -33,7 +33,13 @@ import {
   STANDARD_PERIOD_OPTIONS,
   type StandardPeriod,
 } from "@/lib/period-utils"
-import { RETURNS_RECORDS, SALES_RECORDS, type SaleRecord, type SaleTenderType } from "@/lib/sales-data"
+import {
+  getSalesRecordsStore,
+  RETURNS_RECORDS,
+  SALES_CHANNEL_LABEL,
+  type SaleRecord,
+  type SaleTenderType,
+} from "@/lib/sales-data"
 import { useDemoState } from "@/hooks/use-demo-state"
 
 type FilterOption = "All" | SaleTenderType
@@ -44,7 +50,10 @@ const NO_RETURNS: never[] = []
 export function AllSalesTab() {
   const { state } = useDemoState()
   const isLarry = state.storePersona === "larry"
-  const salesRecords: SaleRecord[] = isLarry ? LARRY_SALES_RECORDS : SALES_RECORDS
+  // Read the live ledger rather than the seed constant, so sales recorded
+  // during the session — at the register, or by a paid online order — show up
+  // here alongside the seeded history.
+  const salesRecords: SaleRecord[] = isLarry ? LARRY_SALES_RECORDS : getSalesRecordsStore()
   const returnsRecords = isLarry ? NO_RETURNS : RETURNS_RECORDS
 
   const [period, setPeriod] = useState<StandardPeriod>("today")
@@ -141,6 +150,7 @@ export function AllSalesTab() {
               <TableHead>Customer</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead>Type</TableHead>
+              <TableHead>Channel</TableHead>
               <TableHead>Date &amp; time</TableHead>
               <TableHead>Cashier</TableHead>
               <TableHead>Status</TableHead>
@@ -157,6 +167,9 @@ export function AllSalesTab() {
                     {sale.type}
                   </Badge>
                 </TableCell>
+                <TableCell className="text-muted-foreground whitespace-nowrap">
+                  {SALES_CHANNEL_LABEL[sale.channel ?? "counter"]}
+                </TableCell>
                 <TableCell className="text-muted-foreground whitespace-nowrap">{sale.date}</TableCell>
                 <TableCell className="text-muted-foreground whitespace-nowrap">{sale.cashier}</TableCell>
                 <TableCell>
@@ -166,7 +179,7 @@ export function AllSalesTab() {
             ))}
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                   No sales match your filters.
                 </TableCell>
               </TableRow>

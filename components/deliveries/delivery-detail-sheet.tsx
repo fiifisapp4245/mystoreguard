@@ -69,14 +69,20 @@ export function DeliveryDetailSheet({
                   <span className="text-muted-foreground">Rider</span>
                   <span>{getRider(delivery.riderId)?.name ?? "Not yet assigned"}</span>
                 </div>
-                {(delivery.fromReceiptNo || delivery.fromInvoiceNo) && (
+                {(delivery.fromReceiptNo || delivery.fromInvoiceNo || delivery.fromOrderNo) && (
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Source</span>
                     <Link
-                      href={delivery.fromReceiptNo ? "/sales/all" : "/invoice/invoices"}
+                      href={
+                        delivery.fromReceiptNo
+                          ? "/sales/all"
+                          : delivery.fromInvoiceNo
+                            ? "/invoice/invoices"
+                            : "/online-store/online-orders"
+                      }
                       className="text-primary hover:underline"
                     >
-                      {delivery.fromReceiptNo ?? delivery.fromInvoiceNo}
+                      {delivery.fromReceiptNo ?? delivery.fromInvoiceNo ?? delivery.fromOrderNo}
                     </Link>
                   </div>
                 )}

@@ -39,7 +39,13 @@ export const FAILURE_REASONS = [
   "Other",
 ]
 
-export type DeliverySourceType = "sale" | "invoice" | "manual"
+/**
+ * "online-order" is the Online Store handing a packed order over — the same
+ * lifecycle, riders, proof of delivery and COD reconciliation as a counter
+ * sale, so online fulfilment needed no engine of its own. See
+ * lib/online-orders-data.ts's sendForDelivery().
+ */
+export type DeliverySourceType = "sale" | "invoice" | "manual" | "online-order"
 
 export interface DeliveryLineItem {
   productId: string
@@ -85,6 +91,8 @@ export interface Delivery {
   sourceType: DeliverySourceType
   fromReceiptNo?: string
   fromInvoiceNo?: string
+  /** Set when this delivery is fulfilling an online order. */
+  fromOrderNo?: string
 }
 
 export const RIDER_STAFF_IDS = ["staff-3", "staff-4", "staff-5", "staff-6"]
@@ -384,6 +392,32 @@ export const DELIVERIES: Delivery[] = [
     sourceType: "invoice",
     fromInvoiceNo: "INV-2041",
   },
+  {
+    id: "DEL-1042",
+    customer: "Akosua Frimpong",
+    phone: "027 888 4545",
+    address: "Community 4, Site 2",
+    area: "Tema",
+    lineItems: [
+      { productId: "p-5", name: "Indomie Chicken Noodles", quantity: 40, unitPrice: 6 },
+      { productId: "p-24", name: "Tema Salt 1kg", quantity: 4, unitPrice: 5.5 },
+    ],
+    isCod: false,
+    codAmount: 0,
+    riderId: "staff-4",
+    scheduledDateISO: "2026-07-22",
+    window: "Morning",
+    note: "Paid by Momo when the order was placed online.",
+    status: "Out for delivery",
+    confirmationCode: "7712",
+    timeline: [
+      { status: "Scheduled", at: "21 Jul, 4:15 pm", label: "Delivery created from ORD-1043" },
+      { status: "Assigned", at: "22 Jul, 8:00 am", label: "Assigned to Abena Darko · Morning" },
+      { status: "Out for delivery", at: "22 Jul, 8:30 am", label: "Out for delivery — items left stock" },
+    ],
+    sourceType: "online-order",
+    fromOrderNo: "ORD-1043",
+  },
 ]
 
 const DELIVERY_PREFIX = "DEL-"
@@ -484,6 +518,7 @@ export interface CreateDeliveryInput {
   sourceType: DeliverySourceType
   fromReceiptNo?: string
   fromInvoiceNo?: string
+  fromOrderNo?: string
 }
 
 function generateConfirmationCode(): string {
@@ -513,12 +548,13 @@ export function createDelivery(input: CreateDeliveryInput): Delivery {
         label:
           input.sourceType === "manual"
             ? "Delivery created manually"
-            : `Delivery created from ${input.fromReceiptNo ?? input.fromInvoiceNo}`,
+            : `Delivery created from ${input.fromReceiptNo ?? input.fromInvoiceNo ?? input.fromOrderNo}`,
       },
     ],
     sourceType: input.sourceType,
     fromReceiptNo: input.fromReceiptNo,
     fromInvoiceNo: input.fromInvoiceNo,
+    fromOrderNo: input.fromOrderNo,
   }
 
   for (const line of delivery.lineItems) {
