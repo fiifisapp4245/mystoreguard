@@ -51,6 +51,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { ModulePageData } from "@/components/dashboard-pages/registry"
+import { OnlineStoreCard } from "@/components/dashboard-pages/online-store-card"
 import { SetupChecklistCard } from "@/components/dashboard-pages/setup-checklist-card"
 import { useDemoState } from "@/hooks/use-demo-state"
 import {
@@ -164,6 +165,8 @@ export function DashboardOverviewPage({ module }: { module: ModulePageData }) {
       />
 
       {isNewStore && <SetupChecklistCard />}
+
+      <OnlineStoreCard />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
